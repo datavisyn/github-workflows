@@ -47,13 +47,14 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - run: echo ${{ github.event.inputs.npm_registry }}
+      - run: echo "${{ inputs.npm_registry }}"
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-          registry-url: ${{ github.event.inputs.npm_registry }}
+          registry-url: ${{ inputs.npm_registry }}
       - run: npm ci
       - run: echo "publish"
+  
       #- run: npm publish
       #  env:
       #    NODE_AUTH_TOKEN: ${{secrets.npm_token}}  
