@@ -43,7 +43,7 @@ jobs:
         run: |
           npm runs dist
   publish-npm:
-    if: ${{ success() && inputs.publish && inputs.publish != 'false' }}
+    if: ${{ inputs.publish && inputs.publish != 'false' }}
     needs: build
     runs-on: ubuntu-20.04
     steps:
