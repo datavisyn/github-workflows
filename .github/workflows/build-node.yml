@@ -5,7 +5,14 @@ on:
     inputs:
       publish:
         required: true
+        default: false
         type: boolean
+      npm_registry:
+        default: 'https://registry.npmjs.org/'
+        type: string
+    secrets:
+      npm_token:
+        default: 'XXX'
 
 jobs:
   build:
@@ -35,14 +42,13 @@ jobs:
           npm run dist
   publish-npm:
     if: ${{ github.event.inputs.publish && github.event.inputs.publish != 'false' }}
-    needs: build 
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-          registry-url: https://registry.npmjs.org/
+          registry-url: npm_registry
       - run: npm ci
       - run: echo "publish"
       #- run: npm publish
