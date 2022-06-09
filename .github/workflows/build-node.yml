@@ -44,7 +44,7 @@ jobs:
           npm run dist
   publish-npm:
     if: ${{ success() && github.event.inputs.publish && github.event.inputs.publish != 'false' }}
-    need: build
+    needs: build
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
