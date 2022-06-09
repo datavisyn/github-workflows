@@ -41,7 +41,7 @@ jobs:
           npm list --depth=1 || true
       - name: Build
         run: |
-          npm run dist
+          npm runs dist
   publish-npm:
     if: ${{ success() && inputs.publish && inputs.publish != 'false' }}
     needs: build
