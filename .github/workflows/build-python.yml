@@ -36,4 +36,28 @@ jobs:
       - name: Run tests
         run: |
           make test
+#  publish-pypi:
+#    needs: build
+#    runs-on: ubuntu-20.04
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Set up Python
+#        uses: actions/setup-python@v3
+#        with:
+#          python-version: 3.10
+#      - name: Install twine
+#        run: |
+#          pip install twine         
+#      - name: Config Pypi
+#        run: |
+#          echo -e "[pypi]" >> ~/.pypirc
+#          echo -e "repository = $PYPI_REPOSITORY" >> ~/.pypirc
+#          echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
+#          echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+#     - name: Publish package
+#        run: |
+#          twine upload dist_python/*
+      #- run: npm publish
+      #  env:
+      #    NODE_AUTH_TOKEN: ${{secrets.npm_token}}            
 

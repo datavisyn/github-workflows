@@ -50,7 +50,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-          registry-url: npm_registry
+          registry-url: ${{ github.event.inputs.npm_registry }}
       - run: npm ci
       - run: echo "publish"
       #- run: npm publish
