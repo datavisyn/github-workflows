@@ -4,15 +4,17 @@ on:
   workflow_call:
     inputs:
       publish:
-        required: true
+        description: 'true if the package should be published to npm; otherwise false'
         default: false
+        required: true
         type: boolean
       npm_registry:
+        description: 'npm registry to publish to'
         default: 'https://registry.npmjs.org/'
         type: string
     secrets:
       npm_token:
-        default: 'XXX'
+        description: "token for npm registry"
 
 jobs:
   build:
@@ -41,7 +43,8 @@ jobs:
         run: |
           npm run dist
   publish-npm:
-    if: ${{ github.event.inputs.publish && github.event.inputs.publish != 'false' }}
+    if: ${{ success() && github.event.inputs.publish && github.event.inputs.publish != 'false' }}
+    need: build
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
