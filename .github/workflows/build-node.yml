@@ -43,6 +43,7 @@ jobs:
         run: |
           npm run dist
   publish-npm:
+    if: ${{ success() && inputs.publish && inputs.publish != 'false' }}
     needs: build
     runs-on: ubuntu-20.04
     steps:
@@ -52,9 +53,7 @@ jobs:
         with:
           node-version: 16
           registry-url: ${{ inputs.npm_registry }}
-      - run: npm ci
       - run: echo "publish"
-  
       #- run: npm publish
       #  env:
       #    NODE_AUTH_TOKEN: ${{secrets.npm_token}}  
