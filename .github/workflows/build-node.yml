@@ -1,0 +1,36 @@
+name: Build and Publish Node
+
+on:
+  workflow_call:
+    inputs:
+      publish:
+        required: true
+        type: boolean
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ["14.19"]
+    steps:      
+      - uses: actions/checkout@v3
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - name: Show Node.js and npm version
+        run: |
+          node -v
+          npm -v
+      - name: Install npm dependencies
+        run: |
+          npm install
+      - name: Show installed npm dependencies
+        run: |
+          npm list --depth=1 || true
+      - name: Build
+        run: |
+          npm run dist

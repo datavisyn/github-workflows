@@ -1,0 +1,44 @@
+name: Build and Publish Python
+
+on:
+  workflow_call:
+    inputs:
+      publish:
+        required: true
+        type: boolean
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10"]
+    steps:      
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Show python and pip version
+        run: |
+          python --version
+          pip --version
+      - name: Install python dependencies
+        run: |
+          virtualenv ~/venv
+          . ~/venv/bin/activate
+          make develop
+      - name: Show installed pip packages
+        run: |
+          . ~/venv/bin/activate
+          pip list || true
+      - name: Linting
+        run: |
+          . ~/venv/bin/activate
+          make lint check-format                  
+      - name: Run tests
+        run: |
+          . ~/venv/bin/activate
+          make test
+
