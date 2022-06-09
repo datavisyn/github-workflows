@@ -15,7 +15,7 @@ jobs:
       matrix:
         python-version: ["3.10"]
     steps:      
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
@@ -26,19 +26,14 @@ jobs:
           pip --version
       - name: Install python dependencies
         run: |
-          virtualenv ~/venv
-          . ~/venv/bin/activate
           make develop
       - name: Show installed pip packages
         run: |
-          . ~/venv/bin/activate
           pip list || true
       - name: Linting
         run: |
-          . ~/venv/bin/activate
           make lint check-format                  
       - name: Run tests
         run: |
-          . ~/venv/bin/activate
           make test
 
