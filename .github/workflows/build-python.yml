@@ -4,9 +4,21 @@ on:
   workflow_call:
     inputs:
       publish:
+        description: "true, if the package should be published to npm; otherwise false"
+        default: false
         required: true
         type: boolean
-
+      pypi_repository:
+        description: "pypi registry to publish to"
+        default: "https://pypi.org/pypi"
+        type: string
+      pypi_username:
+        description: "pypi username"
+        default: "testUser"
+        type: string
+    secrets:
+      pypi_password:
+        description: "password of pypi registry"
 jobs:
   build:
     runs-on: ubuntu-20.04
@@ -36,28 +48,17 @@ jobs:
       - name: Run tests
         run: |
           make test
-#  publish-pypi:
-#    needs: build
-#    runs-on: ubuntu-20.04
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: Set up Python
-#        uses: actions/setup-python@v3
-#        with:
-#          python-version: 3.10
-#      - name: Install twine
-#        run: |
-#          pip install twine         
-#      - name: Config Pypi
-#        run: |
+      - name: publish to pip registry
+        if: ${{ inputs.publish && inputs.publish != 'false' }}
+        run: |
+           echo "publish"
+           pip install twine
 #          echo -e "[pypi]" >> ~/.pypirc
 #          echo -e "repository = $PYPI_REPOSITORY" >> ~/.pypirc
 #          echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
 #          echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
-#     - name: Publish package
-#        run: |
 #          twine upload dist_python/*
-      #- run: npm publish
-      #  env:
-      #    NODE_AUTH_TOKEN: ${{secrets.npm_token}}            
-
+        env: 
+          PYPI_REPOSITORY: ${{secrets.pypi_repository}}
+          PYPI_USERNAME: ${{secrets.pypi_username}}
+          PYPI_PASSWORD: ${{secrets.pypi_password}}        

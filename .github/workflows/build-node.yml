@@ -4,13 +4,13 @@ on:
   workflow_call:
     inputs:
       publish:
-        description: 'true if the package should be published to npm; otherwise false'
+        description: "true, if the package should be published to npm; otherwise false"
         default: false
         required: true
         type: boolean
       npm_registry:
-        description: 'npm registry to publish to'
-        default: 'https://registry.npmjs.org/'
+        description: "npm registry to publish to"
+        default: "https://registry.npmjs.org/"
         type: string
     secrets:
       npm_token:
