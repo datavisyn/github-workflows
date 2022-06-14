@@ -1,4 +1,4 @@
-name: Build and Publish Python Repositories
+name: Build and Publish Python and Node Repositories
 
 on:
   workflow_call:
@@ -8,6 +8,10 @@ on:
         default: false
         required: true
         type: boolean
+      npm_registry:
+        description: "npm registry to publish to"
+        default: "https://registry.npmjs.org/"
+        type: string        
       pypi_repository:
         description: "pypi registry to publish to"
         default: "https://pypi.org/pypi"
@@ -19,8 +23,42 @@ on:
     secrets:
       pypi_password:
         description: "password of pypi registry"
+      npm_token:
+        description: "token for npm registry"        
 jobs:
-  build:
+  build-node:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ["14.19"]
+    steps:      
+      - uses: actions/checkout@v3
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: ${{ inputs.npm_registry }}
+      - name: Show Node.js and npm version
+        run: |
+          node -v
+          npm -v
+      - name: Install npm dependencies
+        run: |
+          npm install
+      - name: Show installed npm dependencies
+        run: |
+          npm list --depth=1 || true
+      - name: Build
+        run: |
+          npm run dist
+      - name: publish to npm
+        if: ${{ inputs.publish && inputs.publish != 'false' }}
+        run: echo "publish"
+        #run: npm publish
+        env: 
+          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+  build-python:
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false

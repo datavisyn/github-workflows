@@ -1,4 +1,4 @@
-name: Build and Publish Node
+name: Build and Publish Node Repositories
 
 on:
   workflow_call:
