@@ -1,0 +1,59 @@
+name: Build and Publish Node Repositories
+
+on: 
+  workflow_call:
+    known_repositories:
+        description: "repositories, that are known in the datavisyn eco-system"
+        required: true
+        type: String
+
+jobs:
+  read-repositories:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2       
+      - name: echo inputs
+        run: |
+          echo ${{inputs.known_repositories}}
+      - name: check inputs
+        run: |
+          echo "heck inputs"         
+      - name: read known repos
+        run: |
+          echo "read known repos"          
+      - name: checkout Repo
+        run: |
+          echo "checkout repo"
+      - name: create release branch
+        run: |
+          echo "create release branch"                  
+      - name: changes for release
+        run: |
+          echo "changes for release" 
+      - name: push branch
+        run: |
+          echo "push branch"
+      - name: create release notes
+        run: |
+          echo "create release notes"
+      - name: create pr
+        run: |
+          echo "create pr"           
+      - name: merge pr
+        run: |
+          echo "merge pr"
+      - name: get master branch
+        run: |
+          echo "get master branch"
+      - name: create release and tag
+        run: |
+          echo "create release and tag"
+      - name: merge master to develop
+        run: |
+          echo "merge master to develop"
+      - name: prepare develop
+        run: |
+          echo "prepare develop"
+      - name: push develop
+        run: |
+          echo "push develop" 
