@@ -2,10 +2,11 @@ name: Build and Publish Node Repositories
 
 on: 
   workflow_call:
-    known_repositories:
-        description: "repositories, that are known in the datavisyn eco-system"
-        required: true
-        type: String
+    inputs:
+      known_repositories:
+          description: "repositories, that are known in the datavisyn eco-system"
+          required: true
+          type: String
 
 jobs:
   read-repositories:
