@@ -1,4 +1,4 @@
-name: Build and Publish Node Repositories
+name: Release Repository
 
 on: 
   workflow_call:
@@ -9,16 +9,16 @@ on:
         type: string
 
 jobs:
-  read-repositories:
+  release-repository:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2       
       - name: echo inputs
         run: |
-          echo ${{inputs.known_repositories}}
+          echo ${{ inputs.known_repositories }}
       - name: check inputs
         run: |
-          echo "heck inputs"         
+          echo "check inputs"         
       - name: read known repos
         run: |
           echo "read known repos"          
