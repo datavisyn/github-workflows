@@ -4,9 +4,9 @@ on:
   workflow_call:
     inputs:
       known_repositories:
-          description: "repositories, that are known in the datavisyn eco-system"
-          required: true
-          type: String
+        description: "repositories, that are known in the datavisyn eco-system"
+        required: true
+        type: string
 
 jobs:
   read-repositories:
