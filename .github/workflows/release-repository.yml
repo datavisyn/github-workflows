@@ -32,6 +32,7 @@ jobs:
           echo ${{ steps.checked-inputs.outputs.repository }}
       - uses: octokit/request-action@v2.x
         id: get_latest_release
+        continue-on-error: true
         name: get latest release
         with:
           route: GET /repos/{owner}/{repo}/releases/latest
@@ -40,6 +41,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - run: "latest release: ${{ steps.get_latest_release.outputs.data }}"
+        if: ${{ success() }} 
       - name: "no release"
         if: ${{ failure() }} 
         run: "no release found. Request failed with status ${{ steps.get_latest_release.outputs.status }}"                
