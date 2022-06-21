@@ -17,14 +17,10 @@ jobs:
         name: echo inputs
         run: |
           echo $KNOWN_REPOSITORIES
-          echo ${{ github.event.repository.name }}
+          echo ${{ github.repository }}
           REPOSITORY=${{ github.event.repository.name }}
-          echo $REPOSITORY
-          echo $KNOWN_REPOSITORIES | jq '.'
           CHECKED_KNOWN_REPOS="$(echo $KNOWN_REPOSITORIES | jq '.')"
           CHECKED_REPOSITORY="$(echo $KNOWN_REPOSITORIES | jq --arg var $REPOSITORY '.[$var]')"
-          echo $CHECKED_KNOWN_REPOS
-          echo $CHECKED_REPOSITORY
           echo ::set-output name=known_repositories::${CHECKED_KNOWN_REPOS}
           echo ::set-output name=repository::${CHECKED_REPOSITORY}
         env:
@@ -33,7 +29,16 @@ jobs:
         run: |
           echo "check repository"
           echo ${{ steps.checked-inputs.outputs.known_repositories }}
-          echo ${{ steps.checked-inputs.outputs.repository }}        
+          echo ${{ steps.checked-inputs.outputs.repository }}
+      - uses: octokit/request-action@v2.x
+        id: get_latest_release
+        with:
+          route: GET /repos/{owner}/{repo}/releases/latest
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - run: "echo latest release: ${{ steps.get_latest_release.outputs.data }}"                  
       - name: read known repos
         run: |
           echo "read known repos"          
