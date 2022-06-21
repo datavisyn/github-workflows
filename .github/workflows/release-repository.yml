@@ -16,8 +16,8 @@ jobs:
       - name: echo inputs
         run: |
           echo $known_repositories
-          echo $known_repositories | jq '.lineup'
-          echo "${{ fromJson(inputs.known_repositories).lineup }}"
+          echo $known_repositories | jq '.tdp_core'
+          echo "${{ fromJson(inputs.known_repositories).tdp_core }}"
         env:
           known_repositories: ${{ inputs.known_repositories}}  
       - name: check inputs
