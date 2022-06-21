@@ -15,8 +15,11 @@ jobs:
       - uses: actions/checkout@v2       
       - name: echo inputs
         run: |
-          echo "${{ inputs.known_repositories }}"
-          echo "${{ fromJson(inputs.known_repositories) }}"
+          echo $known_repositories
+          echo $known_repositories | jq '.lineup'
+          echo "${{ fromJson(inputs.known_repositories).lineup }}"
+        env:
+          known_repositories: ${{ inputs.known_repositories}}  
       - name: check inputs
         run: |
           echo "check inputs"         
