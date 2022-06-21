@@ -26,6 +26,7 @@ jobs:
           echo $CHECKED_REPOSITORY
           echo ::set-output name=known_repositories::${CHECKED_KNOWN_REPOS}
           echo ::set-output name=repository::${CHECKED_REPOSITORY}
+          exit 1
         env:
           KNOWN_REPOSITORIES: ${{ inputs.known_repositories}}  
        
