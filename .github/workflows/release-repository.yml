@@ -39,9 +39,10 @@ jobs:
           repo: ${{ github.event.repository.name }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      - run: "echo latest release: ${{ steps.get_latest_release.outputs.data }}"
-      - name: "Release cound not be found. Request failed with status ${{ steps.get_release.outputs.status }}"
-        if: ${{ failure() }}                        
+      - run: "latest release: ${{ steps.get_latest_release.outputs.data }}"
+      - name: "no release"
+        if: ${{ failure() }} 
+        run: "no release found. Request failed with status ${{ steps.get_latest_release.outputs.status }}"                
       - name: read known repos
         run: |
           echo "read known repos"          
