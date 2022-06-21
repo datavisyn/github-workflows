@@ -32,6 +32,7 @@ jobs:
           echo ${{ steps.checked-inputs.outputs.repository }}
       - uses: octokit/request-action@v2.x
         id: get_latest_release
+        name: get latest release
         with:
           route: GET /repos/{owner}/{repo}/releases/latest
           owner: ${{ github.repository_owner }}
