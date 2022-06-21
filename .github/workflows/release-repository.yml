@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2       
-      - id: checked_inputs
+      - id: checked-inputs
         name: echo inputs
         run: |
           echo $KNOWN_REPOSITORIES
@@ -22,14 +22,18 @@ jobs:
           echo $REPOSITORY
           echo $KNOWN_REPOSITORIES | jq '.'
           CHECKED_KNOWN_REPOS="$(echo $KNOWN_REPOSITORIES | jq '.')"
-          CHECKED_REPOSITORY=$KNOWN_REPOSITORIES | jq --arg var $REPOSITORY '.[$var]'
+          CHECKED_REPOSITORY="$(echo $KNOWN_REPOSITORIES | jq --arg var $REPOSITORY '.[$var]')"
           echo $CHECKED_KNOWN_REPOS
           echo $CHECKED_REPOSITORY
           echo ::set-output name=known_repositories::${CHECKED_KNOWN_REPOS}
           echo ::set-output name=repository::${CHECKED_REPOSITORY}
         env:
           KNOWN_REPOSITORIES: ${{ inputs.known_repositories}}  
-       
+      - name: check repository
+        run: |
+          echo "check repository"
+          echo ${{ steps.checked-inputs.outputs.known_repositories }}
+          echo ${{ steps.checked-inputs.outputs.repository }}        
       - name: read known repos
         run: |
           echo "read known repos"          
