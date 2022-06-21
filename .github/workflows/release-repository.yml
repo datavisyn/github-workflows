@@ -13,16 +13,20 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2       
-      - name: echo inputs
+      - id: checked_inputs
+        name: echo inputs
         run: |
           echo $known_repositories
-          echo $known_repositories | jq '.tdp_core'
-          echo "${{ fromJson(inputs.known_repositories).tdp_core }}"
+          echo ${{ github.event.repository.name }}
+          $CHECKED_KNOWN_REPOS=$known_repositories | jq '.'
+          $CHECKED_REPOSITORY=$known_repositories | jq '.${{ github.event.repository.name }}'
+          echo $CHECKED_KNOWN_REPOS
+          echo $CHECKED_REPOSITORY
+          echo ::set-output name=known_repositories::${CHECKED_KNOWN_REPOS}
+          echo ::set-output name=repository::${CHECKED_REPOSITORY}
         env:
           known_repositories: ${{ inputs.known_repositories}}  
-      - name: check inputs
-        run: |
-          echo "check inputs"         
+       
       - name: read known repos
         run: |
           echo "read known repos"          
