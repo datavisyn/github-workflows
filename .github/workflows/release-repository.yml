@@ -20,13 +20,13 @@ jobs:
           echo ${{ github.event.repository.name }}
           REPOSITORY=${{ github.event.repository.name }}
           echo $REPOSITORY
-          CHECKED_KNOWN_REPOS=$KNOWN_REPOSITORIES | jq '.'
+          echo $KNOWN_REPOSITORIES | jq '.'
+          CHECKED_KNOWN_REPOS="$(echo $KNOWN_REPOSITORIES | jq '.')"
           CHECKED_REPOSITORY=$KNOWN_REPOSITORIES | jq --arg var $REPOSITORY '.[$var]'
           echo $CHECKED_KNOWN_REPOS
           echo $CHECKED_REPOSITORY
           echo ::set-output name=known_repositories::${CHECKED_KNOWN_REPOS}
           echo ::set-output name=repository::${CHECKED_REPOSITORY}
-          exit 1
         env:
           KNOWN_REPOSITORIES: ${{ inputs.known_repositories}}  
        
