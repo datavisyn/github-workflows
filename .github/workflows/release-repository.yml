@@ -16,16 +16,18 @@ jobs:
       - id: checked_inputs
         name: echo inputs
         run: |
-          echo $known_repositories
+          echo $KNOWN_REPOSITORIES
           echo ${{ github.event.repository.name }}
-          $CHECKED_KNOWN_REPOS=$known_repositories | jq '.'
-          $CHECKED_REPOSITORY=$known_repositories | jq --arg kt ${{ github.event.repository.name }} '.$kt'
+          REPOSITORY=${{ github.event.repository.name }}
+          echo $REPOSITORY
+          CHECKED_KNOWN_REPOS=$KNOWN_REPOSITORIES | jq '.'
+          CHECKED_REPOSITORY=$KNOWN_REPOSITORIES | jq --arg var $REPOSITORY '.[$var]'
           echo $CHECKED_KNOWN_REPOS
           echo $CHECKED_REPOSITORY
           echo ::set-output name=known_repositories::${CHECKED_KNOWN_REPOS}
           echo ::set-output name=repository::${CHECKED_REPOSITORY}
         env:
-          known_repositories: ${{ inputs.known_repositories}}  
+          KNOWN_REPOSITORIES: ${{ inputs.known_repositories}}  
        
       - name: read known repos
         run: |
