@@ -40,21 +40,35 @@ jobs:
           repo: ${{ github.event.repository.name }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      - run: |
+      - name: check version
+        id: check_version
+        if: ${{ steps.get_latest_release.outputs.status == 200 }}
+        run: |
+          RELEASE_VERSION="$(echo ${{ steps.checked-inputs.outputs.repository }} | jq '.version')"
           echo "latest release: ${{ steps.get_latest_release.outputs.data }}"
-          echo "status: ${{ steps.get_latest_release.outputs.status }}"                
-      - name: read known repos
-        run: |
-          echo "read known repos"          
-      - name: checkout Repo
-        run: |
-          echo "checkout repo"
+          echo "status: ${{ steps.get_latest_release.outputs.status }}"
+          echo "release version: $RELEASE_VERSION"
+          if [$RELEASE_VERSION == ${{ fromJson(steps.get_latest_release.outputs.data).tag_name }}]; then
+            echo "nothing todo!"
+            exit 1
+          echo ::set-output name=release_version::${RELEASE_VERSION}
+      - name: error handling
+        if: ${{ steps.get_latest_release.outputs.status != 404 }}
+        run: exit 1              
       - name: create release branch
         run: |
-          echo "create release branch"                  
+          echo "create release branch"
+          git checkout develop
+          git checkout -b release/${{ steps.check_version.outputs.release_version }}               
       - name: changes for release
         run: |
-          echo "changes for release" 
+          for row in $(echo "{{ steps.checked-inputs.outputs.known_repositories}}" | jq -r '.[]); do
+          _jq() {
+            echo ${row} | jq -r ${1}
+          }
+          echo $(_jq '.name')
+          done
+
       - name: push branch
         run: |
           echo "push branch"
