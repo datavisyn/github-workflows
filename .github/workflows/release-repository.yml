@@ -63,11 +63,8 @@ jobs:
           git checkout -b release/${{ steps.checked-inputs.outputs.release_version }}               
       - name: changes for release
         run: |
-          for row in $(echo "{{ steps.checked-inputs.outputs.known_repositories}}" | jq -r '.[]); do
-          _jq() {
-            echo ${row} | jq -r ${1}
-          }
-          echo $(_jq '.name')
+          for row in $(echo "${{ steps.checked-inputs.outputs.known_repositories}}" | jq -r '.[]); do
+            echo ${row}
           done
 
       - name: push branch
