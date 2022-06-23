@@ -21,8 +21,10 @@ jobs:
           REPOSITORY=${{ github.event.repository.name }}
           CHECKED_KNOWN_REPOS="$(echo $KNOWN_REPOSITORIES | jq '.')"
           CHECKED_REPOSITORY="$(echo $KNOWN_REPOSITORIES | jq --arg var $REPOSITORY '.[$var]')"
+          RELEASE_VERSION="$(echo $CHECKED_REPOSITORY | jq '.version')"
           echo ::set-output name=known_repositories::${CHECKED_KNOWN_REPOS}
           echo ::set-output name=repository::${CHECKED_REPOSITORY}
+          echo ::set-output name=release_version::${RELEASE_VERSION}
         env:
           KNOWN_REPOSITORIES: ${{ inputs.known_repositories}}  
       - name: check repository
@@ -30,6 +32,7 @@ jobs:
           echo "check repository"
           echo ${{ steps.checked-inputs.outputs.known_repositories }}
           echo ${{ steps.checked-inputs.outputs.repository }}
+          echo ${{ steps.checked-inputs.outputs.release_version }}
       - uses: octokit/request-action@v2.x
         id: get_latest_release
         continue-on-error: true
@@ -44,14 +47,12 @@ jobs:
         id: check_version
         if: ${{ steps.get_latest_release.outputs.status == 200 }}
         run: |
-          RELEASE_VERSION="$(echo ${{ steps.checked-inputs.outputs.repository }} | jq '.version')"
           echo "latest release: ${{ steps.get_latest_release.outputs.data }}"
           echo "status: ${{ steps.get_latest_release.outputs.status }}"
-          echo "release version: $RELEASE_VERSION"
-          if [$RELEASE_VERSION == ${{ fromJson(steps.get_latest_release.outputs.data).tag_name }}]; then
+          echo "release version: ${{ steps.checked-inputs.outputs.release_version }}"
+          if [${{ steps.checked-inputs.outputs.release_version }} == ${{ fromJson(steps.get_latest_release.outputs.data).tag_name }}]; then
             echo "nothing todo!"
             exit 1
-          echo ::set-output name=release_version::${RELEASE_VERSION}
       - name: error handling
         if: ${{ steps.get_latest_release.outputs.status != 404 }}
         run: exit 1              
@@ -59,7 +60,7 @@ jobs:
         run: |
           echo "create release branch"
           git checkout develop
-          git checkout -b release/${{ steps.check_version.outputs.release_version }}               
+          git checkout -b release/${{ steps.checked-inputs.outputs.release_version }}               
       - name: changes for release
         run: |
           for row in $(echo "{{ steps.checked-inputs.outputs.known_repositories}}" | jq -r '.[]); do
