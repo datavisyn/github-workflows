@@ -25,7 +25,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           token: ${{secrets.DATAVISYN_GITHUB_TOKEN}}
-          persist-credentials: false   
       - name: Set up node version ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
@@ -37,8 +36,6 @@ jobs:
           npm -v
       - name: Install npm dependencies
         run: |
-          git config --global url."https://${{ secrets.DATAVISYN_GITHUB_TOKEN }}@github.com/".insteadOf ssh://git@github.com/
-          git config --global url."https://${{ secrets.DATAVISYN_GITHUB_TOKEN }}@github.com/".insteadOf git@github.com:
           git config --global url."https://".insteadOf git://
           git config --list
           npm install
