@@ -23,6 +23,8 @@ jobs:
         python-version: ["3.10"]
     steps:      
       - uses: actions/checkout@v3
+        with:
+          token: ${{secrets.DATAVISYN_GITHUB_TOKEN}}
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
@@ -33,7 +35,6 @@ jobs:
           pip --version
       - name: Install python dependencies
         run: |
-          git config --global url."https://${{ secrets.DATAVISYN_GITHUB_TOKEN }}@github".insteadOf https://github
           make develop
       - name: Show installed pip packages
         run: pip list || true
