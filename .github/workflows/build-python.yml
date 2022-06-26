@@ -8,19 +8,14 @@ on:
         default: false
         required: true
         type: boolean
-      pypi_repository:
-        description: "pypi registry to publish to"
-        default: "https://pypi.org/pypi"
-        type: string
-      pypi_username:
-        description: "pypi username"
-        default: "testUser"
-        type: string
-    secrets:
-      pypi_password:
-        description: "password of pypi registry"
+
+env: 
+  NPM_REGISTRY: "https://registry.npmjs.org/"
+  PYPI_REGISTRY: "https://pypi.org/pypi"
+  PYPI_USERNAME: "test"
+
 jobs:
-  build:
+  build-python:
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -38,16 +33,14 @@ jobs:
           pip --version
       - name: Install python dependencies
         run: |
+          git config --global url."https://${{ secrets.DATAVISYN_GITHUB_TOKEN }}@github".insteadOf https://github
           make develop
       - name: Show installed pip packages
-        run: |
-          pip list || true
+        run: pip list || true
       - name: Linting
-        run: |
-          make lint check-format                  
+        run: make lint check-format                  
       - name: Run tests
-        run: |
-          make test
+        run: make test
       - name: publish to pip registry
         if: ${{ inputs.publish && inputs.publish != 'false' }}
         run: |
@@ -59,6 +52,6 @@ jobs:
 #          echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
 #          twine upload dist_python/*
         env: 
-          PYPI_REPOSITORY: ${{secrets.pypi_repository}}
-          PYPI_USERNAME: ${{secrets.pypi_username}}
-          PYPI_PASSWORD: ${{secrets.pypi_password}}        
+          PYPI_REPOSITORY: ${{env.PYPI_REGISTRY}}
+          PYPI_USERNAME: ${{env.PYPI_USERNAME}}
+          PYPI_PASSWORD: ${{secrets.PYPI_PASSWORD}}       
