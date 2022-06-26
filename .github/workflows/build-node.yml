@@ -21,6 +21,8 @@ jobs:
         node-version: ["14.19"]
     steps:      
       - uses: actions/checkout@v3
+        with:
+          token: ${{secrets.DATAVISYN_GITHUB_TOKEN}}
       - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
@@ -31,11 +33,7 @@ jobs:
           node -v
           npm -v
       - name: Install npm dependencies
-        run: |
-          git config --global url."https://${{secrets.DATAVISYN_GITHUB_TOKEN}}:x-oauth-basic@github.com/".insteadOf git@github.com:
-          git config --global url."https://".insteadOf git+ssh://
-          git config --global url."https://".insteadOf git://
-          npm install
+        run: npm install
       - name: Show installed npm dependencies
         run: npm list --depth=1 || true
       - name: Build
