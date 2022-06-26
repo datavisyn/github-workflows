@@ -37,6 +37,8 @@ jobs:
           make develop
       - name: Show installed pip packages
         run: pip list || true
+      - name: Show content
+        run: ls -lah       
       - name: Linting
         run: make lint check-format                  
       - name: Run tests
