@@ -16,8 +16,6 @@ jobs:
       - id: checked-inputs
         name: echo inputs
         run: |
-          echo $KNOWN_REPOSITORIES
-          echo ${{ github.repository }}
           REPOSITORY=${{ github.event.repository.name }}
           CHECKED_KNOWN_REPOS="$(echo $KNOWN_REPOSITORIES | jq '.')"
           CHECKED_REPOSITORY="$(echo $KNOWN_REPOSITORIES | jq --arg var $REPOSITORY '.[$var]')"
