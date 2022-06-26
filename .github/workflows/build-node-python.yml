@@ -36,7 +36,7 @@ jobs:
           npm -v
       - name: Install npm dependencies
         run: |
-          git config --global url."https://".insteadOf git://
+          git config --global url.https://github.com/.insteadOf ssh://git@github.com/
           git config --list
           npm install
       - name: Show installed npm dependencies
