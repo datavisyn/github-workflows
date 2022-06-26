@@ -21,14 +21,12 @@ jobs:
         node-version: ["14.19"]
     steps:      
       - uses: actions/checkout@v3
-        with:
-          token: ${{secrets.DATAVISYN_GITHUB_TOKEN}}
-      - name: Set up Node.js ${{ matrix.node-version }}
+      - name: Set up node version ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           registry-url: ${{ env.NPM_REGISTRY }}
-      - name: Show Node.js and npm version
+      - name: Show node and npm version
         run: |
           node -v
           npm -v
@@ -40,7 +38,7 @@ jobs:
         run: npm list --depth=1 || true
       - name: Build
         run: npm run dist
-      - name: publish to npm
+      - name: Publish to npm
         if: ${{ inputs.publish && inputs.publish != 'false' }}
         run: echo "publish"
         #run: npm publish

@@ -23,29 +23,30 @@ jobs:
         node-version: ["14.19"]
     steps:      
       - uses: actions/checkout@v3
-      - name: Set up Node.js ${{ matrix.node-version }}
+      - name: Set up node version ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           registry-url: ${{ env.NPM_REGISTRY }}
-      - name: Show Node.js and npm version
+      - name: Show node and npm version
         run: |
           node -v
           npm -v
       - name: Install npm dependencies
         run: |
-          git config --global url."https://${{ secrets.DATAVISYN_GITHUB_TOKEN }}@github".insteadOf https://github
+          git config --global url.https://${{ secrets.DATAVISYN_GITHUB_TOKEN }}@github.com/.insteadOf ssh://git@github.com/
           npm install
       - name: Show installed npm dependencies
         run: npm list --depth=1 || true
       - name: Build
         run: npm run dist
-      - name: publish to npm
+      - name: Publish to npm
         if: ${{ inputs.publish && inputs.publish != 'false' }}
         run: echo "publish"
         #run: npm publish
         env: 
           NODE_AUTH_TOKEN: ${{secrets.DATAVISYN_GITHUB_TOKEN}}
+jobs:
   build-python:
     runs-on: ubuntu-20.04
     strategy:
@@ -54,7 +55,7 @@ jobs:
         python-version: ["3.10"]
     steps:      
       - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
@@ -72,7 +73,7 @@ jobs:
         run: make lint check-format                  
       - name: Run tests
         run: make test
-      - name: publish to pip registry
+      - name: Publish to pip registry
         if: ${{ inputs.publish && inputs.publish != 'false' }}
         run: |
            echo "publish"
@@ -85,4 +86,4 @@ jobs:
         env: 
           PYPI_REPOSITORY: ${{env.PYPI_REGISTRY}}
           PYPI_USERNAME: ${{env.PYPI_USERNAME}}
-          PYPI_PASSWORD: ${{secrets.PYPI_PASSWORD}}        
+          PYPI_PASSWORD: ${{secrets.PYPI_PASSWORD}} 
