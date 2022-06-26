@@ -37,6 +37,7 @@ jobs:
       - name: Install npm dependencies
         run: |
           git config --global url."https://${{ secrets.DATAVISYN_GITHUB_TOKEN }}@github.com/".insteadOf ssh://git@github.com/
+          git config --global url."https://${{ secrets.DATAVISYN_GITHUB_TOKEN }}@github.com/".insteadOf git@github.com:
           git config --global url."https://".insteadOf git://
           git config --list
           npm install
