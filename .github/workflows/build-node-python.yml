@@ -46,7 +46,6 @@ jobs:
         #run: npm publish
         env: 
           NODE_AUTH_TOKEN: ${{secrets.DATAVISYN_GITHUB_TOKEN}}
-jobs:
   build-python:
     runs-on: ubuntu-20.04
     strategy:
