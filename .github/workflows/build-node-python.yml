@@ -23,6 +23,8 @@ jobs:
         node-version: ["14.19"]
     steps:      
       - uses: actions/checkout@v3
+        with:
+          token: ${{secrets.DATAVISYN_GITHUB_TOKEN}}      
       - name: Set up node version ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
