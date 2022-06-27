@@ -61,10 +61,22 @@ jobs:
           git checkout -b release/${{ steps.checked-inputs.outputs.release_version }}               
       - name: changes for release
         run: |
-          for row in $(echo "${{ steps.checked-inputs.outputs.known_repositories}}" | jq -r '.[]); do
-            echo ${row}
+          readarray -t my_array < <(echo $KNOWN_REPOSITORIES | jq -rc '. | keys[]')
+          for repository in "${my_array[@]}"; do
+            npm_version=$(jq -r --arg var $repository '.[$var].npm_version' ./release/repositories.json)
+            npm_develop=$(jq -r --arg var $repository '.[$var].npm_develop' ./release/repositories.json)
+            pip_version=$(jq -r --arg var $repository '.[$var].pip_version' ./release/repositories.json)
+            pip_develop=$(jq -r --arg var $repository '.[$var].pip_develop' ./release/repositories.json)
+            echo $repository: $npm_version $npm_develop $pip_version $pip_develop
+            if [[ $npm_version != null && $npm_develop != null ]] ; then
+              sed -i "s|\"$repository\": \"$npm_develop\"|\"$repository\": \"$npm_version\"|gI" ./package.json
+            fi
+            if [[ $pip_version != null && $pip_develop != null ]] ; then
+              sed -i "s|$pip_version|$pip_develop|gI" ./requirements.txt
+            fi
           done
-
+          cat ./package.json
+          cat ./requirements.txt       
       - name: push branch
         run: |
           echo "push branch"
