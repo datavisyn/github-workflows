@@ -11,9 +11,14 @@ on:
 env: 
   NPM_REGISTRY: "https://registry.npmjs.org/"
 
+permissions:
+  contents: read
 
 jobs:
   build-node:
+    permissions:
+      id-token: write
+      contents: read  
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
