@@ -36,6 +36,7 @@ jobs:
         run: |
           REPOSITORY=${{ github.event.repository.name }}
           CHECKED_KNOWN_REPOS="$(echo $KNOWN_REPOSITORIES | jq '.')"
+          CHECKED_KNOWN_REPOS="${CHECKED_KNOWN_REPOS//$'\n'/''}"
           CHECKED_REPOSITORY="$(echo $KNOWN_REPOSITORIES | jq --arg var $REPOSITORY '.[$var]')"
           RELEASE_VERSION="$(echo $CHECKED_REPOSITORY | jq '.version')"
           echo ::set-output name=known_repositories::${CHECKED_KNOWN_REPOS}
