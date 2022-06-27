@@ -14,8 +14,6 @@ env:
   PYPI_REGISTRY: "https://pypi.org/pypi"
   PYPI_USERNAME: "datavisyn"
 
-permissions:
-  contents: read
 
 jobs:
   build-node:
