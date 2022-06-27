@@ -96,6 +96,7 @@ jobs:
               sed -i "s|$pip_develop|$pip_version|gI" ./requirements.txt
             fi
           done
+          sed -E -i 's/(^\s*"version": ")(.*?)(",$)/\${{ steps.checked-inputs.outputs.release_version }}\3/' ./package.json
           cat ./package.json
           cat ./requirements.txt
         env:
