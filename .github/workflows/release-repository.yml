@@ -81,7 +81,7 @@ jobs:
           git checkout -b release/${{ steps.checked-inputs.outputs.release_version }}               
       - name: changes for release
         run: |
-          echo ${{ fromJson(steps.checked-inputs.outputs.known_repositories) }}  
+          echo "${{ fromJson(steps.checked-inputs.outputs.known_repositories).lineupjs }}"  
           echo $REPOSITORIES
           echo $REPOSITORIES.lineupjs
           for repository in "${!REPOSITORIES[@]}"; do
