@@ -81,10 +81,10 @@ jobs:
           git checkout -b release/${{ steps.checked-inputs.outputs.release_version }}               
       - name: changes for release
         run: |
-          $REPOSITORIES=$(echo '${{ steps.checked-inputs.outputs.known_repositories }}' | jq '.')  
+          $REPOSITORIES=${{ fromJson(steps.checked-inputs.outputs.known_repositories) }}  
           echo $REPOSITORIES
-          readarray -t my_array < <(echo $REPOSITORIES | jq -rc '. | keys[]')
-          for repository in "${my_array[@]}"; do
+          echo $REPOSITORIES.lineupjs
+          for repository in "${!REPOSITORIES[@]}"; do
             npm_version=$(echo $REPOSITORIES | jq -r --arg var $repository '.[$var].npm_version')
             npm_develop=$(echo $REPOSITORIES | jq -r --arg var $repository '.[$var].npm_develop')
             pip_version=$(echo $REPOSITORIES | jq -r --arg var $repository '.[$var].pip_version')
