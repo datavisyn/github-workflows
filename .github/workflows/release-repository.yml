@@ -35,6 +35,7 @@ jobs:
         name: echo inputs
         run: |
           REPOSITORY=${{ github.event.repository.name }}
+          echo $KNOWN_REPOSITORIES
           CHECKED_KNOWN_REPOS="$(echo $KNOWN_REPOSITORIES | jq '.')"
           CHECKED_KNOWN_REPOS="${CHECKED_KNOWN_REPOS//$'\n'/''}"
           CHECKED_REPOSITORY="$(echo $KNOWN_REPOSITORIES | jq --arg var $REPOSITORY '.[$var]')"
@@ -80,7 +81,9 @@ jobs:
           git checkout -b release/${{ steps.checked-inputs.outputs.release_version }}               
       - name: changes for release
         run: |
-          readarray -t my_array < <(echo ${{ steps.checked-inputs.outputs.known_repositories }} | jq -rc '. | keys[]')
+          REPOSITORIES=echo ${{ steps.checked-inputs.outputs.known_repositories }} | jq '.'
+          echo $REPOSITORIES
+          readarray -t my_array < <(echo $REPOSITORIES | jq -rc '. | keys[]')
           for repository in "${my_array[@]}"; do
             npm_version=$(jq -r --arg var $repository '.[$var].npm_version' ./release/repositories.json)
             npm_develop=$(jq -r --arg var $repository '.[$var].npm_develop' ./release/repositories.json)
