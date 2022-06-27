@@ -94,4 +94,4 @@ jobs:
         env: 
           PYPI_REPOSITORY: ${{ env.PYPI_REGISTRY }}
           PYPI_USERNAME: ${{ env.PYPI_USERNAME }}
-          PYPI_PASSWORD: ${{ ecrets.PYPI_PASSWORD }} 
+          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }} 
