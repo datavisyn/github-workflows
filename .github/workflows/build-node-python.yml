@@ -24,6 +24,8 @@ jobs:
         node-version: ["14.19"]
     steps:      
       - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}      
       - name: Set up node version ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
@@ -49,7 +51,7 @@ jobs:
         run: echo "publish"
         #run: npm publish
         env: 
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
   build-python:
     runs-on: ubuntu-20.04
     strategy:
@@ -90,6 +92,6 @@ jobs:
 #          echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
 #          twine upload dist_python/*
         env: 
-          PYPI_REPOSITORY: ${{env.PYPI_REGISTRY}}
-          PYPI_USERNAME: ${{env.PYPI_USERNAME}}
-          PYPI_PASSWORD: ${{secrets.PYPI_PASSWORD}} 
+          PYPI_REPOSITORY: ${{ env.PYPI_REGISTRY }}
+          PYPI_USERNAME: ${{ env.PYPI_USERNAME }}
+          PYPI_PASSWORD: ${{ ecrets.PYPI_PASSWORD }} 
