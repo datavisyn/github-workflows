@@ -27,7 +27,7 @@ jobs:
       - name: Dump matrix context
         run: echo '${{ toJSON(matrix) }}'
       - name: Wrong actor
-        if: ${{ github.actor != 'datavisyn-bot' }}
+        if: ${{ github.actor != 'datavisyn-bot' && github.actor != 'anita-steiner' }}
         run: |
           echo 'Wrong actor!'
           exit 1
