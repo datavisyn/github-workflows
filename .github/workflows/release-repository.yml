@@ -81,14 +81,14 @@ jobs:
           git checkout -b release/${{ steps.checked-inputs.outputs.release_version }}               
       - name: changes for release
         run: |
-          echo '${{ steps.checked-inputs.outputs.known_repositories }}' | jq '.'  
+          $REPOSITORIES=$(echo '${{ steps.checked-inputs.outputs.known_repositories }}' | jq '.')  
           echo $REPOSITORIES
           readarray -t my_array < <(echo $REPOSITORIES | jq -rc '. | keys[]')
           for repository in "${my_array[@]}"; do
-            npm_version=$(jq -r --arg var $repository '.[$var].npm_version' ./release/repositories.json)
-            npm_develop=$(jq -r --arg var $repository '.[$var].npm_develop' ./release/repositories.json)
-            pip_version=$(jq -r --arg var $repository '.[$var].pip_version' ./release/repositories.json)
-            pip_develop=$(jq -r --arg var $repository '.[$var].pip_develop' ./release/repositories.json)
+            npm_version=$(echo $REPOSITORIES | jq -r --arg var $repository '.[$var].npm_version')
+            npm_develop=$(echo $REPOSITORIES | jq -r --arg var $repository '.[$var].npm_develop')
+            pip_version=$(echo $REPOSITORIES | jq -r --arg var $repository '.[$var].pip_version')
+            pip_develop=$(echo $REPOSITORIES | jq -r --arg var $repository '.[$var].pip_develop')
             echo $repository: $npm_version $npm_develop $pip_version $pip_develop
             if [[ $npm_version != null && $npm_develop != null ]] ; then
               sed -i "s|\"$repository\": \"$npm_develop\"|\"$repository\": \"$npm_version\"|gI" ./package.json
