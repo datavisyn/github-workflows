@@ -31,10 +31,13 @@ jobs:
         run: |
           python --version
           pip --version
+      - name: Git config
+        if: "${{ env.GITHUB_TOKEN != '' }}"
+        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github".insteadOf https://github
+        env: 
+          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}           
       - name: Install python dependencies
-        run: |
-          git config --global url."https://${{ secrets.DATAVISYN_GITHUB_TOKEN }}@github".insteadOf https://github
-          make develop
+        run: make develop
       - name: Show installed pip packages
         run: pip list || true
       - name: Linting
