@@ -81,7 +81,7 @@ jobs:
           git checkout -b release/${{ steps.checked-inputs.outputs.release_version }}               
       - name: changes for release
         run: |
-          REPOSITORIES=echo ${{ steps.checked-inputs.outputs.known_repositories }} | jq '.'
+          REPOSITORIES=$(echo ${{ steps.checked-inputs.outputs.known_repositories }} | jq '.')
           echo $REPOSITORIES
           readarray -t my_array < <(echo $REPOSITORIES | jq -rc '. | keys[]')
           for repository in "${my_array[@]}"; do
