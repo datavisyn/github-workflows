@@ -35,6 +35,8 @@ jobs:
         name: echo inputs
         run: |
           REPOSITORY=${{ github.event.repository.name }}
+          echo ${{ inputs.known_repositories }}
+          echo ${{ github.event.inputs }}
           echo $KNOWN_REPOSITORIES
           CHECKED_KNOWN_REPOS="$(echo $KNOWN_REPOSITORIES | jq '.')"
           CHECKED_KNOWN_REPOS="${CHECKED_KNOWN_REPOS//$'\n'/''}"
