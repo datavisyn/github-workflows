@@ -124,6 +124,10 @@ jobs:
           echo -e $README
           echo ::set-output name=readme::${README}
           echo ::set-output name=commits::${COMMIT_TITLES}
+      - name: setup git config
+        run: |
+          git config user.name "datavisyn-bot"
+          git config user.email "<>"          
       - name: push branch
         run: |
           echo "push branch" 
