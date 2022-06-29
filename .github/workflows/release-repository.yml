@@ -152,8 +152,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: |
-          "data: ${{ steps.create_release.outputs.data }}"
-          "status: ${{ steps.create_release.outputs.status }}"                 
+          echo "data: ${{ steps.create_release.outputs.data }}"
+          echo "status: ${{ steps.create_release.outputs.status }}"                 
       - name: merge pr
         run: |
           echo "merge pr"
