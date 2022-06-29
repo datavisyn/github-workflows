@@ -145,7 +145,7 @@ jobs:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
           title: "Release ${{ steps.checked_inputs.outputs.release_version }}"
-          body: "${{ steps.release_notes.outputs.readme }}"
+          body: '"${{ steps.release_notes.outputs.readme }}"'
           head: "release/${{ steps.checked_inputs.outputs.release_version }}"
           base: "master"
           draft: false
