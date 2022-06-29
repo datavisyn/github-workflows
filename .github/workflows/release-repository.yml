@@ -35,8 +35,6 @@ jobs:
         name: echo inputs
         run: |
           REPOSITORY=${{ github.event.repository.name }}
-          echo "${{ inputs.known_repositories }}"
-          echo "${{ github.event.inputs }}"
           echo $KNOWN_REPOSITORIES
           CHECKED_KNOWN_REPOS="$(echo $KNOWN_REPOSITORIES | jq '.')"
           CHECKED_KNOWN_REPOS="${CHECKED_KNOWN_REPOS//$'\n'/''}"
@@ -46,7 +44,7 @@ jobs:
           echo ::set-output name=repository::${CHECKED_REPOSITORY}
           echo ::set-output name=release_version::${RELEASE_VERSION}
         env:
-          KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }}  
+          KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }} # use github.event.inputs instead of inputs ?? 
       - name: check repository
         run: |
           echo "check repository"
@@ -103,7 +101,7 @@ jobs:
           cat ./package.json
           cat ./requirements.txt
         env:
-          KNOWN_REPOSITORIES: ${{ inputs.known_repositories}}  
+          KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }}  
 
       - name: push branch
         run: |
