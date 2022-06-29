@@ -99,15 +99,11 @@ jobs:
             fi
           done
           version=$(jq -r '.version' ./package.json)
-          sed -i "s|\"version\": \"$version\"|\"version\": \"${{ steps.checked_inputs.outputs.release_version }}\"|gI" ./package.json
+          sed -i "s|\"version\": \"$version\"|\"version\": \"c\"|gI" ./package.json
           cat ./package.json
           cat ./requirements.txt
         env:
           KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }}  
-
-      - name: push branch
-        run: |
-          echo "push branch"
       - name: create release notes
         id: release_notes
         run: |
@@ -128,11 +124,32 @@ jobs:
           echo -e $README
           echo ::set-output name=readme::${README}
           echo ::set-output name=commits::${COMMIT_TITLES}
+      - name: push branch
+        run: |
+          echo "push branch" 
+          git commit -am "Prepare release ${{ steps.checked_inputs.outputs.release_version }}"
+          git push origin release/${{ steps.checked_inputs.outputs.release_version }}
       - name: create pr
         run: |
           echo "create pr"
-          echo -e "readme: ${{ steps.get_latest_release.outputs.release_notes }}"
-          echo -e "commits: ${{ steps.get_latest_release.outputs.commits }}"         
+          echo -e "readme: ${{ steps.release_notes.outputs.readme }}"
+          echo -e "commits: ${{ steps.release_notes.outputs.commits }}"
+      - uses: octokit/request-action@v2.x
+        id: create_release
+        with:
+          route: POST /repos/{owner}/{repo}/pulls
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          title: "Release ${{ steps.checked_inputs.outputs.release_version }}"
+          body: ${{ steps.release_notes.outputs.readme }}
+          head: release/${{ steps.checked_inputs.outputs.release_version }}
+          base: "master"
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          "data: ${{ steps.create_release.outputs.data }}"
+          "status: ${{ steps.create_release.outputs.status }}"                 
       - name: merge pr
         run: |
           echo "merge pr"
