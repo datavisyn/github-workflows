@@ -41,7 +41,7 @@ jobs:
           CHECKED_KNOWN_REPOS="$(echo $KNOWN_REPOSITORIES | jq '.')"
           CHECKED_KNOWN_REPOS="${CHECKED_KNOWN_REPOS//$'\n'/''}"
           CHECKED_REPOSITORY="$(echo $KNOWN_REPOSITORIES | jq --arg var $REPOSITORY '.[$var]')"
-          RELEASE_VERSION="$(echo $CHECKED_REPOSITORY | jq '.version')"
+          RELEASE_VERSION="$(echo $CHECKED_REPOSITORY | jq -r '.version')"
           echo ::set-output name=known_repositories::${CHECKED_KNOWN_REPOS}
           echo ::set-output name=repository::${CHECKED_REPOSITORY}
           echo ::set-output name=release_version::${RELEASE_VERSION}
@@ -79,8 +79,8 @@ jobs:
       - name: create release branch
         run: |
           echo "create release branch"
-          git checkout develop
-          git checkout -b release/${{ steps.checked_inputs.outputs.release_version }}               
+          git checkout release/${{ steps.checked_inputs.outputs.release_version }}
+          # git checkout -b release/${{ steps.checked_inputs.outputs.release_version }}               
       - name: changes for release
         run: |
           REPOSITORIES="$(echo $KNOWN_REPOSITORIES | jq '.')"  
@@ -131,8 +131,8 @@ jobs:
       - name: push branch
         run: |
           echo "push branch" 
-          git commit -am "Prepare release ${{ steps.checked_inputs.outputs.release_version }}"
-          git push origin release/${{ steps.checked_inputs.outputs.release_version }}
+          # git commit -am "Prepare release ${{ steps.checked_inputs.outputs.release_version }}"
+          # git push origin release/${{ steps.checked_inputs.outputs.release_version }}
       - name: create pr
         run: |
           echo "create pr"
@@ -146,7 +146,7 @@ jobs:
           repo: ${{ github.event.repository.name }}
           title: "Release ${{ steps.checked_inputs.outputs.release_version }}"
           body: ${{ steps.release_notes.outputs.readme }}
-          head: release/${{ steps.checked_inputs.outputs.release_version }}
+          head: "release/${{ steps.checked_inputs.outputs.release_version }}"
           base: "master"
           draft: false
         env:
