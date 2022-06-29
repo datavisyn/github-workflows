@@ -31,8 +31,8 @@ jobs:
         run: |
           echo 'Wrong actor!'
           exit 1
-      - id: checked-inputs
-        name: echo inputs
+      - name: echo inputs
+        id: checked_inputs
         run: |
           REPOSITORY=${{ github.event.repository.name }}
           echo $KNOWN_REPOSITORIES
@@ -48,9 +48,9 @@ jobs:
       - name: check repository
         run: |
           echo "check repository"
-          echo ${{ steps.checked-inputs.outputs.known_repositories }}
-          echo ${{ steps.checked-inputs.outputs.repository }}
-          echo ${{ steps.checked-inputs.outputs.release_version }}
+          echo ${{ steps.checked_inputs.outputs.known_repositories }}
+          echo ${{ steps.checked_inputs.outputs.repository }}
+          echo ${{ steps.checked_inputs.outputs.release_version }}
       - uses: octokit/request-action@v2.x
         id: get_latest_release
         continue-on-error: true
@@ -67,8 +67,8 @@ jobs:
         run: |
           echo "latest release: ${{ steps.get_latest_release.outputs.data }}"
           echo "status: ${{ steps.get_latest_release.outputs.status }}"
-          echo "release version: ${{ steps.checked-inputs.outputs.release_version }}"
-          if [${{ steps.checked-inputs.outputs.release_version }} == ${{ fromJson(steps.get_latest_release.outputs.data).tag_name }}]; then
+          echo "release version: ${{ steps.checked_inputs.outputs.release_version }}"
+          if [${{ steps.checked_inputs.outputs.release_version }} == ${{ fromJson(steps.get_latest_release.outputs.data).tag_name }}]; then
             echo "nothing todo!"
             exit 1
       - name: error handling
@@ -78,7 +78,7 @@ jobs:
         run: |
           echo "create release branch"
           git checkout develop
-          git checkout -b release/${{ steps.checked-inputs.outputs.release_version }}               
+          git checkout -b release/${{ steps.checked_inputs.outputs.release_version }}               
       - name: changes for release
         run: |
           REPOSITORIES="$(echo $KNOWN_REPOSITORIES | jq '.')"  
@@ -97,7 +97,7 @@ jobs:
             fi
           done
           version=$(jq -r '.version' ./package.json)
-          sed -i "s|\"version\": \"$version\"|\"version\": \"${{ steps.checked-inputs.outputs.release_version }}\"|gI" ./package.json
+          sed -i "s|\"version\": \"$version\"|\"version\": \"${{ steps.checked_inputs.outputs.release_version }}\"|gI" ./package.json
           cat ./package.json
           cat ./requirements.txt
         env:
@@ -107,11 +107,30 @@ jobs:
         run: |
           echo "push branch"
       - name: create release notes
+        id: release_notes
         run: |
           echo "create release notes"
+          readarray -t my_array < <(git log 'origin/master..develop'  --pretty=format:%s)
+          README="## Release notes\n"
+          COMMIT_TITLES=""
+          for logs in "${my_array[@]}"; do
+            if [[ ${logs,,} != merge* && ${logs,,} != "prepare next dev"* ]];
+            then
+              COMMIT_TITLES="$COMMIT_TITLES\n* $logs"
+            fi  
+          done
+          README="$README$COMMIT_TITLES\n\n### Release dependencies first\n\nIn case of dependent visyn repositories follow dependency tree from the top.\n\n"
+          README="$README### 🏁 Finish line\n\n"
+          README="$README* [ ] Inform colleagues and customers about the release\n"
+          README="$README* [ ] Celebrate the new release 🥳"
+          echo -e $README
+          echo ::set-output name=readme::${README}
+          echo ::set-output name=commits::${COMMIT_TITLES}
       - name: create pr
         run: |
-          echo "create pr"           
+          echo "create pr"
+          echo -e "readme: ${{ steps.get_latest_release.outputs.release_notes }}"
+          echo -e "commits: ${{ steps.get_latest_release.outputs.commits }}"         
       - name: merge pr
         run: |
           echo "merge pr"
