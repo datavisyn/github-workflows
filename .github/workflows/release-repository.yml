@@ -134,7 +134,7 @@ jobs:
           # git commit -am "Prepare release ${{ steps.checked_inputs.outputs.release_version }}"
           # git push origin release/${{ steps.checked_inputs.outputs.release_version }}
       - name: trigger build        
-        uses: datavisyn/github-workflows/.github/actions/trigger-workflow-and-wait/action.yaml@develop
+        uses: datavisyn/github-workflows/.github/actions/trigger-workflow-and-wait/action.yml@develop
         with:
           owner: ${{ steps.release-repository.outputs.owner }}
           # repo:  ${{ matrix.repository }}
