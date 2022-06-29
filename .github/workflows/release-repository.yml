@@ -44,7 +44,7 @@ jobs:
           echo ::set-output name=repository::${CHECKED_REPOSITORY}
           echo ::set-output name=release_version::${RELEASE_VERSION}
         env:
-          KNOWN_REPOSITORIES: ${{ inputs.known_repositories}}  
+          KNOWN_REPOSITORIES: ${{ inputs.known_repositories }}  
       - name: check repository
         run: |
           echo "check repository"
