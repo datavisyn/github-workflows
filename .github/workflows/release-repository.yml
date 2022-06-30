@@ -194,47 +194,48 @@ jobs:
       #     git branch -d release/${{ steps.checked_inputs.outputs.release_version }}
       #     git push origin --delete release/${{ steps.checked_inputs.outputs.release_version }}
 
-      - name: trigger master build
-        id: trigger_build  
-        uses: datavisyn/github-action-trigger-workflow@v1
-        with:
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-          workflow_file_name: "build.yml"
-          ref: "master"
-          github_user: ${{ env.GITHUB_USER }}
-      - name: create release
-        id: create_release
-        uses: octokit/request-action@v2.x
-        with:
-          route: POST /repos/{owner}/{repo}/releases
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          tag_name: ${{ steps.checked_inputs.outputs.release_version }}
-          target_commitish: master
-          name: ${{ steps.checked_inputs.outputs.release_version }}
-          body: '"${{ steps.release_notes.outputs.commits }}"'
-          draft: false 
-          prerelease: false
-          generate_release_notes: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: check release status
-        if: ${{ steps.create_release.outputs.status != 201 }}
-        run: |
-          echo "something went wrong with the creation of the release"
-          exit 1                   
+      # - name: trigger master build
+      #   id: trigger_build  
+      #   uses: datavisyn/github-action-trigger-workflow@v1
+      #   with:
+      #     owner: ${{ github.repository_owner }}
+      #     repo: ${{ github.event.repository.name }}
+      #     github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+      #     workflow_file_name: "build.yml"
+      #     ref: "master"
+      #     github_user: ${{ env.GITHUB_USER }}
+      # - name: create release
+      #   id: create_release
+      #   uses: octokit/request-action@v2.x
+      #   with:
+      #     route: POST /repos/{owner}/{repo}/releases
+      #     owner: ${{ github.repository_owner }}
+      #     repo: ${{ github.event.repository.name }}
+      #     tag_name: ${{ steps.checked_inputs.outputs.release_version }}
+      #     target_commitish: master
+      #     name: ${{ steps.checked_inputs.outputs.release_version }}
+      #     body: '"${{ steps.release_notes.outputs.commits }}"'
+      #     draft: false 
+      #     prerelease: false
+      #     generate_release_notes: false
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: check release status
+      #   if: ${{ steps.create_release.outputs.status != 201 }}
+      #   run: |
+      #     echo "something went wrong with the creation of the release"
+      #     exit 1                   
       - name: git fetch
         run: |
           echo "get fetch"
           git fetch
           git checkout -t origin/master
-          git checkout -t origin/develop
+          git checkout develop
+          git pull
       - name: merge master to develop
         run: |
           echo "merge master to develop"
-          # git merge origin/master
+          git merge origin/master
       - name: prepare develop
         run: |
           REPOSITORIES="$(echo $KNOWN_REPOSITORIES | jq '.')"  
@@ -260,4 +261,6 @@ jobs:
           KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }}           
       - name: push develop
         run: |
-          echo "push develop" 
+          echo "push develop"
+          git commit -am "Prepare next development"
+          git push origin develop
