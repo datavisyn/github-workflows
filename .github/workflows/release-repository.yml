@@ -145,7 +145,7 @@ jobs:
           repo: ${{ github.event.repository.name }}
           github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
           workflow_file_name: "build.yml"
-          ref: "develop"
+          ref: "release/${{ steps.checked_inputs.outputs.release_version }}"
           github_user: ${{ env.GITHUB_USER }}
       - name: create pr
         run: |
@@ -169,7 +169,7 @@ jobs:
           echo "data: ${{ steps.create_pr.outputs.data }}"
           echo "status: ${{ steps.create_pr.outputs.status }}"
       - name: check pr status
-        if: ${{ steps.create_pr.outputs.status != 200 }}
+        if: ${{ steps.create_pr.outputs.status != 201 }}
         run: |
           echo "something went wrong with the pr"
           exit 1                                  
