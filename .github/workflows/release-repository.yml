@@ -173,7 +173,7 @@ jobs:
         id: merge_pr
         uses: octokit/request-action@v2.x
         with:
-          route: POST /repos/{owner}/{repo}/pulls/{pull_number}/merge
+          route: PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
           pull_number: ${{ fromJson(steps.create_pr.outputs.data).number }}
