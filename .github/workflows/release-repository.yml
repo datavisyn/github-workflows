@@ -215,13 +215,13 @@ jobs:
           target_commitish: master
           name: ${{ steps.checked_inputs.outputs.release_version }}
           body: '"${{ steps.release_notes.outputs.readme }}"'
-          draft: true 
+          draft: false 
           prerelease: false
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: check release status
-        if: ${{ steps.create_release.outputs.status != 200 }}
+        if: ${{ steps.create_release.outputs.status != 201 }}
         run: |
           echo "something went wrong with the creation of the release"
           exit 1                   
