@@ -214,10 +214,10 @@ jobs:
           tag_name: ${{ steps.checked_inputs.outputs.release_version }}
           target_commitish: master
           name: ${{ steps.checked_inputs.outputs.release_version }}
-          body: '"${{ steps.release_notes.outputs.readme }}"'
+          body: '"${{ steps.release_notes.outputs.commits }}"'
           draft: false 
           prerelease: false
-          generate_release_notes: true
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: check release status
