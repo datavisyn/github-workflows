@@ -153,7 +153,7 @@ jobs:
           echo -e "readme: ${{ steps.release_notes.outputs.readme }}"
           echo -e "commits: ${{ steps.release_notes.outputs.commits }}"
       - uses: octokit/request-action@v2.x
-        id: create_release
+        id: create_pr
         with:
           route: POST /repos/{owner}/{repo}/pulls
           owner: ${{ github.repository_owner }}
@@ -166,8 +166,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: |
-          echo "data: ${{ steps.create_release.outputs.data }}"
-          echo "status: ${{ steps.create_release.outputs.status }}"                 
+          echo "data: ${{ steps.create_pr.outputs.data }}"
+          echo "status: ${{ steps.create_pr.outputs.status }}"
+      - name: check pr status
+        if: ${{ steps.create_pr.outputs.status != 200 }}
+        run: |
+          echo "something went wrong with the pr"
+          exit 1                                  
       - name: merge pr
         run: |
           echo "merge pr"
