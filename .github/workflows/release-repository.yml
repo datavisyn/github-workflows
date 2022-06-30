@@ -126,24 +126,23 @@ jobs:
           echo ::set-output name=commits::${COMMIT_TITLES}
       - name: setup git config
         run: |
-          git config user.name "datavisyn-bot"
+          git config user.name "${{ github.actor }}"
           git config user.email "<>"          
       - name: push branch
         run: |
           echo "push branch" 
           # git commit -am "Prepare release ${{ steps.checked_inputs.outputs.release_version }}"
           # git push origin release/${{ steps.checked_inputs.outputs.release_version }}
-      - name: trigger build        
-        uses: datavisyn/github-workflows/.github/actions/trigger-workflow-and-wait/action.yml@develop
+      - name: trigger build
+        id: trigger_build  
+        uses: datavisyn/github-action-trigger-workflow@v1
         with:
-          owner: ${{ steps.release-repository.outputs.owner }}
-          # repo:  ${{ matrix.repository }}
-          repo: test_release_repo
-          github_token: ${{ secrets.DATAVISYN_BOT_MAINTENANCE_TOKEN }}
-          workflow_file_name: "release.yml"
-          ref: "develop"
-          github_user: ${{ env.GITHUB_USER }}
-          client_payload: ${{ steps.release-repository.outputs.client_payload }}          
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.repository }}
+          github_token: ${{ github.token }}
+          workflow_file_name: "build.yml"
+          ref: ""release/${{ steps.checked_inputs.outputs.release_version }}""
+          github_user: ${{ github.actor }}
       - name: create pr
         run: |
           echo "create pr"
