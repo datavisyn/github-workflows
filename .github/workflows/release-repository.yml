@@ -204,7 +204,6 @@ jobs:
           workflow_file_name: "build.yml"
           ref: "master"
           github_user: ${{ env.GITHUB_USER }}
-          client_payload: "{\"publish\": false }"
       - name: create release
         id: create_release
         uses: octokit/request-action@v2.x
