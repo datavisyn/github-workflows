@@ -11,8 +11,6 @@ on:
 env: 
   GITHUB_USER: "datavisyn-bot"
 
-permissions:
-  contents: read  
 
 jobs:
   release-repository:
