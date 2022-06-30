@@ -67,17 +67,18 @@ jobs:
           repo: ${{ github.event.repository.name }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      - name: check version
-        id: check_version
-        if: ${{ steps.get_latest_release.outputs.status == 200 }}
-        run: |
-          echo "latest release: ${{ steps.get_latest_release.outputs.data }}"
-          echo "status: ${{ steps.get_latest_release.outputs.status }}"
-          echo "release version: ${{ steps.checked_inputs.outputs.release_version }}"
-          if [ "${{ steps.checked_inputs.outputs.release_version }}" == "${{ fromJson(steps.get_latest_release.outputs.data).tag_name }}" ]; then
-            echo "nothing todo!"
-            exit 1
-          fi  
+      # - name: check version
+      #   id: check_version
+      #   if: ${{ steps.get_latest_release.outputs.status == 200 }}
+      #   run: |
+      #     echo "latest release: ${{ steps.get_latest_release.outputs.data }}"
+      #     echo "status: ${{ steps.get_latest_release.outputs.status }}"
+      #     echo "release version: ${{ steps.checked_inputs.outputs.release_version }}"
+      #     if [ "${{ steps.checked_inputs.outputs.release_version }}" == "${{ fromJson(steps.get_latest_release.outputs.data).tag_name }}" ]; then
+      #       echo "nothing todo!"
+      #       exit 1 
+      #       # check if exit 1 is really the best solution
+      #     fi  
       - name: error handling
         if: ${{ steps.get_latest_release.outputs.status != 404 }}
         run: exit 1              
