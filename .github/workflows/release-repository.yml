@@ -176,7 +176,7 @@ jobs:
           route: POST /repos/{owner}/{repo}/pulls/{pull_number}/merge
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
-          pull_number: ${{ steps.create_pr.outputs.number }}
+          pull_number: ${{ steps.create_pr.outputs.data.number }}
           commit_title: "Release ${{ steps.checked_inputs.outputs.release_version }}"
           merge_method: "squash"
           base: "master"
