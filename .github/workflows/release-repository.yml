@@ -143,10 +143,10 @@ jobs:
         with:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ github.token }}
           workflow_file_name: "build.yml"
           ref: "develop"
-          github_user: ${{ env.GITHUB_USER }}
+          github_user: ${{ github.actor }}
       - name: create pr
         run: |
           echo "create pr"
