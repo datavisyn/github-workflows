@@ -8,6 +8,9 @@ on:
         required: true
         type: string
 
+env: 
+  GITHUB_USER: "datavisyn-bot"
+
 jobs:
   release-repository:
     runs-on: ubuntu-20.04
@@ -139,10 +142,10 @@ jobs:
         with:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.repository }}
-          github_token: ${{ github.token }}
+          github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
           workflow_file_name: "build.yml"
           ref: "release/${{ steps.checked_inputs.outputs.release_version }}"
-          github_user: ${{ github.actor }}
+          github_user: ${{ env.GITHUB_USER }}
       - name: create pr
         run: |
           echo "create pr"
