@@ -85,7 +85,7 @@ jobs:
           echo "create release branch"
           git checkout release/${{ steps.checked_inputs.outputs.release_version }}
           # git checkout -b release/${{ steps.checked_inputs.outputs.release_version }}               
-      - name: changes for release
+      - name: prepare release
         run: |
           REPOSITORIES="$(echo $KNOWN_REPOSITORIES | jq '.')"  
           readarray -t my_array < <(echo $KNOWN_REPOSITORIES | jq -rc '. | keys[]')
@@ -225,18 +225,39 @@ jobs:
         run: |
           echo "something went wrong with the creation of the release"
           exit 1                   
-      - name: get master branch
+      - name: git fetch
         run: |
-          echo "get master branch"
+          echo "get fetch"
           git fetch
-          git checkout master
+          git checkout -t origin/master
+          git checkout -t origin/develop
       - name: merge master to develop
         run: |
           echo "merge master to develop"
-          # git merge develop
+          # git merge origin/master
       - name: prepare develop
         run: |
-          echo "prepare develop"
+          REPOSITORIES="$(echo $KNOWN_REPOSITORIES | jq '.')"  
+          readarray -t my_array < <(echo $KNOWN_REPOSITORIES | jq -rc '. | keys[]')
+          for repository in "${my_array[@]}"; do
+            npm_version=$(echo $REPOSITORIES | jq -r --arg var $repository '.[$var].npm_version')
+            npm_develop=$(echo $REPOSITORIES | jq -r --arg var $repository '.[$var].npm_develop')
+            pip_version=$(echo $REPOSITORIES | jq -r --arg var $repository '.[$var].pip_version')
+            pip_develop=$(echo $REPOSITORIES | jq -r --arg var $repository '.[$var].pip_develop')
+            echo $repository: $npm_version $npm_develop $pip_version $pip_develop
+            if [[ $npm_version != null && $npm_develop != null ]] ; then
+              sed -i "s|\"$repository\": \"$npm_version\"|\"$repository\": \"$npm_develop\"|gI" ./package.json
+            fi
+            if [[ $pip_version != null && $pip_develop != null ]] ; then
+              sed -i "s|$pip_version|$pip_develop|gI" ./requirements.txt
+            fi
+          done
+          version=$(jq -r '.version' ./package.json)
+          sed -i "s|\"version\": \"$version\"|\"version\": \"$version-SNAPSHOT\"|gI" ./package.json
+          cat ./package.json
+          cat ./requirements.txt
+        env:
+          KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }}           
       - name: push develop
         run: |
           echo "push develop" 
