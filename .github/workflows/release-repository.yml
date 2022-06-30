@@ -216,8 +216,6 @@ jobs:
           target_commitish: master
           name: ${{ steps.checked_inputs.outputs.release_version }}
           body: '"${{ steps.release_notes.outputs.readme }}"'
-          title: "Release ${{ steps.checked_inputs.outputs.release_version }}"
-          body: '"${{ steps.release_notes.outputs.commits }}"'
           draft: true 
           prerelease: false
           generate_release_notes: true
