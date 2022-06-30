@@ -137,7 +137,64 @@ jobs:
           echo "push branch" 
           # git commit -am "Prepare release ${{ steps.checked_inputs.outputs.release_version }}"
           # git push origin release/${{ steps.checked_inputs.outputs.release_version }}
-      - name: trigger build
+      # - name: trigger build
+      #   id: trigger_build  
+      #   uses: datavisyn/github-action-trigger-workflow@v1
+      #   with:
+      #     owner: ${{ github.repository_owner }}
+      #     repo: ${{ github.event.repository.name }}
+      #     github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+      #     workflow_file_name: "build.yml"
+      #     ref: "release/${{ steps.checked_inputs.outputs.release_version }}"
+      #     github_user: ${{ env.GITHUB_USER }}
+      # - name: create pull request
+      #   id: create_pr
+      #   uses: octokit/request-action@v2.x
+      #   with:
+      #     route: POST /repos/{owner}/{repo}/pulls
+      #     owner: ${{ github.repository_owner }}
+      #     repo: ${{ github.event.repository.name }}
+      #     title: "Release ${{ steps.checked_inputs.outputs.release_version }}"
+      #     body: '"${{ steps.release_notes.outputs.readme }}"'
+      #     head: "release/${{ steps.checked_inputs.outputs.release_version }}"
+      #     base: "master"
+      #     draft: false
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - run: |
+      #     echo "data: ${{ steps.create_pr.outputs.data }}"
+      #     echo "status: ${{ steps.create_pr.outputs.status }}"
+      # - name: check pr status
+      #   if: ${{ steps.create_pr.outputs.status != 201 }}
+      #   run: |
+      #     echo "something went wrong with the pr"
+      #     exit 1                                  
+      # - name: merge pull request
+      #   id: merge_pr
+      #   uses: octokit/request-action@v2.x
+      #   with:
+      #     route: PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge
+      #     owner: ${{ github.repository_owner }}
+      #     repo: ${{ github.event.repository.name }}
+      #     pull_number: ${{ fromJson(steps.create_pr.outputs.data).number }}
+      #     commit_title: "Release ${{ steps.checked_inputs.outputs.release_version }}"
+      #     merge_method: "squash"
+      #     base: "master"
+      #     draft: false
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: check merge status
+      #   if: ${{ steps.merge_pr.outputs.status != 200 }}
+      #   run: |
+      #     echo "something went wrong with the merge of the pr"
+      #     exit 1              
+      # - name: delete release branch
+      #   run: |
+      #     echo "delete release branch"
+      #     git branch -d release/${{ steps.checked_inputs.outputs.release_version }}
+      #     git push origin --delete release/${{ steps.checked_inputs.outputs.release_version }}
+
+      - name: trigger master build
         id: trigger_build  
         uses: datavisyn/github-action-trigger-workflow@v1
         with:
@@ -145,58 +202,41 @@ jobs:
           repo: ${{ github.event.repository.name }}
           github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
           workflow_file_name: "build.yml"
-          ref: "release/${{ steps.checked_inputs.outputs.release_version }}"
+          ref: "master"
           github_user: ${{ env.GITHUB_USER }}
-      - name: create pull request
-        id: create_pr
+          client_payload: "{\"publish\": false }"
+      - name: create release
+        id: create_release
         uses: octokit/request-action@v2.x
         with:
-          route: POST /repos/{owner}/{repo}/pulls
+          route: POST /repos/{owner}/{repo}/releases
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
-          title: "Release ${{ steps.checked_inputs.outputs.release_version }}"
+          tag_name: ${{ steps.checked_inputs.outputs.release_version }}
+          target_commitish: master
+          name: ${{ steps.checked_inputs.outputs.release_version }}
           body: '"${{ steps.release_notes.outputs.readme }}"'
-          head: "release/${{ steps.checked_inputs.outputs.release_version }}"
-          base: "master"
-          draft: false
+          title: "Release ${{ steps.checked_inputs.outputs.release_version }}"
+          body: '"${{ steps.release_notes.outputs.commits }}"'
+          draft: true 
+          prerelease: false
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: |
-          echo "data: ${{ steps.create_pr.outputs.data }}"
-          echo "status: ${{ steps.create_pr.outputs.status }}"
-      - name: check pr status
-        if: ${{ steps.create_pr.outputs.status != 201 }}
+      - name: check release status
+        if: ${{ steps.create_release.outputs.status != 200 }}
         run: |
-          echo "something went wrong with the pr"
-          exit 1                                  
-      - name: merge pull request
-        id: merge_pr
-        uses: octokit/request-action@v2.x
-        with:
-          route: PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          pull_number: ${{ fromJson(steps.create_pr.outputs.data).number }}
-          commit_title: "Release ${{ steps.checked_inputs.outputs.release_version }}"
-          merge_method: "squash"
-          base: "master"
-          draft: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: check merge status
-        if: ${{ steps.merge_pr.outputs.status != 200 }}
-        run: |
-          echo "something went wrong with the merge of the pr"
-          exit 1              
+          echo "something went wrong with the creation of the release"
+          exit 1                   
       - name: get master branch
         run: |
           echo "get master branch"
-      - name: create release and tag
-        run: |
-          echo "create release and tag"
+          git fetch
+          git checkout master
       - name: merge master to develop
         run: |
           echo "merge master to develop"
+          # git merge develop
       - name: prepare develop
         run: |
           echo "prepare develop"
