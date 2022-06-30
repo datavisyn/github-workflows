@@ -141,7 +141,7 @@ jobs:
           repo: ${{ github.repository }}
           github_token: ${{ github.token }}
           workflow_file_name: "build.yml"
-          ref: ""release/${{ steps.checked_inputs.outputs.release_version }}""
+          ref: "release/${{ steps.checked_inputs.outputs.release_version }}"
           github_user: ${{ github.actor }}
       - name: create pr
         run: |
