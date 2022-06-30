@@ -171,6 +171,7 @@ jobs:
           exit 1                                  
       - name: merge pull request
         id: merge_pr
+        uses: octokit/request-action@v2.x
         with:
           route: POST /repos/{owner}/{repo}/pulls/{pull_number}/merge
           owner: ${{ github.repository_owner }}
