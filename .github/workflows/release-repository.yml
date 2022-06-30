@@ -147,13 +147,9 @@ jobs:
           workflow_file_name: "build.yml"
           ref: "release/${{ steps.checked_inputs.outputs.release_version }}"
           github_user: ${{ env.GITHUB_USER }}
-      - name: create pr
-        run: |
-          echo "create pr"
-          echo -e "readme: ${{ steps.release_notes.outputs.readme }}"
-          echo -e "commits: ${{ steps.release_notes.outputs.commits }}"
-      - uses: octokit/request-action@v2.x
+      - name: create pull request
         id: create_pr
+        uses: octokit/request-action@v2.x
         with:
           route: POST /repos/{owner}/{repo}/pulls
           owner: ${{ github.repository_owner }}
@@ -173,9 +169,24 @@ jobs:
         run: |
           echo "something went wrong with the pr"
           exit 1                                  
-      - name: merge pr
+      - name: merge pull request
+        id: merge_pr
+        with:
+          route: POST /repos/{owner}/{repo}/pulls/{pull_number}/merge
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          pull_number: ${{ steps.create_pr.outputs.number }}
+          commit_title: "Release ${{ steps.checked_inputs.outputs.release_version }}"
+          merge_method: "squash"
+          base: "master"
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: check merge status
+        if: ${{ steps.merge_pr.outputs.status != 200 }}
         run: |
-          echo "merge pr"
+          echo "something went wrong with the merge of the pr"
+          exit 1              
       - name: get master branch
         run: |
           echo "get master branch"
