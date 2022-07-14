@@ -1,4 +1,4 @@
-name: Release Repository
+name: Release Product
 
 on: 
   workflow_call:
@@ -23,19 +23,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Dump GitHub context
-        id: github_context_step
-        run: echo '${{ toJSON(github) }}'
-      - name: Dump job context
-        run: echo '${{ toJSON(job) }}'
-      - name: Dump steps context
-        run: echo '${{ toJSON(steps) }}'
-      - name: Dump runner context
-        run: echo '${{ toJSON(runner) }}'
-      - name: Dump strategy context
-        run: echo '${{ toJSON(strategy) }}'
-      - name: Dump matrix context
-        run: echo '${{ toJSON(matrix) }}'
       - name: Wrong actor
         if: ${{ github.actor != 'datavisyn-bot' && github.actor != 'anita-steiner' }}
         run: |
@@ -48,19 +35,88 @@ jobs:
           echo $KNOWN_REPOSITORIES
           checked_known_repos="$(echo $KNOWN_REPOSITORIES | jq '.')"
           checked_known_repos="${checked_known_repos//$'\n'/''}"
-          checked_repository="$(echo $KNOWN_REPOSITORIES | jq --arg var $repository '.[$var]')"
-          release_version="$(echo $checked_repository | jq -r '.version')"
           echo ::set-output name=known_repositories::${checked_known_repos}
-          echo ::set-output name=repository::${checked_repository}
-          echo ::set-output name=release_version::${release_version}
         env:
           KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }} # use github.event.inputs instead of inputs ?? 
       - name: check repository
+        id: check-repository
         run: |
-          echo "check repository"
-          echo ${{ steps.checked_inputs.outputs.known_repositories }}
-          echo ${{ steps.checked_inputs.outputs.repository }}
-          echo ${{ steps.checked_inputs.outputs.release_version }}
+          repository=$(jq  -rc '.[] | select(.type == "web") | .repo' ./phovea_product.json)
+          repository=$(echo "$repository" | sed -e 's|.*/||')
+          release_version="$(echo $KNOWN_REPOSITORIES | jq --arg var $repository '.[$var] | .version')"
+          generator_version="$(echo $KNOWN_REPOSITORIES | jq '."generator-phovea" | .version')"
+          echo ::set-output name=repository::${checked_repository}
+          echo ::set-output name=release_version::${release_version}
+          echo ::set-output name=generator_version::${generator_version}
+        env:
+          KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }} # use github.event.inputs instead of inputs ?? 
+      - name: create release branch
+        run: |
+          echo "create release branch"
+          git checkout release/${{ steps.check-repository.outputs.release_version }}
+          # git checkout -b release/${{ steps.check-repository.outputs.release_version }}           
+      - name: prepare release
+        run: |
+          version=$(jq -r '.version' ./package.json)
+          # change version in package.json
+          npm_develop=git+ssh://git@github.com:phovea/generator-phovea#develop
+          sed -i "s|\"generator-phovea": \"$npm_develop\"|\"generator-phovea\": \"${{ steps.check-repository.outputs.generator_version }}\"|gI" ./package.json
+          sed -i "s|\"version\": \"$version\"|\"version\": \"${{ steps.check-repository.outputs.release_version }}\"|gI" ./package.json
+          cat ./package.json
+          # change phovea_product
+          # frontend
+          content="[{"
+          name=$(jq  -rc '.[] | select(.type == "web") | .repo' ./phovea_product.json)
+          name=$(echo "$name" | sed -e 's|.*/||')
+          version="$(echo $KNOWN_REPOSITORIES | jq -r --arg var $name '.[$var] | .version')"
+          owner="$(echo $KNOWN_REPOSITORIES | jq -r --arg var $name '.[$var] | .owner')"
+          content+="\"type\": \"web\", \"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\",   \"additional\": ["
+          readarray -t my_array < <(jq  -rc '.[] | select(.type == "web") | .additional[] ' ./phovea_product.json)
+          for additional in "${my_array[@]}"; do
+            name=$(echo $additional | jq  -rc '.name')
+            name=$(echo "$name" | sed -e 's|.*/||')
+            version="$(echo $KNOWN_REPOSITORIES | jq -r --arg var $name '.[$var] | .version')"
+            owner="$(echo $KNOWN_REPOSITORIES | jq -r --arg var $name '.[$var] | .owner')"
+            content+="{\"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\"},"
+          done
+          content=${content::-1}
+          content+="]},"
+          # backend
+          content+="{"
+          name=$(jq  -rc '.[] | select(.type == "api") | .repo' ./phovea_product.json)
+          name=$(echo "$name" | sed -e 's|.*/||')
+          version="$(echo $KNOWN_REPOSITORIES | jq -r --arg var $name '.[$var] | .version')"
+          owner="$(echo $KNOWN_REPOSITORIES | jq -r --arg var $name '.[$var] | .owner')"
+          content+="\"type\": \"web\", \"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\",   \"additional\": ["
+          readarray -t my_array < <(jq  -rc '.[] | select(.type == "api") | .additional[]' ./phovea_product.json)
+          for additional in "${my_array[@]}"; do
+            echo "$additional"
+            name=$(echo $additional | jq  -rc '.name')
+            name=$(echo "$name" | sed -e 's|.*/||')
+            version="$(echo $KNOWN_REPOSITORIES | jq -r --arg var $name '.[$var] | .version')"
+            owner="$(echo $KNOWN_REPOSITORIES | jq -r --arg var $name '.[$var] | .owner')"
+            content+="{\"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\"},"
+          done
+          content=${content::-1}
+          content+="]}]"          
+          echo -e $content > ./phovea_product2.json
+          jq '.' ./phovea_product2.json > ./phovea_product3.json
+          mv ./phovea_product3.json ./phovea_product2.json
+          #change version of github action references
+          find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@master/@$GA_VERSION/g" {} \;
+        env:
+          KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }}
+          GA_VERSION: ${{ github.event.inputs.ga_version }} 
+      - name: setup git config
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "<>"          
+      - name: push branch
+        run: |
+          echo "push branch" 
+          # git commit -am "Prepare release ${{ steps.checked_inputs.outputs.release_version }}"
+          # git push origin release/${{ steps.checked_inputs.outputs.release_version }}
+
       - uses: octokit/request-action@v2.x
         id: get_latest_release
         continue-on-error: true
@@ -180,104 +236,3 @@ jobs:
       #   run: |
       #     echo "something went wrong with the pr"
       #     exit 1                                  
-      # - name: merge pull request
-      #   id: merge_pr
-      #   uses: octokit/request-action@v2.x
-      #   with:
-      #     route: PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge
-      #     owner: ${{ github.repository_owner }}
-      #     repo: ${{ github.event.repository.name }}
-      #     pull_number: ${{ fromJson(steps.create_pr.outputs.data).number }}
-      #     commit_title: "Release ${{ steps.checked_inputs.outputs.release_version }}"
-      #     merge_method: "squash"
-      #     base: "master"
-      #     draft: false
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # - name: check merge status
-      #   if: ${{ steps.merge_pr.outputs.status != 200 }}
-      #   run: |
-      #     echo "something went wrong with the merge of the pr"
-      #     exit 1              
-      # - name: delete release branch
-      #   run: |
-      #     echo "delete release branch"
-      #     git branch -d release/${{ steps.checked_inputs.outputs.release_version }}
-      #     git push origin --delete release/${{ steps.checked_inputs.outputs.release_version }}
-
-      # - name: trigger master build
-      #   id: trigger_build  
-      #   uses: datavisyn/github-action-trigger-workflow@v1
-      #   with:
-      #     owner: ${{ github.repository_owner }}
-      #     repo: ${{ github.event.repository.name }}
-      #     github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-      #     workflow_file_name: "build.yml"
-      #     ref: "master"
-      #     github_user: ${{ env.GITHUB_USER }}
-      # - name: create release
-      #   id: create_release
-      #   uses: octokit/request-action@v2.x
-      #   with:
-      #     route: POST /repos/{owner}/{repo}/releases
-      #     owner: ${{ github.repository_owner }}
-      #     repo: ${{ github.event.repository.name }}
-      #     tag_name: ${{ steps.checked_inputs.outputs.release_version }}
-      #     target_commitish: master
-      #     name: ${{ steps.checked_inputs.outputs.release_version }}
-      #     body: '"${{ steps.release_notes.outputs.commits }}"'
-      #     draft: false 
-      #     prerelease: false
-      #     generate_release_notes: false
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # - name: check release status
-      #   if: ${{ steps.create_release.outputs.status != 201 }}
-      #   run: |
-      #     echo "something went wrong with the creation of the release"
-      #     exit 1                   
-      - name: git fetch
-        run: |
-          echo "get fetch"
-          git fetch
-          git checkout -t origin/master
-          git checkout develop
-          git pull
-      - name: merge master to develop
-        run: |
-          echo "merge master to develop"
-          git merge origin/master
-      - name: prepare develop
-        run: |
-          # change version git references with develop references in package.json and requirements.txt
-          repositories="$(echo $KNOWN_REPOSITORIES | jq '.')"  
-          readarray -t my_array < <(echo $KNOWN_REPOSITORIES | jq -rc '. | keys[]')
-          for repository in "${my_array[@]}"; do
-            npm_version=$(echo $repositories | jq -r --arg var $repository '.[$var].npm_version')
-            npm_develop=$(echo $repositories | jq -r --arg var $repository '.[$var].npm_develop')
-            pip_version=$(echo $repositories | jq -r --arg var $repository '.[$var].pip_version')
-            pip_develop=$(echo $repositories | jq -r --arg var $repository '.[$var].pip_develop')
-            next_dev_version=$(echo $repositories | jq -r --arg var $repository '.[$var].next_dev_version')
-            echo $repository: $npm_version $npm_develop $pip_version $pip_develop
-            if [[ $npm_version != null && $npm_develop != null ]] ; then
-              sed -i "s|\"$repository\": \"$npm_version\"|\"$repository\": \"$npm_develop\"|gI" ./package.json
-            fi
-            if [[ $pip_version != null && $pip_develop != null ]] ; then
-              sed -i "s|$pip_version|$pip_develop|gI" ./requirements.txt
-            fi
-          done
-          # change version in package.json
-          version=$(jq -r '.version' ./package.json)
-          sed -i "s|\"version\": \"$version\"|\"version\": \"$next_dev_version\"|gI" ./package.json
-          cat ./package.json
-          cat ./requirements.txt
-          #change version of github action references
-          find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@$GA_VERSION/@master/g" {} \;
-        env:
-          KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }}
-          GA_VERSION: ${{ github.event.inputs.ga_version }}            
-      - name: push develop
-        run: |
-          echo "push develop"
-          git commit -am "Prepare next development"
-          git push origin develop
