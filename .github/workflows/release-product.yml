@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       ga_version:
-        description: "github action version to use for master"
+        description: "github action version to use for main"
         required: true
         type: string        
 
@@ -20,7 +20,7 @@ jobs:
   release-repository:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Wrong actor
@@ -103,7 +103,7 @@ jobs:
           jq '.' ./phovea_product2.json > ./phovea_product3.json
           mv ./phovea_product3.json ./phovea_product2.json
           #change version of github action references
-          find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@master/@$GA_VERSION/g" {} \;
+          find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@main/@$GA_VERSION/g" {} \;
         env:
           KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }}
           GA_VERSION: ${{ github.event.inputs.ga_version }} 
@@ -171,7 +171,7 @@ jobs:
           cat ./package.json
           cat ./requirements.txt
           #change version of github action references
-          find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@master/@$GA_VERSION/g" {} \;
+          find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@main/@$GA_VERSION/g" {} \;
         env:
           KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }}
           GA_VERSION: ${{ github.event.inputs.ga_version }} 
@@ -179,7 +179,7 @@ jobs:
         id: release_notes
         run: |
           echo "create release notes"
-          readarray -t my_array < <(git log 'origin/master..develop'  --pretty=format:%s)
+          readarray -t my_array < <(git log 'origin/main..develop'  --pretty=format:%s)
           readme="## Release notes\n"
           commit_titles=""
           for logs in "${my_array[@]}"; do
@@ -224,7 +224,7 @@ jobs:
       #     title: "Release ${{ steps.checked_inputs.outputs.release_version }}"
       #     body: '"${{ steps.release_notes.outputs.readme }}"'
       #     head: "release/${{ steps.checked_inputs.outputs.release_version }}"
-      #     base: "master"
+      #     base: "main"
       #     draft: false
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

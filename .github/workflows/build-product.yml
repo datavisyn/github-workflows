@@ -109,7 +109,7 @@ build-node:
       - name: Get image tag
         id: get-image-tag
         run: |
-          if [[ ${{ github.ref_name }} == *"master"* ]] ; then
+          if [[ ${{ github.ref_name }} == *"main"* ]] ; then
             tag1=$(jq -r '.version' ./package.json)
           else
             tag1=${{ github.ref_name }}
