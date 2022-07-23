@@ -42,19 +42,25 @@ runs:
       run: |
         python --version
         pip --version
+      shell: bash  
     - name: Git config
       if: "${{ env.GITHUB_TOKEN != '' }}"
       run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github".insteadOf https://github
+      shell: bash
       env: 
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}           
     - name: Install python dependencies
       run: make develop
+      shell: bash
     - name: Show installed pip packages
       run: pip list || true
+      shell: bash
     - name: Linting
-      run: make lint check-format                  
+      run: make lint check-format
+      shell: bash             
     - name: Run tests
       run: make test
+      shell: bash
     - name: Publish to pip registry
       if: ${{ inputs.publish && inputs.publish != 'false' }}
       run: |
@@ -65,6 +71,7 @@ runs:
 #          echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
 #          echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
 #          twine upload dist_python/*
+      shell: bash
       env: 
         PYPI_REPOSITORY: ${{ inputs.pypi_registry }}
         PYPI_USERNAME: ${{ inputs.pypi_username }}
