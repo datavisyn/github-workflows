@@ -66,38 +66,17 @@ jobs:
         python-version: ["3.10"]
     steps:      
       - uses: actions/checkout@v3
-      - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Show python and pip version
-        run: |
-          python --version
-          pip --version
-      - name: Git config
-        if: "${{ env.GITHUB_TOKEN != '' }}"
-        run: git config --global url."https://${{ env.GITHUB_TOKEN }}@github".insteadOf https://github
-        env: 
-          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}           
-      - name: Install python dependencies
-        run: make develop
-      - name: Show installed pip packages
-        run: pip list || true
-      - name: Linting
-        run: make lint check-format                  
-      - name: Run tests
-        run: make test
-      - name: Publish to pip registry
-        if: ${{ inputs.publish && inputs.publish != 'false' }}
-        run: |
-           echo "publish"
-           pip install twine
-#          echo -e "[pypi]" >> ~/.pypirc
-#          echo -e "repository = $PYPI_REPOSITORY" >> ~/.pypirc
-#          echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
-#          echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
-#          twine upload dist_python/*
-        env: 
-          PYPI_REPOSITORY: ${{ env.PYPI_REGISTRY }}
-          PYPI_USERNAME: ${{ env.PYPI_USERNAME }}
-          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }} 
+          repository: datavisyn/github-workflows
+          ref: main
+          path: ./tmp/github-workflows
+      - uses: ./tmp/github-workflows/.github/actions/build-python
+        with:
+          python_version: ${{ matrix.python-version }}
+          publish: ${{ inputs.publish}}
+          pypi_registry: ${{ env.PYPI_REGISTRY }}
+          pypi_username: ${{ env.PYPI_USERNAME }}
+          pypi_password: ${{ secrets.PYPI_PASSWORD }} 
+          github_ro_token:  ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }} 
+

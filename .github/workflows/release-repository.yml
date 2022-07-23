@@ -15,14 +15,14 @@ on:
 env: 
   GITHUB_USER: "datavisyn-bot"
 
-
 jobs:
   release-repository:
     runs-on: ubuntu-20.04
+    env:
+      KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }}
+      GA_VERSION: ${{ github.event.inputs.ga_version }}
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       - name: Dump GitHub context
         id: github_context_step
         run: echo '${{ toJSON(github) }}'
@@ -41,28 +41,32 @@ jobs:
         run: |
           echo 'Wrong actor!'
           exit 1
+      - name: Wrong branch
+        if: ${{ github.ref != 'refs/heads/develop' }}
+        run: |
+          echo 'Wrong branch!'
+          exit 1
+      - name: Wrong ga version
+        run: |
+          if[[ "$GA_VERSION" != v* ]]; then
+            exit 1
+            echo 'Wrong branch!'
+          fi                 
       - name: echo inputs
-        id: checked_inputs
+        run: |
+          echo $KNOWN_REPOSITORIES
+          echo $GA_VERSION
+      - name: get release version
+        id: get-release-version
         run: |
           repository=${{ github.event.repository.name }}
-          echo $KNOWN_REPOSITORIES
-          checked_known_repos="$(echo $KNOWN_REPOSITORIES | jq '.')"
-          checked_known_repos="${checked_known_repos//$'\n'/''}"
           checked_repository="$(echo $KNOWN_REPOSITORIES | jq --arg var $repository '.[$var]')"
           release_version="$(echo $checked_repository | jq -r '.version')"
-          echo ::set-output name=known_repositories::${checked_known_repos}
-          echo ::set-output name=repository::${checked_repository}
+          new_branch_name=release/$release_version
           echo ::set-output name=release_version::${release_version}
-        env:
-          KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }} # use github.event.inputs instead of inputs ?? 
-      - name: check repository
-        run: |
-          echo "check repository"
-          echo ${{ steps.checked_inputs.outputs.known_repositories }}
-          echo ${{ steps.checked_inputs.outputs.repository }}
-          echo ${{ steps.checked_inputs.outputs.release_version }}
+          echo ::set-output name=new_branch_name::${new_branch_name}
       - uses: octokit/request-action@v2.x
-        id: get_latest_release
+        id: get-latest-release
         continue-on-error: true
         name: get latest release
         with:
@@ -71,26 +75,28 @@ jobs:
           repo: ${{ github.event.repository.name }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      # - name: check version
-      #   id: check_version
-      #   if: ${{ steps.get_latest_release.outputs.status == 200 }}
-      #   run: |
-      #     echo "latest release: ${{ steps.get_latest_release.outputs.data }}"
-      #     echo "status: ${{ steps.get_latest_release.outputs.status }}"
-      #     echo "release version: ${{ steps.checked_inputs.outputs.release_version }}"
-      #     if [ "${{ steps.checked_inputs.outputs.release_version }}" == "${{ fromJson(steps.get_latest_release.outputs.data).tag_name }}" ]; then
-      #       echo "nothing todo!"
-      #       exit 1 
-      #       # check if exit 1 is really the best solution
-      #     fi  
-      # - name: error handling
-      #   if: ${{ steps.get_latest_release.outputs.status != 404 }}
-      #   run: exit 1              
-      - name: create release branch
+      - name: check release version
+        if: ${{ steps.get-latest-release.outputs.status == 200 }}
         run: |
-          echo "create release branch"
-          git checkout release/${{ steps.checked_inputs.outputs.release_version }}
-          # git checkout -b release/${{ steps.checked_inputs.outputs.release_version }}               
+          echo "latest release: ${{ steps.get-latest-release.outputs.data }}"
+          echo "release version: ${{ steps.get-release-version.outputs.release_version }}"
+          if [ "${{ steps.get-release-version.outputs.release_version }}" == "${{ fromJson(steps.get-latest-release.outputs.data).tag_name }}" ]; then
+            echo "nothing todo!"
+            exit 1 
+            # check if exit 1 is really the best solution
+          fi  
+      - name: error handling if latest release was not callable
+        if: ${{ steps.get-latest-release.outputs.status != 404 }}
+        run: exit 1              
+      - name: create/get release branch
+        run: |
+          echo "create/get release branch"
+          exists=`git show-ref refs/heads/${{ steps.get-release-version.outputs.new_branch_name }}`
+          if [ -n "$exists" ]; then
+            git checkout ${{ steps.get-release-version.outputs.new_branch_name }}
+          else
+            git checkout -b ${{ steps.get-release-version.outputs.new_branch_name }}
+          fi
       - name: prepare release
         run: |
           # change develop git references with version references in package.json and requirements.txt
@@ -110,17 +116,14 @@ jobs:
             fi
           done
           version=$(jq -r '.version' ./package.json)
-          # change version in package.json
-          sed -i "s|\"version\": \"$version\"|\"version\": \"${{ steps.checked_inputs.outputs.release_version }}\"|gI" ./package.json
-          cat ./package.json
           cat ./requirements.txt
+          # change version in package.json
+          sed -i "s|\"version\": \"$version\"|\"version\": \"${{ steps.get-release-version.outputs.release_version }}\"|gI" ./package.json
+          cat ./package.json
           #change version of github action references
           find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@main/@$GA_VERSION/g" {} \;
-        env:
-          KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }}
-          GA_VERSION: ${{ github.event.inputs.ga_version }} 
       - name: create release notes
-        id: release_notes
+        id: release-notes
         run: |
           echo "create release notes"
           readarray -t my_array < <(git log 'origin/main..develop'  --pretty=format:%s)
@@ -146,96 +149,94 @@ jobs:
       - name: push branch
         run: |
           echo "push branch" 
-          # git commit -am "Prepare release ${{ steps.checked_inputs.outputs.release_version }}"
-          # git push origin release/${{ steps.checked_inputs.outputs.release_version }}
-      # - name: trigger build
-      #   id: trigger_build  
-      #   uses: datavisyn/github-action-trigger-workflow@v1
-      #   with:
-      #     owner: ${{ github.repository_owner }}
-      #     repo: ${{ github.event.repository.name }}
-      #     github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-      #     workflow_file_name: "build.yml"
-      #     ref: "release/${{ steps.checked_inputs.outputs.release_version }}"
-      #     github_user: ${{ env.GITHUB_USER }}
-      # - name: create pull request
-      #   id: create_pr
-      #   uses: octokit/request-action@v2.x
-      #   with:
-      #     route: POST /repos/{owner}/{repo}/pulls
-      #     owner: ${{ github.repository_owner }}
-      #     repo: ${{ github.event.repository.name }}
-      #     title: "Release ${{ steps.checked_inputs.outputs.release_version }}"
-      #     body: '"${{ steps.release_notes.outputs.readme }}"'
-      #     head: "release/${{ steps.checked_inputs.outputs.release_version }}"
-      #     base: "main"
-      #     draft: false
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # - run: |
-      #     echo "data: ${{ steps.create_pr.outputs.data }}"
-      #     echo "status: ${{ steps.create_pr.outputs.status }}"
-      # - name: check pr status
-      #   if: ${{ steps.create_pr.outputs.status != 201 }}
-      #   run: |
-      #     echo "something went wrong with the pr"
-      #     exit 1                                  
-      # - name: merge pull request
-      #   id: merge_pr
-      #   uses: octokit/request-action@v2.x
-      #   with:
-      #     route: PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge
-      #     owner: ${{ github.repository_owner }}
-      #     repo: ${{ github.event.repository.name }}
-      #     pull_number: ${{ fromJson(steps.create_pr.outputs.data).number }}
-      #     commit_title: "Release ${{ steps.checked_inputs.outputs.release_version }}"
-      #     merge_method: "squash"
-      #     base: "main"
-      #     draft: false
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # - name: check merge status
-      #   if: ${{ steps.merge_pr.outputs.status != 200 }}
-      #   run: |
-      #     echo "something went wrong with the merge of the pr"
-      #     exit 1              
-      # - name: delete release branch
-      #   run: |
-      #     echo "delete release branch"
-      #     git branch -d release/${{ steps.checked_inputs.outputs.release_version }}
-      #     git push origin --delete release/${{ steps.checked_inputs.outputs.release_version }}
+          git commit -am "Prepare release ${{ steps.get-release-version.outputs.release_version }}"
+          git push origin ${{ steps.get-release-version.outputs.new_branch_name }}
+      - name: trigger build
+        uses: datavisyn/github-action-trigger-workflow@v1
+        with:
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+          workflow_file_name: "build.yml"
+          ref: "${{ steps.get-release-version.outputs.new_branch_name }}"
+          github_user: ${{ env.GITHUB_USER }}
+      - name: create pull request
+        id: create-pr
+        uses: octokit/request-action@v2.x
+        with:
+          route: POST /repos/{owner}/{repo}/pulls
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          title: "Release ${{ steps.get-release-version.outputs.release_version }}"
+          body: '"${{ steps.release_notes.outputs.readme }}"'
+          head: "${{ steps.get-release-version.outputs.new_branch_name }}"
+          base: "main"
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          echo "data: ${{ steps.create-pr.outputs.data }}"
+          echo "status: ${{ steps.create-pr.outputs.status }}"
+      - name: check pr status
+        if: ${{ steps.create-pr.outputs.status != 201 }}
+        run: |
+          echo "something went wrong with the pr"
+          exit 1                                  
+      - name: merge pull request
+        id: merge-pr
+        uses: octokit/request-action@v2.x
+        with:
+          route: PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          pull_number: ${{ fromJson(steps.create-pr.outputs.data).number }}
+          commit_title: "Release ${{ steps.get-release-version.outputs.release_version }}"
+          merge_method: "squash"
+          base: "main"
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: check merge status
+        if: ${{ steps.merge-pr.outputs.status != 200 }}
+        run: |
+          echo "something went wrong with the merge of the pr"
+          exit 1              
+      - name: delete release branch
+        run: |
+          echo "delete release branch"
+          git branch -d ${{ steps.get-release-version.outputs.new_branch_name }}
+          git push origin --delete ${{ steps.get-release-version.outputs.new_branch_name }}
 
-      # - name: trigger main build
-      #   id: trigger_build  
-      #   uses: datavisyn/github-action-trigger-workflow@v1
-      #   with:
-      #     owner: ${{ github.repository_owner }}
-      #     repo: ${{ github.event.repository.name }}
-      #     github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-      #     workflow_file_name: "build.yml"
-      #     ref: "main"
-      #     github_user: ${{ env.GITHUB_USER }}
-      # - name: create release
-      #   id: create_release
-      #   uses: octokit/request-action@v2.x
-      #   with:
-      #     route: POST /repos/{owner}/{repo}/releases
-      #     owner: ${{ github.repository_owner }}
-      #     repo: ${{ github.event.repository.name }}
-      #     tag_name: ${{ steps.checked_inputs.outputs.release_version }}
-      #     target_commitish: main
-      #     name: ${{ steps.checked_inputs.outputs.release_version }}
-      #     body: '"${{ steps.release_notes.outputs.commits }}"'
-      #     draft: false 
-      #     prerelease: false
-      #     generate_release_notes: false
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # - name: check release status
-      #   if: ${{ steps.create_release.outputs.status != 201 }}
-      #   run: |
-      #     echo "something went wrong with the creation of the release"
-      #     exit 1                   
+      - name: trigger main build
+        uses: datavisyn/github-action-trigger-workflow@v1
+        with:
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+          workflow_file_name: "build.yml"
+          ref: "main"
+          github_user: ${{ env.GITHUB_USER }}
+      - name: create release
+        id: create-release
+        uses: octokit/request-action@v2.x
+        with:
+          route: POST /repos/{owner}/{repo}/releases
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          tag_name: ${{ steps.get-release-version.outputs.release_version }}
+          target_commitish: main
+          name: ${{ steps.get-release-version.outputs.release_version }}
+          body: '"${{ steps.release-notes.outputs.commits }}"'
+          draft: false 
+          prerelease: false
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: check release status
+        if: ${{ steps.create-release.outputs.status != 201 }}
+        run: |
+          echo "something went wrong with the creation of the release"
+          exit 1                   
       - name: git fetch
         run: |
           echo "get fetch"
@@ -273,9 +274,6 @@ jobs:
           cat ./requirements.txt
           #change version of github action references
           find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@$GA_VERSION/@main/g" {} \;
-        env:
-          KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }}
-          GA_VERSION: ${{ github.event.inputs.ga_version }}            
       - name: push develop
         run: |
           echo "push develop"
