@@ -75,7 +75,7 @@ jobs:
         run: |
           mkdir -p ./.github/actions
           cp -r ./tmp/github-workflows/.github/actions/* ./.github/actions
-          cd ./github/actions
+          cd ./.github/actions
           echo $(ls)
       - uses: ./.github/actions/build-python
         with:
