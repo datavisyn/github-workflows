@@ -71,7 +71,11 @@ jobs:
           repository: datavisyn/github-workflows
           ref: main
           path: ./tmp/github-workflows
-      - uses: ./tmp/github-workflows/.github/actions/build-python
+      - name: copy actions folder
+        run: |
+          mkdir -p ./.github/actions
+          cp -r ./tmp/github-workflows/.github/actions/* ./.github/actions
+      - uses: ./.github/actions/build-python
         with:
           python_version: ${{ matrix.python-version }}
           publish: ${{ inputs.publish}}
