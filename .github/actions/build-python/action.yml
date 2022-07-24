@@ -1,29 +1,9 @@
-name: Build and Publish Python Repositories
+name: Build Python Repositories
 
 inputs:
   python_version:
     description: "python version to use"
     default: "3.10"
-    required: true
-    type: string
-  publish:
-    description: "true, if the package should be published to npm; otherwise false"
-    default: false
-    required: true
-    type: boolean
-  pypi_registry:
-    description: "registry where to publish python package"
-    default: "https://pypi.org/pypi"
-    required: true
-    type: string
-  pypi_username:
-    description: "username for python registry"
-    default: "admin"
-    required: true
-    type: string
-  pypi_password:
-    description: "passwort for python registry"
-    default: "admin"
     required: true
     type: string
   github_ro_token:  
@@ -61,18 +41,3 @@ runs:
     - name: Run tests
       run: make test
       shell: bash
-    - name: Publish to pip registry
-      if: ${{ inputs.publish && inputs.publish != 'false' }}
-      run: |
-          echo "publish"
-          pip install twine
-#          echo -e "[pypi]" >> ~/.pypirc
-#          echo -e "repository = $PYPI_REPOSITORY" >> ~/.pypirc
-#          echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
-#          echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
-#          twine upload dist_python/*
-      shell: bash
-      env: 
-        PYPI_REPOSITORY: ${{ inputs.pypi_registry }}
-        PYPI_USERNAME: ${{ inputs.pypi_username }}
-        PYPI_PASSWORD: ${{ inputs.pypi_password }}      

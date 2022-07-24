@@ -1,0 +1,36 @@
+name: Build Python Repositories
+
+inputs:
+  pypi_registry:
+    description: "registry where to publish python package"
+    default: "https://pypi.org/pypi"
+    required: true
+    type: string
+  pypi_username:
+    description: "username for python registry"
+    default: "admin"
+    required: true
+    type: string
+  pypi_password:
+    description: "passwort for python registry"
+    default: "admin"
+    required: true
+    type: string
+runs:
+  using: "composite"
+  steps:      
+    - name: Publish to pip registry
+      if: ${{ inputs.publish && inputs.publish != 'false' }}
+      run: |
+          echo "publish"
+          pip install twine
+#          echo -e "[pypi]" >> ~/.pypirc
+#          echo -e "repository = $PYPI_REPOSITORY" >> ~/.pypirc
+#          echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
+#          echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+#          twine upload dist_python/*
+      shell: bash
+      env: 
+        PYPI_REPOSITORY: ${{ inputs.pypi_registry }}
+        PYPI_USERNAME: ${{ inputs.pypi_username }}
+        PYPI_PASSWORD: ${{ inputs.pypi_password }}      
