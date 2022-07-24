@@ -23,6 +23,11 @@ jobs:
       KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }}
       GA_VERSION: ${{ github.event.inputs.ga_version }}
     steps:
+      - name: check actor
+        if: ${{ !contains('["datavisyn-bot", "anita-steiner","dvvanessastoiber", "puehringer","dvdanielamoitzi", "thinkh"]', github.actor) }}
+        run: |
+          echo "you are not allowed to run this job!"
+          exit 1    
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0

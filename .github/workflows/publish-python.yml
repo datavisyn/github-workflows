@@ -16,7 +16,12 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10"]
-    steps:      
+    steps: 
+      - name: check actor
+        if: ${{ !contains('["datavisyn-bot", "anita-steiner","dvvanessastoiber", "puehringer","dvdanielamoitzi", "thinkh"]', github.actor) }}
+        run: |
+          echo "you are not allowed to run this job!"
+          exit 1         
       - uses: actions/checkout@v3
       - uses: actions/checkout@v3
         with:

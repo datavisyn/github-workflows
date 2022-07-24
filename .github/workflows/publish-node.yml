@@ -18,7 +18,12 @@ jobs:
       fail-fast: false
       matrix:
         node-version: ["14.19"]
-    steps:      
+    steps:
+      - name: check actor
+        if: ${{ !contains('["datavisyn-bot", "anita-steiner","dvvanessastoiber", "puehringer","dvdanielamoitzi", "thinkh"]', github.actor) }}
+        run: |
+          echo "you are not allowed to run this job!"
+          exit 1       
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }} # has to set because otherwise it will not work
