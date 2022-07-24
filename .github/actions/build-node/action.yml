@@ -28,14 +28,19 @@ runs:
       run: |
         node -v
         npm -v
+      shell: bash  
     - name: Git config
       if: "${{ env.GITHUB_TOKEN != '' }}"
       run: git config --global url.https://${{ env.GITHUB_TOKEN }}@github.com/.insteadOf ssh://git@github.com/
       env: 
-        GITHUB_TOKEN: ${{ inputs.github_ro_token }}       
+        GITHUB_TOKEN: ${{ inputs.github_ro_token }}
+      shell: bash         
     - name: Install npm dependencies
       run:  npm install
+      shell: bash
     - name: Show installed npm dependencies
       run: npm list --depth=1 || true
+      shell: bash
     - name: Build
       run: npm run dist
+      shell: bash

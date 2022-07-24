@@ -12,5 +12,6 @@ runs:
     - name: Publish to npm
       run: echo "publish"
       #run: npm publish
+      shell: bash
       env: 
         NODE_AUTH_TOKEN: ${{ inputs.npm_token }}
