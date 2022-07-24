@@ -1,0 +1,41 @@
+name: Build node source
+
+inputs:
+  node_version:
+    description: "node version to use"
+    default: "3.10"
+    required: true
+    type: string
+  github_ro_token:  
+    description: "github read-only token"
+    default: "admin"
+    required: true
+    type: string
+  npm_registry:  
+    description: "npm registry"
+    default: "https://registry.npmjs.org/"
+    required: true
+    type: string    
+runs:
+  using: "composite"
+  steps:      
+    - name: Set up node version ${{inputs.node_version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ inputs.node_version }}
+        registry-url: ${{ inputs.npm_registry }}
+    - name: Show node and npm version
+      run: |
+        node -v
+        npm -v
+    - name: Git config
+      if: "${{ env.GITHUB_TOKEN != '' }}"
+      run: git config --global url.https://${{ env.GITHUB_TOKEN }}@github.com/.insteadOf ssh://git@github.com/
+      env: 
+        GITHUB_TOKEN: ${{ inputs.github_ro_token }}       
+    - name: Install npm dependencies
+      run:  npm install
+    - name: Show installed npm dependencies
+      run: npm list --depth=1 || true
+    - name: Build
+      run: npm run dist

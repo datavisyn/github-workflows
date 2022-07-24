@@ -1,4 +1,4 @@
-name: Build node repositories
+name: Publish node repositories
 
 on: workflow_call
 
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  build-node:
+  publish:
     permissions:
       id-token: write
       contents: read  
@@ -32,3 +32,6 @@ jobs:
           node_version: ${{ matrix.node-version }}
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token:  ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+      - uses: ./tmp/github-workflows/.github/actions/publish-node
+        with:
+          npm_token:  ${{ secrets.NPM_TOKEN }}

@@ -1,4 +1,4 @@
-name: Build Python Repositories
+name: Publish python package
 
 inputs:
   pypi_registry:
@@ -20,7 +20,6 @@ runs:
   using: "composite"
   steps:      
     - name: Publish to pip registry
-      if: ${{ inputs.publish && inputs.publish != 'false' }}
       run: |
           echo "publish"
           pip install twine

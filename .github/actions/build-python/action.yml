@@ -1,4 +1,4 @@
-name: Build Python Repositories
+name: Build python source
 
 inputs:
   python_version:

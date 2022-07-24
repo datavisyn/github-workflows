@@ -1,0 +1,16 @@
+name: Publish npm package
+
+inputs:
+  npm_token:  
+    description: "npm token"
+    default: "admin"
+    required: true
+    type: string       
+runs:
+  using: "composite"
+  steps:      
+    - name: Publish to npm
+      run: echo "publish"
+      #run: npm publish
+      env: 
+        NODE_AUTH_TOKEN: ${{ inputs.npm_token }}
