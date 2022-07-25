@@ -26,4 +26,4 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/build-python
         with:
           python_version: ${{ matrix.python-version }}
-          github_ro_token:  ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}      
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || '' }}

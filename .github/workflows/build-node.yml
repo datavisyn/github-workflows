@@ -21,7 +21,7 @@ jobs:
     steps:      
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }} # has to set because otherwise it will not work
+          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token }} # has to set because otherwise it will not work
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
@@ -31,4 +31,4 @@ jobs:
         with:
           node_version: ${{ matrix.node-version }}
           npm_registry: ${{ env.NPM_REGISTRY }}
-          github_ro_token:  ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || '' }} 

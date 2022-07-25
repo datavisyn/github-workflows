@@ -7,12 +7,9 @@ on:
         description: "repositories, that are known in the datavisyn eco-system"
         required: true
         type: string
-      ga_version:
-        description: "github action version to use for main"
-        required: true
-        type: string        
 
 env: 
+  GA_VERSION: "v1"
   GITHUB_USER: "datavisyn-bot"
 
 jobs:
@@ -20,7 +17,6 @@ jobs:
     runs-on: ubuntu-20.04
     env:
       KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }}
-      GA_VERSION: ${{ github.event.inputs.ga_version }}
     steps:
       - name: check actor
         if: ${{ !contains('["datavisyn-bot", "anita-steiner","dvvanessastoiber", "puehringer","dvdanielamoitzi", "thinkh"]', github.actor) }}
