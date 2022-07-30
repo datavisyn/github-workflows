@@ -7,7 +7,9 @@ env:
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
 
- 
+permissions:
+  contents: write
+
 
 jobs:
   release-repository:
@@ -83,7 +85,7 @@ jobs:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
       - name: error handling if latest release was not callable
         if: ${{ steps.get-latest-release.outputs.status != 404 && steps.get-latest-release.outputs.status != 200 }}
         run: exit 1 
