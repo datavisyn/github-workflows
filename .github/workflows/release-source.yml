@@ -249,13 +249,14 @@ jobs:
         run: |
           echo "get fetch"
           git fetch
-          git checkout -t origin/main
+          git checkout main
+          git pull
           git checkout develop
           git pull
       - name: merge main to develop
         run: |
           echo "merge main to develop"
-          git merge origin/main
+          git merge main --allow-unrelated-histories
       # checkout this workflow repository to get actions    
       - uses: actions/checkout@v3
         with:
