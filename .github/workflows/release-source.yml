@@ -59,12 +59,9 @@ jobs:
       - name: get release version
         id: get-release-version
         run: |
-          echo "known repositories1: ${{ steps.get-known-repositories.outputs.known_repositories }}"
           known_repositories=${{ steps.get-known-repositories.outputs.known_repositories }}
-          echo "known repositories2: ${known_repositories}"
           repository=${{ github.event.repository.name }}
           echo "repository: ${repository}"
-          echo $known_repositories | jq -r '.'
           echo $known_repositories | jq -r '.'
           checked_repository="$(echo $known_repositories | jq -r '.' | jq --arg var $repository '.[$var]')"
           release_version="$(echo $checked_repository | jq -r '.version')"
@@ -86,7 +83,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - name: error handling if latest release was not callable
-        if: ${{ steps.get-latest-release.outputs.status != 404 }}
+        if: ${{ steps.get-latest-release.outputs.status != 404 && steps.get-latest-release.outputs.status != 200 }}
         run: exit 1 
       - name: check release version
         if: ${{ steps.get-latest-release.outputs.status == 200 }}
