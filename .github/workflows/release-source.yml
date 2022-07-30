@@ -7,11 +7,7 @@ env:
   GA_VERSION: "v1"
   GITHUB_USER: "datavisyn-bot"
 
-permissions:
-  contents: write
-  id-token: write
-
-  
+ 
 
 jobs:
   release-repository:
