@@ -9,6 +9,9 @@ env:
 
 permissions:
   contents: write
+  id-token: write
+
+  
 
 jobs:
   release-repository:
@@ -43,6 +46,7 @@ jobs:
         id: get-known-repositories
         run: |
           echo "${{github.event.repository.private}}"
+          echo "${{secrets.DATAVISYN_BOT_REPO_TOKEN}}"
           if [[ ${{github.event.repository.private}} = true ]]; then
             wget https://raw.github.com/datavisyn/github-maintenance/main/release/next_repositories_sources.json?token=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }} --output-document=./known_repositories.json
           else
