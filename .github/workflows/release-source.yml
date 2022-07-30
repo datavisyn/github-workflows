@@ -37,12 +37,6 @@ jobs:
         run: |
           echo 'only the develop branch can be released.'
           exit 1
-      - name: Wrong ga version
-        run: |
-          if[[ "$GA_VERSION" != v* ]]; then
-            exit 1
-            echo 'Wrong branch!'
-          fi
       # checkout specific repository         
       - uses: actions/checkout@v3
       - name: read known repositories
