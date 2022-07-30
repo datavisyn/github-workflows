@@ -201,7 +201,7 @@ jobs:
           exit 1
       - name: trigger publish
         uses: datavisyn/github-action-trigger-workflow@v1
-        if: ${{ !steps.get-release-version.outputs.private || steps.get-release-version.outputs.private == "false"}}
+        if: ${{ !steps.get-release-version.outputs.private || steps.get-release-version.outputs.private == 'false' }}
         with:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
