@@ -52,7 +52,7 @@ jobs:
               -o known_repositories.json \
               -L https://raw.githubusercontent.com/datavisyn/github-maintenance/main/release/next_repositories_sources_public.json
           fi
-          known_repositories=$(jq -Rs '.' ./known_repositories.json)
+          known_repositories=$(jq -rc '.' ./known_repositories.json)
           echo ${known_repositories}
           rm ./known_repositories.json
           echo "::set-output name=known_repositories::$known_repositories"     
@@ -60,10 +60,10 @@ jobs:
         id: get-release-version
         run: |
           echo "known repositories1: ${{ steps.get-known-repositories.outputs.known_repositories }}"
-          known_repositories= ${{ steps.get-known-repositories.outputs.known_repositories }}
-          echo "known repositories2: $known_repositories"
+          known_repositories=${{ steps.get-known-repositories.outputs.known_repositories }}
+          echo "known repositories2: ${known_repositories}"
           repository=${{ github.event.repository.name }}
-          echo "repository: $repository"
+          echo "repository: ${repository}"
           checked_repository="$(echo $known_repositories | jq --arg var $repository '.[$var]')"
           release_version="$(echo $checked_repository | jq -r '.version')"
           new_branch_name=release/$release_version
