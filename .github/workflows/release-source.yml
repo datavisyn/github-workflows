@@ -44,9 +44,16 @@ jobs:
           echo "${{github.event.repository.private}}"
           echo "${{secrets.DATAVISYN_BOT_REPO_TOKEN}}"
           if [[ ${{github.event.repository.private}} = true ]]; then
-            wget https://raw.github.com/datavisyn/github-maintenance/main/release/next_repositories_sources.json?token=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }} --output-document=./known_repositories.json
+            curl -H 'Authorization: token ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}' \
+              -H 'Accept: application/vnd.github.v4.raw' \
+              -o known_repositories.json \
+              -L https://raw.githubusercontent.com/datavisyn/github-maintenance/main/release/next_repositories_sources.json
+            mv ./  
           else
-            wget https://raw.github.com/datavisyn/github-maintenance/main/release/next_repositories_sources_public.json?token=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }} --output-document=./known_repositories.json
+            curl -H 'Authorization: token ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}' \
+              -H 'Accept: application/vnd.github.v4.raw' \
+              -o known_repositories.json \
+              -L https://raw.githubusercontent.com/datavisyn/github-maintenance/main/release/next_repositories_sources_public.json
           fi
           known_repositories=$(echo $(cat ./known_repositories.json) | sed 's/ //g' )
           rm ./known_repositories.json
