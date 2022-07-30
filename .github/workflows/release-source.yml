@@ -65,8 +65,8 @@ jobs:
           repository=${{ github.event.repository.name }}
           echo "repository: ${repository}"
           echo $known_repositories | jq -r '.'
-          echo $known_repositories | jq -r '.' | jq '.'
-          checked_repository="$(echo $known_repositories | jq -r '.' | jq --arg var $repository '.$var')"
+          echo $known_repositories | jq -r '.'
+          checked_repository="$(echo $known_repositories | jq -r '.' | jq --arg var $repository '.[$var]')"
           release_version="$(echo $checked_repository | jq -r '.version')"
           new_branch_name=release/$release_version
           next_dev_version=$(echo $checked_repository | jq -r '.next_dev_version')
