@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 env: 
-  GA_VERSION: "v1"
+  GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
 
  
@@ -153,7 +153,7 @@ jobs:
       - name: push branch
         run: |
           echo "push branch" 
-          git commit -am "Prepare release ${{ steps.get-release-version.outputs.release_version }}"
+          git commit -am "[skip ci]Prepare release ${{ steps.get-release-version.outputs.release_version }}"
           git push origin ${{ steps.get-release-version.outputs.new_branch_name }}
       - name: trigger build
         uses: datavisyn/github-action-trigger-workflow@v1
