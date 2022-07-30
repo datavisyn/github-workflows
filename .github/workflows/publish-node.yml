@@ -23,10 +23,17 @@ jobs:
         if: ${{ !contains('["datavisyn-bot", "anita-steiner","dvvanessastoiber", "puehringer","dvdanielamoitzi", "thinkh"]', github.actor) }}
         run: |
           echo "you are not allowed to run this job!"
-          exit 1       
+          exit 1
+      - name: check branch
+        if: ${{ github.ref != 'refs/heads/main' }}
+        run: |
+          echo "only the main branch can be published."
+          exit 1
+      # checkout specific source repository                   
       - uses: actions/checkout@v3
         with:
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token }} # has to set because otherwise it will not work
+      # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows

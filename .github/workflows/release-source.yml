@@ -1,71 +1,76 @@
-name: Release repository
+name: Release source repository
 
 on: 
   workflow_call:
-    inputs:
-      known_repositories:
-        description: "repositories, that are known in the datavisyn eco-system"
-        required: true
-        type: string
 
 env: 
   GA_VERSION: "v1"
   GITHUB_USER: "datavisyn-bot"
 
+permissions:
+  contents: write
+
 jobs:
   release-repository:
     runs-on: ubuntu-20.04
-    env:
-      KNOWN_REPOSITORIES: ${{ github.event.inputs.known_repositories }}
     steps:
+      # - name: Dump GitHub context
+      #   id: github_context_step
+      #   run: echo '${{ toJSON(github) }}'
+      # - name: Dump job context
+      #   run: echo '${{ toJSON(job) }}'
+      # - name: Dump steps context
+      #   run: echo '${{ toJSON(steps) }}'
+      # - name: Dump runner context
+      #   run: echo '${{ toJSON(runner) }}'
+      # - name: Dump strategy context
+      #   run: echo '${{ toJSON(strategy) }}'
+      # - name: Dump matrix context
+      #   run: echo '${{ toJSON(matrix) }}'    
       - name: check actor
         if: ${{ !contains('["datavisyn-bot", "anita-steiner","dvvanessastoiber", "puehringer","dvdanielamoitzi", "thinkh"]', github.actor) }}
         run: |
           echo "you are not allowed to run this job!"
           exit 1
-      - uses: actions/checkout@v3
-      - name: Dump GitHub context
-        id: github_context_step
-        run: echo '${{ toJSON(github) }}'
-      - name: Dump job context
-        run: echo '${{ toJSON(job) }}'
-      - name: Dump steps context
-        run: echo '${{ toJSON(steps) }}'
-      - name: Dump runner context
-        run: echo '${{ toJSON(runner) }}'
-      - name: Dump strategy context
-        run: echo '${{ toJSON(strategy) }}'
-      - name: Dump matrix context
-        run: echo '${{ toJSON(matrix) }}'
-      - name: Wrong actor
-        if: ${{ github.actor != 'datavisyn-bot' && github.actor != 'anita-steiner' }}
-        run: |
-          echo 'Wrong actor!'
-          exit 1
-      - name: Wrong branch
+      - name: check branch
         if: ${{ github.ref != 'refs/heads/develop' }}
         run: |
-          echo 'Wrong branch!'
+          echo 'only the develop branch can be released.'
           exit 1
       - name: Wrong ga version
         run: |
           if[[ "$GA_VERSION" != v* ]]; then
             exit 1
             echo 'Wrong branch!'
-          fi                 
-      - name: echo inputs
+          fi
+      # checkout specific repository         
+      - uses: actions/checkout@v3
+      - name: read known repositories
+        id: get-known-repositories
         run: |
-          echo $KNOWN_REPOSITORIES
-          echo $GA_VERSION
+          echo "${{github.event.repository.private}}"
+          if [[ ${{github.event.repository.private}} = true ]]; then
+            wget https://raw.github.com/datavisyn/github-maintenance/main/release/next_repositories_sources.json?token=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }} --output-document=./known_repositories.json
+          else
+            wget https://raw.github.com/datavisyn/github-maintenance/main/release/next_repositories_sources_public.json?token=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }} --output-document=./known_repositories.json
+          fi
+          known_repositories=$(echo $(cat ./known_repositories.json) | sed 's/ //g' )
+          rm ./known_repositories.json
+          echo "::set-output name=known_repositories::$known_repositories"     
       - name: get release version
         id: get-release-version
         run: |
+          known_repositories= ${{ steps.get-known-repositories.outputs.known_repositories }}
           repository=${{ github.event.repository.name }}
-          checked_repository="$(echo $KNOWN_REPOSITORIES | jq --arg var $repository '.[$var]')"
+          checked_repository="$(echo $known_repositories | jq --arg var $repository '.[$var]')"
           release_version="$(echo $checked_repository | jq -r '.version')"
           new_branch_name=release/$release_version
+          next_dev_version=$(echo $checked_repository | jq -r '.next_dev_version')
+          private=$(echo $checked_repository | jq -r '.private')
           echo ::set-output name=release_version::${release_version}
           echo ::set-output name=new_branch_name::${new_branch_name}
+          echo ::set-output name=next_dev_version::${next_dev_version}
+          echo ::set-output name=private::${private}
       - uses: octokit/request-action@v2.x
         id: get-latest-release
         continue-on-error: true
@@ -76,6 +81,9 @@ jobs:
           repo: ${{ github.event.repository.name }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
+      - name: error handling if latest release was not callable
+        if: ${{ steps.get-latest-release.outputs.status != 404 }}
+        run: exit 1 
       - name: check release version
         if: ${{ steps.get-latest-release.outputs.status == 200 }}
         run: |
@@ -85,10 +93,8 @@ jobs:
             echo "nothing todo!"
             exit 1 
             # check if exit 1 is really the best solution
-          fi  
-      - name: error handling if latest release was not callable
-        if: ${{ steps.get-latest-release.outputs.status != 404 }}
-        run: exit 1              
+          fi
+          # TODO: semver - check if version is lower than given version
       - name: create/get release branch
         run: |
           echo "create/get release branch"
@@ -98,31 +104,22 @@ jobs:
           else
             git checkout -b ${{ steps.get-release-version.outputs.new_branch_name }}
           fi
-      - name: prepare release
+      # checkout this workflow repository to get actions    
+      - uses: actions/checkout@v3
+        with:
+          repository: datavisyn/github-workflows
+          ref: main
+          path: ./tmp/github-workflows
+      - name: prepare develop
+        uses: ./tmp/github-workflows/.github/actions/release-changes
+        with:
+          known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
+          repository_version: ${{ steps.get-release-version.outputs.release_version }}
+          ga_version:  ${{ env.GA_VERSION }}
+          prepare_release: true          
+      - name: delete tmp files
         run: |
-          # change develop git references with version references in package.json and requirements.txt
-          repositories="$(echo $KNOWN_REPOSITORIES | jq '.')"  
-          readarray -t my_array < <(echo $KNOWN_REPOSITORIES | jq -rc '. | keys[]')
-          for repository in "${my_array[@]}"; do
-            npm_version=$(echo $repositories | jq -r --arg var $repository '.[$var].npm_version')
-            npm_develop=$(echo $repositories | jq -r --arg var $repository '.[$var].npm_develop')
-            pip_version=$(echo $repositories | jq -r --arg var $repository '.[$var].pip_version')
-            pip_develop=$(echo $repositories | jq -r --arg var $repository '.[$var].pip_develop')
-            echo $repository: $npm_version $npm_develop $pip_version $pip_develop
-            if [[ $npm_version != null && $npm_develop != null ]] ; then
-              sed -i "s|\"$repository\": \"$npm_develop\"|\"$repository\": \"$npm_version\"|gI" ./package.json
-            fi
-            if [[ $pip_version != null && $pip_develop != null ]] ; then
-              sed -i "s|$pip_develop|$pip_version|gI" ./requirements.txt
-            fi
-          done
-          version=$(jq -r '.version' ./package.json)
-          cat ./requirements.txt
-          # change version in package.json
-          sed -i "s|\"version\": \"$version\"|\"version\": \"${{ steps.get-release-version.outputs.release_version }}\"|gI" ./package.json
-          cat ./package.json
-          #change version of github action references
-          find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@main/@$GA_VERSION/g" {} \;
+          rm -rf ./tmp/github-workflows
       - name: create release notes
         id: release-notes
         run: |
@@ -201,22 +198,22 @@ jobs:
         if: ${{ steps.merge-pr.outputs.status != 200 }}
         run: |
           echo "something went wrong with the merge of the pr"
-          exit 1              
+          exit 1
+      - name: trigger publish
+        uses: datavisyn/github-action-trigger-workflow@v1
+        if: ${{ ! steps.get-release-version.outputs.private || (steps.get-release-version.outputs.private == false || steps.get-release-version.outputs.private == "false"}}
+        with:
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+          workflow_file_name: "publish.yml"
+          ref: "main"
+          github_user: ${{ env.GITHUB_USER }}                    
       - name: delete release branch
         run: |
           echo "delete release branch"
           git branch -d ${{ steps.get-release-version.outputs.new_branch_name }}
           git push origin --delete ${{ steps.get-release-version.outputs.new_branch_name }}
-
-      - name: trigger main build
-        uses: datavisyn/github-action-trigger-workflow@v1
-        with:
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-          workflow_file_name: "build.yml"
-          ref: "main"
-          github_user: ${{ env.GITHUB_USER }}
       - name: create release
         id: create-release
         uses: octokit/request-action@v2.x
@@ -249,32 +246,22 @@ jobs:
         run: |
           echo "merge main to develop"
           git merge origin/main
+      # checkout this workflow repository to get actions    
+      - uses: actions/checkout@v3
+        with:
+          repository: datavisyn/github-workflows
+          ref: main
+          path: ./tmp/github-workflows
       - name: prepare develop
+        uses: ./tmp/github-workflows/.github/actions/release-changes
+        with:
+          known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
+          repository_version: ${{ steps.get-release-version.outputs.next_dev_version }}
+          ga_version:  ${{ env.GA_VERSION }}
+          prepare_release: false          
+      - name: delete tmp files
         run: |
-          # change version git references with develop references in package.json and requirements.txt
-          repositories="$(echo $KNOWN_REPOSITORIES | jq '.')"  
-          readarray -t my_array < <(echo $KNOWN_REPOSITORIES | jq -rc '. | keys[]')
-          for repository in "${my_array[@]}"; do
-            npm_version=$(echo $repositories | jq -r --arg var $repository '.[$var].npm_version')
-            npm_develop=$(echo $repositories | jq -r --arg var $repository '.[$var].npm_develop')
-            pip_version=$(echo $repositories | jq -r --arg var $repository '.[$var].pip_version')
-            pip_develop=$(echo $repositories | jq -r --arg var $repository '.[$var].pip_develop')
-            next_dev_version=$(echo $repositories | jq -r --arg var $repository '.[$var].next_dev_version')
-            echo $repository: $npm_version $npm_develop $pip_version $pip_develop
-            if [[ $npm_version != null && $npm_develop != null ]] ; then
-              sed -i "s|\"$repository\": \"$npm_version\"|\"$repository\": \"$npm_develop\"|gI" ./package.json
-            fi
-            if [[ $pip_version != null && $pip_develop != null ]] ; then
-              sed -i "s|$pip_version|$pip_develop|gI" ./requirements.txt
-            fi
-          done
-          # change version in package.json
-          version=$(jq -r '.version' ./package.json)
-          sed -i "s|\"version\": \"$version\"|\"version\": \"$next_dev_version\"|gI" ./package.json
-          cat ./package.json
-          cat ./requirements.txt
-          #change version of github action references
-          find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@$GA_VERSION/@main/g" {} \;
+          rm -rf ./tmp/github-workflows          
       - name: push develop
         run: |
           echo "push develop"

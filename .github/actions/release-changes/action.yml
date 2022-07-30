@@ -1,0 +1,63 @@
+name: changes for the release
+
+inputs:
+  known_repositories:
+    description: "known repositories as json"
+    required: true
+    type: string
+  repository_version:
+    description: "version of the repository for the package.json"
+    required: true
+    type: string
+  ga_version:
+    description: "github action version to use"
+    required: true
+    type: string      
+  prepare_release:  
+    description: "true, if this is called to prepare the release; false if it runs to prepare the develop"
+    default: true
+    required: true
+    type: boolean
+runs:
+  using: "composite"
+  steps:      
+    - name: change release
+      run: |
+        # change git references with version references in package.json and requirements.txt
+        known_repositories= ${{ inputs.known_repositories }}
+        repositories="$(echo $known_repositories | jq '.')"  
+        readarray -t my_array < <(echo $known_repositories | jq -rc '. | keys[]')
+        for repository in "${my_array[@]}"; do
+          npm_version=$(echo $repositories | jq -r --arg var $repository '.[$var].npm_version')
+          npm_develop=$(echo $repositories | jq -r --arg var $repository '.[$var].npm_develop')
+          pip_version=$(echo $repositories | jq -r --arg var $repository '.[$var].pip_version')
+          pip_develop=$(echo $repositories | jq -r --arg var $repository '.[$var].pip_develop')
+          echo $repository: $npm_version $npm_develop $pip_version $pip_develop
+          if [[ ${{ inputs.prepare_release }} = true ]]; then
+            if [[ $npm_version != null && $npm_develop != null ]] ; then
+              sed -i "s|\"$repository\": \"$npm_develop\"|\"$repository\": \"$npm_version\"|gI" ./package.json
+            fi
+            if [[ $pip_version != null && $pip_develop != null ]] ; then
+              sed -i "s|$pip_develop|$pip_version|gI" ./requirements.txt
+            fi
+          else
+            if [[ $npm_version != null && $npm_develop != null ]] ; then
+              sed -i "s|\"$repository\": \"$npm_version\"|\"$repository\": \"$npm_develop\"|gI" ./package.json
+            fi
+            if [[ $pip_version != null && $pip_develop != null ]] ; then
+              sed -i "s|$pip_version|$pip_develop|gI" ./requirements.txt
+            fi
+          fi  
+        done
+        version=$(jq -r '.version' ./package.json)
+        cat ./requirements.txt
+        # change version in package.json
+        sed -i "s|\"version\": \"$version\"|\"version\": \"${{ inputs.repository_version }}\"|gI" ./package.json
+        cat ./package.json
+        #change version of github action references
+        if [[ ${{ inputs.prepare_release = true }} ]]; then
+          find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@main/@$GA_VERSION/g" {} \;
+        else
+          find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@$GA_VERSION/@main/g" {} \;  
+        fi
+      shell: bash
