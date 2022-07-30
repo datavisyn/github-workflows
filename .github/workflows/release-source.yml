@@ -41,14 +41,11 @@ jobs:
       - name: read known repositories
         id: get-known-repositories
         run: |
-          echo "${{github.event.repository.private}}"
-          echo "${{secrets.DATAVISYN_BOT_REPO_TOKEN}}"
           if [[ ${{github.event.repository.private}} = true ]]; then
             curl -H 'Authorization: token ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}' \
               -H 'Accept: application/vnd.github.v4.raw' \
               -o known_repositories.json \
               -L https://raw.githubusercontent.com/datavisyn/github-maintenance/main/release/next_repositories_sources.json
-            mv ./  
           else
             curl -H 'Authorization: token ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}' \
               -H 'Accept: application/vnd.github.v4.raw' \
