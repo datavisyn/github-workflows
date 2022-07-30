@@ -99,16 +99,12 @@ jobs:
       - name: create/get release branch
         run: |
           echo "create/get release branch"
-          echo $BRANCH_NAME
-          echo ${BRANCH_NAME}
-          echo ${{ env.BRANCH_NAME }}
-          exists=`git show-ref refs/heads/${{ steps.get-release-version.outputs.new_branch_name }}`
-          if git rev-parse --verify --quiet origin/${BRANCH_NAME}; then
+          if git rev-parse --verify --quiet origin/${{ env.BRANCH_NAME }}; then
             echo "branch exists!"
-            git checkout ${BRANCH_NAME} 
+            git checkout ${{ env.BRANCH_NAME }} 
           else
             echo "create branch"
-            git checkout -b ${BRANCH_NAME}
+            git checkout -b ${{ env.BRANCH_NAME }}
           fi
         env:
           BRANCH_NAME: ${{ steps.get-release-version.outputs.new_branch_name }}
