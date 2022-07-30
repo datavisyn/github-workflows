@@ -177,7 +177,7 @@ jobs:
           base: "main"
           draft: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
       - run: |
           echo "data: ${{ steps.create-pr.outputs.data }}"
           echo "status: ${{ steps.create-pr.outputs.status }}"
@@ -199,7 +199,7 @@ jobs:
           base: "main"
           draft: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
       - name: check merge status
         if: ${{ steps.merge-pr.outputs.status != 200 }}
         run: |
@@ -235,7 +235,7 @@ jobs:
           prerelease: false
           generate_release_notes: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
       - name: check release status
         if: ${{ steps.create-release.outputs.status != 201 }}
         run: |
