@@ -25,7 +25,7 @@ runs:
       run: |
         echo ${{ inputs.prepare_release }}
         # change git references with version references in package.json and requirements.txt
-        known_repositories= ${{ inputs.known_repositories }}
+        known_repositories=${{ inputs.known_repositories }}
         echo $known_repositories | jq -r '.'
         repositories=$(echo $known_repositories | jq -r '.')
         echo "repositories: ${repositories}"
