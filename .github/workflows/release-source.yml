@@ -178,13 +178,12 @@ jobs:
           draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-      - run: |
-          echo "data: ${{ steps.create-pr.outputs.data }}"
-          echo "status: ${{ steps.create-pr.outputs.status }}"
       - name: check pr status
         if: ${{ steps.create-pr.outputs.status != 201 }}
         run: |
           echo "something went wrong with the pr"
+          echo "data: ${{ steps.create-pr.outputs.data }}"
+          echo "status: ${{ steps.create-pr.outputs.status }}"
           exit 1                                  
       - name: merge pull request
         id: merge-pr
@@ -204,6 +203,8 @@ jobs:
         if: ${{ steps.merge-pr.outputs.status != 200 }}
         run: |
           echo "something went wrong with the merge of the pr"
+          echo "data: ${{ steps.merge-pr.outputs.data }}"
+          echo "status: ${{ steps.merge-pr.outputs.status }}"          
           exit 1
       - name: trigger publish
         uses: datavisyn/github-action-trigger-workflow@v1
@@ -218,6 +219,7 @@ jobs:
       - name: delete release branch
         run: |
           echo "delete release branch"
+          git checkout develop
           git branch -d ${{ steps.get-release-version.outputs.new_branch_name }}
           git push origin --delete ${{ steps.get-release-version.outputs.new_branch_name }}
       - name: create release
@@ -240,6 +242,8 @@ jobs:
         if: ${{ steps.create-release.outputs.status != 201 }}
         run: |
           echo "something went wrong with the creation of the release"
+          echo "data: ${{ steps.create-release.outputs.data }}"
+          echo "status: ${{ steps.create-release.outputs.status }}"       
           exit 1                   
       - name: git fetch
         run: |
