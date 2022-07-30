@@ -27,13 +27,14 @@ runs:
         known_repositories= ${{ inputs.known_repositories }}
         repositories="$(echo $known_repositories | jq '.')"  
         readarray -t my_array < <(echo $known_repositories | jq -rc '. | keys[]')
+        echo ${{ inputs.prepare_release }}
         for repository in "${my_array[@]}"; do
           npm_version=$(echo $repositories | jq -r --arg var $repository '.[$var].npm_version')
           npm_develop=$(echo $repositories | jq -r --arg var $repository '.[$var].npm_develop')
           pip_version=$(echo $repositories | jq -r --arg var $repository '.[$var].pip_version')
           pip_develop=$(echo $repositories | jq -r --arg var $repository '.[$var].pip_develop')
           echo $repository: $npm_version $npm_develop $pip_version $pip_develop
-          if [[ ${{ inputs.prepare_release }} = true ]]; then
+          if ${{ inputs.prepare_release }}; then
             if [[ $npm_version != null && $npm_develop != null ]] ; then
               sed -i "s|\"$repository\": \"$npm_develop\"|\"$repository\": \"$npm_version\"|gI" ./package.json
             fi
@@ -55,7 +56,7 @@ runs:
         sed -i "s|\"version\": \"$version\"|\"version\": \"${{ inputs.repository_version }}\"|gI" ./package.json
         cat ./package.json
         #change version of github action references
-        if [[ ${{ inputs.prepare_release = true }} ]]; then
+        if ${{ inputs.prepare_release }}; then
           find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@main/@$GA_VERSION/g" {} \;
         else
           find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@$GA_VERSION/@main/g" {} \;  
