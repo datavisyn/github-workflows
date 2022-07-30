@@ -219,9 +219,12 @@ jobs:
       - name: delete release branch
         run: |
           echo "delete release branch"
+          git fetch
+          git status
           git checkout develop
           git branch -D ${{ steps.get-release-version.outputs.new_branch_name }}
           git push origin --delete ${{ steps.get-release-version.outputs.new_branch_name }}
+          git status
       - name: create release
         id: create-release
         uses: octokit/request-action@v2.x
@@ -247,16 +250,18 @@ jobs:
           exit 1                   
       - name: git fetch
         run: |
+          git status
           echo "get fetch"
           git fetch
           git checkout main
-          git pull
+          git pull --rebase
           git checkout develop
-          git pull
+          git pull --rebase
+          git status
       - name: merge main to develop
         run: |
           echo "merge main to develop"
-          git merge main --allow-unrelated-histories
+          git merge -X theirs main --allow-unrelated-histories
       # checkout this workflow repository to get actions    
       - uses: actions/checkout@v3
         with:
