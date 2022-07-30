@@ -100,11 +100,15 @@ jobs:
         run: |
           echo "create/get release branch"
           exists=`git show-ref refs/heads/${{ steps.get-release-version.outputs.new_branch_name }}`
-          if [ -n "$exists" ]; then
-            git checkout ${{ steps.get-release-version.outputs.new_branch_name }}
+          if git rev-parse --verify --quiet origin/${BRANCH_NAME}; then
+            echo "branch exists!"
+            git checkout ${BRANCH_NAME} 
           else
-            git checkout -b ${{ steps.get-release-version.outputs.new_branch_name }}
+            echo "create branch"
+            git checkout -b ${BRANCH_NAME}
           fi
+        env:
+          BRANCH_NAME: ${{ steps.get-release-version.outputs.new_branch_name }}
       # checkout this workflow repository to get actions    
       - uses: actions/checkout@v3
         with:
