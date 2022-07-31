@@ -27,7 +27,8 @@ runs:
     - name: Install generator
       run: |
         npm install -g yo@4.3.0
-        npm install -g generator-phovea@${{ inputs.generator_version }}   
+        npm install -g generator-phovea@${{ inputs.generator_version }}
+      shell: bash     
     - name: create workspace
       run: |
         mkdir -p ./tmp/${{ inputs.phovea_type }}
@@ -49,10 +50,13 @@ runs:
           git clone -b $branch --depth 1 $repository $name
         done
       env: 
-        GITHUB_TOKEN: ${{ inputs.github_token }}           
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      shell: bash             
     - name: update workspace
-        run: |
-          cd ./tmp/${{ inputs.phovea_type }}
-          rm ./../../.yo-rc.json
-          yo phovea:workspace --defaultApp=${{ inputs.app_name }} --noAdditionals=true  --addWorkspaceRepos=false
-          yes | cp -r ./../../templates/${{ inputs.phovea_type }}/* .
+      run: |
+        cd ./tmp/${{ inputs.phovea_type }}
+        rm ./../../.yo-rc.json
+        yo phovea:workspace --defaultApp=${{ inputs.app_name }} --noAdditionals=true  --addWorkspaceRepos=false
+        yes | cp -r ./../../templates/${{ inputs.phovea_type }}/* .
+      shell: bash  
+
