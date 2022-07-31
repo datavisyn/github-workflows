@@ -35,7 +35,8 @@ jobs:
           npm -v
       - name: Git config
         if: "${{ env.GITHUB_TOKEN != '' }}"
-        run: git config --global url.https://${{ env.GITHUB_TOKEN }}@github.com/.insteadOf ssh://git@github.com/
+        run: |
+          git config --global url.https://${{ env.GITHUB_TOKEN }}@github.com/.insteadOf ssh://git@github.com/
         env: 
           GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}       
       - name: Install generator
@@ -137,7 +138,7 @@ jobs:
           cd ./tmp/web
           name=$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json)
           name=$(echo "$name" | sed -e 's|.*/||')
-          repository=https://github.com/$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json).git
+          repository=git@github.com:$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json).git
           branch=$(jq  -rc '.[] | select(.type == "api") | .branch' ../../phovea_product.json)
           git clone -b $branch --depth 1 $repository $name
           readarray -t my_array < <(jq  -rc '.[] | select(.type == "api") | .additional[]' ../../phovea_product.json)
@@ -146,7 +147,7 @@ jobs:
             name=$(echo $additional | jq  -rc '.name')
             name=$(echo "$name" | sed -e 's|.*/||')
             echo "$name"
-            repository=https://github.com/$(echo $additional | jq  -rc '.repo').git
+            repository=git@github.com:$(echo $additional | jq  -rc '.repo').git
             branch=$(echo $additional | jq  -rc '.branch')
             echo "$repository"
             echo "$branch"
