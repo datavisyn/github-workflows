@@ -3,31 +3,34 @@ name: Release source repository
 on: 
   workflow_call:
 
-env: 
-  GA_VERSION: "main"
-  GITHUB_USER: "datavisyn-bot"
-
 permissions:
   contents: write
 
+concurrency:
+  group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
+  cancel-in-progress: true
+
+env: 
+  GA_VERSION: "main"
+  GITHUB_USER: "datavisyn-bot"
 
 jobs:
   release-repository:
     runs-on: ubuntu-20.04
     steps:
-      - name: Dump GitHub context
-        id: github_context_step
-        run: echo '${{ toJSON(github) }}'
-      - name: Dump job context
-        run: echo '${{ toJSON(job) }}'
-      - name: Dump steps context
-        run: echo '${{ toJSON(steps) }}'
-      - name: Dump runner context
-        run: echo '${{ toJSON(runner) }}'
-      - name: Dump strategy context
-        run: echo '${{ toJSON(strategy) }}'
-      - name: Dump matrix context
-        run: echo '${{ toJSON(matrix) }}'    
+      # - name: Dump GitHub context
+      #   id: github_context_step
+      #   run: echo '${{ toJSON(github) }}'
+      # - name: Dump job context
+      #   run: echo '${{ toJSON(job) }}'
+      # - name: Dump steps context
+      #   run: echo '${{ toJSON(steps) }}'
+      # - name: Dump runner context
+      #   run: echo '${{ toJSON(runner) }}'
+      # - name: Dump strategy context
+      #   run: echo '${{ toJSON(strategy) }}'
+      # - name: Dump matrix context
+      #   run: echo '${{ toJSON(matrix) }}'    
       - name: check actor
         if: ${{ !contains('["datavisyn-bot", "anita-steiner","dvvanessastoiber", "puehringer","dvdanielamoitzi", "thinkh"]', github.actor) }}
         run: |
