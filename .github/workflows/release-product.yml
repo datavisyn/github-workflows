@@ -141,7 +141,7 @@ jobs:
           version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
           echo $version
           owner="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .owner')"
-          content+="\"type\": \"web\", \"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\",   \"additional\": ["
+          content+="\"type\": \"api\", \"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\",   \"additional\": ["
           readarray -t my_array < <(jq  -rc '.[] | select(.type == "api") | .additional[]' ./phovea_product.json)
           for additional in "${my_array[@]}"; do
             echo "$additional"

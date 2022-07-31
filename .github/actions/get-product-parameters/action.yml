@@ -59,7 +59,7 @@ runs:
         web_repo="$product_name/"$(jq  -rc '.[] | select(.type == "web") | .label' ./phovea_product.json)
         # get everything from branch name
         # branchname should look <develop|master|main>_<sub_app>_<customer>_<aws>
-        # for release candidates the branch name should look like: rc_<version>_<sub_app>_<customer>_<aws>
+        # for release candidates the branch name should look like: rc_<version>_<sub_app>_<customer>_<aws>-<date>
         branch_name=${{ env.BRANCH_NAME }}
         branch_name=${branch_name##*/}
         echo $branch_name
@@ -76,7 +76,7 @@ runs:
           branch_name=${branch_name#develop}
         fi
         # master / main branch
-        if [[ $branch_name == master* ]] || [[ $a == main* ]] ; then 
+        if [[ $branch_name == master* ]] || [[ $branch_name == main* ]] ; then 
           stage=production
           branch_name=${branch_name#main_}
           branch_name=${branch_name#main}
@@ -86,9 +86,10 @@ runs:
         # release candidate
         if [[ $branch_name == rc_* ]] ; then 
           stage=production
+          aws=false
+          branch_name=${branch_name%%-*}
           branch_name=${branch_name#rc_}
           rc_candidate=rc_${branch_name%%_*}
-          branch_name=${branch_name#*_}
         fi
         # version tag
         if [[ $branch_name == v* ]] ; then 
