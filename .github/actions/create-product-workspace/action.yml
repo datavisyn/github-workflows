@@ -62,6 +62,6 @@ runs:
         cd ./tmp/${{ inputs.phovea_type }}
         rm ./../../.yo-rc.json
         yo phovea:workspace --defaultApp=${{ inputs.app_name }} --noAdditionals=true  --addWorkspaceRepos=false
-        yes | cp -r ./../../templates/${{ inputs.phovea_type }}/* .
+        cp -r ./../../templates/${{ inputs.phovea_type }}/* .
       shell: bash  
 

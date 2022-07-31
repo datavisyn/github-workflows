@@ -1,0 +1,56 @@
+name: Login to AWS ECR and push image with given tags
+
+inputs:
+  aws_role:  
+    description: "aws role to push to the ecr registry"
+    required: true
+    type: string
+  ecr_registry:
+    description: "registry where to push the image"
+    required: true
+    type: string
+  ecr_repository:  
+    description: "ecr repository to use"
+    required: true
+    type: string
+  docker_file:  
+    description: "dockerfile to use"
+    required: true
+    type: string
+  image_tag1:  
+    description: "image tag 1"
+    required: true
+    type: string
+  image_tag2:  
+    description: "image tag 2"
+    required: true
+    type: string    
+       
+runs:
+  using: "composite"
+  steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ inputs.aws_role }}
+        aws-region: eu-central-1
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Build, tag, and push image to Amazon ECR
+      run: |
+        cd ./tmp/api
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2 -f $DOCKER_FILE .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2
+      env:
+        ECR_REGISTRY: ${{ inputs.ecr_registry }}
+        ECR_REPOSITORY: ${{ inputs. }}
+        IMAGE_TAG1: ${{ inputs.image_tag1 }}
+        IMAGE_TAG2: ${{ inputs.image_tag2 }}
+        DOCKER_FILE: ${{ inputs.docker_file }}
+      shell: bash  
+    - name: Log out from Amazon ECR
+      run: docker logout ${{ steps.login-ecr.outputs.registry }}
+      shell: bash
+
