@@ -84,7 +84,10 @@ jobs:
           generator_version="$(echo $known_repositories | jq -r '."generator-phovea" | .version')"
           new_branch_name=${{steps.get-parameters.outputs.image_tag2 }}
           new_branch_name=${new_branch_name/develop/"rc_$release_version"}
-          main_branch_name=${new_branch_name/develop/"main"}
+          main_branch_name=${{steps.get-parameters.outputs.image_tag1 }}
+          main_branch_name=${main_branch_name/develop/main}
+          echo "new_branch_name=$new_branch_name"
+          echo "main_branch_name=$main_branch_name"
           echo ::set-output name=repository::${checked_repository}
           echo ::set-output name=release_version::${release_version}
           echo ::set-output name=generator_version::${generator_version}

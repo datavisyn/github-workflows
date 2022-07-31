@@ -86,7 +86,6 @@ runs:
         # release candidate
         if [[ $branch_name == rc_* ]] ; then 
           stage=production
-          aws=false
           branch_name=${branch_name%%-*}
           branch_name=${branch_name#rc_}
           rc_candidate=rc_${branch_name%%_*}
