@@ -17,6 +17,10 @@ inputs:
     description: "dockerfile to use"
     required: true
     type: string
+  current_directory:  
+    description: "current directory for building the Dockerfile"
+    required: true
+    type: string    
   image_tag1:  
     description: "image tag 1"
     required: true
@@ -39,7 +43,7 @@ runs:
       uses: aws-actions/amazon-ecr-login@v1
     - name: Build, tag, and push image to Amazon ECR
       run: |
-        cd ./tmp/api
+        cd $CURRENT_DIRECTORY
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2 -f $DOCKER_FILE .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2
@@ -49,6 +53,7 @@ runs:
         IMAGE_TAG1: ${{ inputs.image_tag1 }}
         IMAGE_TAG2: ${{ inputs.image_tag2 }}
         DOCKER_FILE: ${{ inputs.docker_file }}
+        CURRENT_DIRECTORY: ${{ inputs.current_directory }}
       shell: bash  
     - name: Log out from Amazon ECR
       run: docker logout ${{ steps.login-ecr.outputs.registry }}

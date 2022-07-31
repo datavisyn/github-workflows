@@ -112,6 +112,7 @@ jobs:
           fi
           image_tag1=${image_tag1::-1}
           image_tag2=$image_tag1-$(TZ=${{ env.TIME_ZONE }} date +%Y%m%d-%H%M%S)
+          aws=true
           # echo parameters
           echo "app=$app"
           echo "api_repo=$api_repo"
@@ -299,31 +300,16 @@ jobs:
             cp -r ./${name,,}.egg-info ../build/source/${name,,}.egg-info
             cd ..
           done
-      - name: Configure AWS Credentials
+      - uses: ./tmp/github-workflows/.github/actions/build-push-image
         if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
-        uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets.AWS_ECR_ROLE }}
-          aws-region: eu-central-1
-      - name: Login to Amazon ECR
-        if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}      
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-      - name: Build, tag, and push image to Amazon ECR
-        if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}      
-        env:
-          ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
-          ECR_REPOSITORY: ${{ needs.prepare-build.outputs.api_repo }}
-          IMAGE_TAG1: ${{ needs.prepare-build.outputs.image_tag1 }}
-          IMAGE_TAG2: ${{ needs.prepare-build.outputs.image_tag2 }}
-        run: |
-          cd ./tmp/api
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2 -f ./deploy/api/Dockerfile .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2
-      - name: Log out from Amazon ECR
-        if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' && always() }}      
-        run: docker logout ${{ steps.login-ecr.outputs.registry }}        
+          aws_role: ${{ secrets.AWS_ECR_ROLE }} 
+          ecr_registry: ${{ secrets.AWS_ECR_REGISTRY }}
+          ecr_repository: ${{ needs.prepare-build.outputs.api_repo }}
+          docker_file: ./deploy/api/Dockerfile
+          CURRENT_DIRECTORY: ./tmp/api
+          image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
+          image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
   deploy:
     needs: [prepare-build, build-python] 
     runs-on: ubuntu-20.04
