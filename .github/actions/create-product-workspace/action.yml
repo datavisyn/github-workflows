@@ -1,0 +1,58 @@
+name: create workspace for product
+
+inputs:
+  generator_version:
+    description: "generator version to use"
+    default: "v11.0.0"
+    required: true
+    type: string
+  phovea_type:  
+    description: "phovea type (api or web)"
+    default: "api"
+    required: true
+    type: string
+  github_token:  
+    description: "github token to use for clonging"
+    default: "XXX"
+    required: true
+    type: string
+  app_name:  
+    description: "name of the app for the product"
+    default: "XXX"
+    required: true
+    type: string        
+runs:
+  using: "composite"
+  steps:
+    - name: Install generator
+      run: |
+        npm install -g yo@4.3.0
+        npm install -g generator-phovea@${{ inputs.generator_version }}   
+    - name: create workspace
+      run: |
+        mkdir -p ./tmp/${{ inputs.phovea_type }}
+        cd ./tmp/${{ inputs.phovea_type }}
+        name=$(jq --arg var ${{ inputs.phovea_type }} -rc '.[] | select(.type == "${var}") | .repo' ../../phovea_product.json)
+        name=$(echo "$name" | sed -e 's|.*/||')
+        repository=https://${{ env.GITHUB_TOKEN }}@github.com/$(jq  -rc '.[] | select(.type == "${var}") | .repo' ../../phovea_product.json).git
+        branch=$(jq  --arg var ${{ inputs.phovea_type }} -rc '.[] | select(.type == "${var}") | .branch' ../../phovea_product.json)
+        git clone -b $branch --depth 1 $repository $name
+        readarray -t my_array < <(jq --arg var ${{ inputs.phovea_type }} -rc '.[] | select(.type == "${var}") | .additional[]' ../../phovea_product.json)
+        for additional in "${my_array[@]}"; do
+          echo "$additional"
+          name=$(echo $additional | jq  -rc '.name')
+          name=$(echo "$name" | sed -e 's|.*/||')
+          repository=https://${{ env.GITHUB_TOKEN }}@github.com/$(echo $additional | jq  -rc '.repo').git
+          branch=$(echo $additional | jq  -rc '.branch')
+          echo "$repository"
+          echo "$branch"
+          git clone -b $branch --depth 1 $repository $name
+        done
+      env: 
+        GITHUB_TOKEN: ${{ inputs.github_token }}           
+    - name: update workspace
+        run: |
+          cd ./tmp/${{ inputs.phovea_type }}
+          rm ./../../.yo-rc.json
+          yo phovea:workspace --defaultApp=${{ inputs.app_name }} --noAdditionals=true  --addWorkspaceRepos=false
+          yes | cp -r ./../../templates/${{ inputs.phovea_type }}/* .

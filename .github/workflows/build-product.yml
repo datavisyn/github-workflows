@@ -113,7 +113,6 @@ jobs:
           image_tag1=${image_tag1::-1}
           image_tag2=$image_tag1-$(TZ=${{ env.TIME_ZONE }} date +%Y%m%d-%H%M%S)
           # echo parameters
-          aws=true
           echo "app=$app"
           echo "api_repo=$api_repo"
           echo "web_repo=$web_repo"
@@ -259,43 +258,23 @@ jobs:
           git config --global url.https://${{ env.GITHUB_TOKEN }}@github.com/.insteadOf ssh://git@github.com/
         env: 
           GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}       
-      - name: Install generator
-        run: |
-          npm install -g yo@4.3.0
-          npm install -g generator-phovea@${{ env.GENERATOR_VERSION }}
+      # needs wheel for make
       - name: install requirements
         run: |
           python -m pip install --upgrade pip
-          pip install setuptools wheel          
-      - name: create workspace
-        run: |
-          mkdir -p ./tmp/api
-          cd ./tmp/api
-          name=$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json)
-          name=$(echo "$name" | sed -e 's|.*/||')
-          repository=https://${{ env.GITHUB_TOKEN }}@github.com/$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json).git
-          branch=$(jq  -rc '.[] | select(.type == "api") | .branch' ../../phovea_product.json)
-          git clone -b $branch --depth 1 $repository $name
-          readarray -t my_array < <(jq  -rc '.[] | select(.type == "api") | .additional[]' ../../phovea_product.json)
-          for additional in "${my_array[@]}"; do
-            echo "$additional"
-            name=$(echo $additional | jq  -rc '.name')
-            name=$(echo "$name" | sed -e 's|.*/||')
-            echo "$name"
-            repository=https://${{ env.GITHUB_TOKEN }}@github.com/$(echo $additional | jq  -rc '.repo').git
-            branch=$(echo $additional | jq  -rc '.branch')
-            echo "$repository"
-            echo "$branch"
-            git clone -b $branch --depth 1 $repository $name
-          done
-        env: 
-          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}           
-      - name: update workspace
-        run: |
-          cd ./tmp/api
-          rm ./../../.yo-rc.json
-          yo phovea:workspace --defaultApp=${{ needs.prepare-build.outputs.app }} --noAdditionals=true  --addWorkspaceRepos=false
-          yes | cp -r ./../../templates/api/* .
+          pip install setuptools wheel
+      # checkout this workflow repository to get actions
+      - uses: actions/checkout@v3
+        with:
+          repository: datavisyn/github-workflows
+          ref: main
+          path: ./tmp/github-workflows
+      - uses: ./tmp/github-workflows/.github/actions/create-product-workspace
+        with:
+          phovea_type: api
+          generator_version: ${{ env.GENERATOR_VERSION }}
+          github_token:  ${{ secrets.DATAVISYN_BOT_REPO_TOKEN ||  github.token }}
+          app_name:  ${{ needs.prepare-build.outputs.app }}   
       - name: Build
         run: |
           cd ./tmp/api
