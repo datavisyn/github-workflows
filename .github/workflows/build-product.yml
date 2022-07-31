@@ -86,8 +86,8 @@ jobs:
           for c in "${array[@]}"
           do
             if [[ ${{ github.ref }} =~ _${c}_ ]]; then
-              branch_name=${branch_name//$c/}
-              customer=c
+              branch_name=${branch_name//_$c/}
+              customer=$c
             fi
           done
           # check if there is a sub_app part
