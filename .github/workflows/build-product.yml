@@ -59,6 +59,8 @@ jobs:
           # branchname should look <develop|master|main>_<sub_app>_<customer>_<aws>
           # for release candidates the branch name should look like: rc_<version>_<sub_app>_<customer>_<aws>
           branch_name=${{ github.ref }}
+          branch_name=${branch_name##*/}
+          echo $branch_name
           post_fix=_aws
           aws=false
           if [[ $branch_name == *"_aws"* ]]; then
@@ -126,6 +128,17 @@ jobs:
           fi
           image_tag1=${image_tag1::-1}
           image_tag2=$image_tag1-$(date +%Y%m%d-%H%M%S)
+          # echo parameters
+          echo "app=$app"
+          echo "api_repo=$api_repo"
+          echo "web_repo=$web_repo"
+          echo "stage=$stage"
+          echo "customer=$customer"
+          echo ":sub_app=$sub_app"
+          echo "aws=$aws"
+          echo "image_tag1=$image_tag1"
+          echo "image_tag2=$image_tag2"
+          # echo to output
           echo "::set-output name=app::$app"
           echo "::set-output name=api_repo::$api_repo"
           echo "::set-output name=web_repo::$web_repo"
