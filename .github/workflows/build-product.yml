@@ -262,6 +262,10 @@ jobs:
         run: |
           npm install -g yo@4.3.0
           npm install -g generator-phovea@${{ env.GENERATOR_VERSION }}
+      - name: install requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel          
       - name: create workspace
         run: |
           mkdir -p ./tmp/api
@@ -298,6 +302,7 @@ jobs:
           name=$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json)
           name=$(echo "$name" | sed -e 's|.*/||')
           cd $name
+          echo $name
           make build
           cp -r ./build/lib/* ../build/source/
           cp -r ./${name,,}.egg-info ../build/source/${name,,}.egg-info
