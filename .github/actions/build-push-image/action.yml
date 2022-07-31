@@ -49,7 +49,7 @@ runs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2
       env:
         ECR_REGISTRY: ${{ inputs.ecr_registry }}
-        ECR_REPOSITORY: ${{ inputs. }}
+        ECR_REPOSITORY: ${{ inputs.current_directory }}
         IMAGE_TAG1: ${{ inputs.image_tag1 }}
         IMAGE_TAG2: ${{ inputs.image_tag2 }}
         DOCKER_FILE: ${{ inputs.docker_file }}

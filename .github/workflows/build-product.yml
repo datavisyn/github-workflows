@@ -133,103 +133,68 @@ jobs:
           echo "::set-output name=aws::$aws"
           echo "::set-output name=image_tag1::$image_tag1"
           echo "::set-output name=image_tag2::$image_tag2"
-  # build-node:
-  #   needs: prepare-build 
-  #   runs-on: ubuntu-20.04
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       node-version: ["14.19"]
-  #   steps: 
-  #     # checkout specific repository    
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-  #     - name: Set up node version ${{ matrix.node-version }}
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: ${{ matrix.node-version }}
-  #         registry-url: ${{ env.NPM_REGISTRY }}
-  #     - name: Show node and npm version
-  #       run: |
-  #         node -v
-  #         npm -v
-  #     - name: Git config
-  #       if: "${{ env.GITHUB_TOKEN != '' }}"
-  #       run: |
-  #         git config --global url.https://${{ env.GITHUB_TOKEN }}@github.com/.insteadOf ssh://git@github.com/
-  #       env: 
-  #         GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}       
-  #     - name: Install generator
-  #       run: |
-  #         npm install -g yo@4.3.0
-  #         npm install -g generator-phovea@${{ env.GENERATOR_VERSION }}
-  #     - name: create workspace
-  #       run: |
-  #         mkdir -p ./tmp/web
-  #         cd ./tmp/web
-  #         name=$(jq  -rc '.[] | select(.type == "web") | .repo' ../../phovea_product.json)
-  #         name=$(echo "$name" | sed -e 's|.*/||')
-  #         repository=https://${{ env.GITHUB_TOKEN }}@github.com/$(jq  -rc '.[] | select(.type == "web") | .repo' ../../phovea_product.json).git
-  #         branch=$(jq  -rc '.[] | select(.type == "web") | .branch' ../../phovea_product.json)
-  #         git clone -b $branch --depth 1 $repository $name
-  #         readarray -t my_array < <(jq  -rc '.[] | select(.type == "web") | .additional[]' ../../phovea_product.json)
-  #         for additional in "${my_array[@]}"; do
-  #           echo "$additional"
-  #           name=$(echo $additional | jq  -rc '.name')
-  #           name=$(echo "$name" | sed -e 's|.*/||')
-  #           echo "$name"
-  #           repository=https://${{ env.GITHUB_TOKEN }}@github.com/$(echo $additional | jq  -rc '.repo').git
-  #           branch=$(echo $additional | jq  -rc '.branch')
-  #           echo "$repository"
-  #           echo "$branch"
-  #           git clone -b $branch --depth 1 $repository $name
-  #         done
-  #       env: 
-  #         GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}           
-  #     - name: update workspace
-  #       run: |
-  #         cd ./tmp/web
-  #         rm ./../../.yo-rc.json
-  #         yo phovea:workspace --defaultApp=${{ needs.prepare-build.outputs.app }} --noAdditionals=true  --addWorkspaceRepos=false
-  #         yes | cp -r ./../../templates/web/* .
-  #     - name: install dependencies
-  #       run: |
-  #         cd ./tmp/web
-  #         npm i     
-  #     - name: show installed dependencies
-  #       run: |
-  #         cd ./tmp/web
-  #         npm list --depth=1 || true
-  #     - name: Build
-  #       run: |
-  #         cd ./tmp/web
-  #         npm run dist
-  #     - name: Configure AWS Credentials
-  #       if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
-  #       uses: aws-actions/configure-aws-credentials@v1
-  #       with:
-  #         role-to-assume: ${{ secrets.AWS_ECR_ROLE }}
-  #         aws-region: eu-central-1
-  #     - name: Login to Amazon ECR
-  #       if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}      
-  #       id: login-ecr
-  #       uses: aws-actions/amazon-ecr-login@v1
-  #     - name: Build, tag, and push image to Amazon ECR
-  #       if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}      
-  #       env:
-  #         ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
-  #         ECR_REPOSITORY: ${{ needs.prepare-build.outputs.web_repo }}
-  #         IMAGE_TAG1: ${{ needs.prepare-build.outputs.image_tag1 }}
-  #         IMAGE_TAG2: ${{ needs.prepare-build.outputs.image_tag2 }}
-  #       run: |
-  #         cd ./tmp/web
-  #         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2 -f ./deploy/web/Dockerfile .
-  #         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
-  #         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2
-  #     - name: Log out from Amazon ECR
-  #       if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' && always() }}      
-  #       run: docker logout ${{ steps.login-ecr.outputs.registry }}
+  build-node:
+    needs: prepare-build 
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ["14.19"]
+    steps: 
+      # checkout specific product repository    
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+      - name: Set up node version ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: ${{ env.NPM_REGISTRY }}
+      - name: Show node and npm version
+        run: |
+          node -v
+          npm -v
+      - name: Git config
+        if: "${{ env.GITHUB_TOKEN != '' }}"
+        run: |
+          git config --global url.https://${{ env.GITHUB_TOKEN }}@github.com/.insteadOf ssh://git@github.com/
+        env: 
+          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+      # checkout this workflow repository to get actions
+      - uses: actions/checkout@v3
+        with:
+          repository: datavisyn/github-workflows
+          ref: main
+          path: ./tmp/github-workflows
+      - uses: ./tmp/github-workflows/.github/actions/create-product-workspace
+        with:
+          phovea_type: web
+          generator_version: ${{ env.GENERATOR_VERSION }}
+          github_token:  ${{ secrets.DATAVISYN_BOT_REPO_TOKEN ||  github.token }}
+          app_name:  ${{ needs.prepare-build.outputs.app }}             
+      - name: install dependencies
+        run: |
+          cd ./tmp/web
+          npm i     
+      - name: show installed dependencies
+        run: |
+          cd ./tmp/web
+          npm list --depth=1 || true
+      - name: Build
+        run: |
+          cd ./tmp/web
+          npm run dist
+      - uses: ./tmp/github-workflows/.github/actions/build-push-image
+        if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
+        with:
+          aws_role: ${{ secrets.AWS_ECR_ROLE }} 
+          ecr_registry: ${{ secrets.AWS_ECR_REGISTRY }}
+          ecr_repository: ${{ needs.prepare-build.outputs.web_repo }}
+          docker_file: ./deploy/web/Dockerfile
+          CURRENT_DIRECTORY: ./tmp/web
+          image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
+          image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}          
+
   build-python:
     needs: prepare-build 
     runs-on: ubuntu-20.04
@@ -238,7 +203,7 @@ jobs:
       matrix:
         python-version: ["3.10"]
     steps: 
-      # checkout specific repository    
+      # checkout specific product repository    
       - uses: actions/checkout@v3
       # need node because of the generator
       - name: Set up node version 
@@ -311,7 +276,7 @@ jobs:
           image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
           image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
   deploy:
-    needs: [prepare-build, build-python] 
+    needs: [prepare-build, build-node, build-python] 
     runs-on: ubuntu-20.04
     if: ${{ needs.prepare-build.outputs.stage == 'develop' && needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
     steps:           
