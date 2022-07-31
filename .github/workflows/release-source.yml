@@ -1,7 +1,6 @@
 name: Release source repository
 
-on: 
-  workflow_call:
+on: workflow_call
 
 permissions:
   contents: write

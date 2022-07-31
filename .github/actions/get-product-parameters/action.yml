@@ -1,0 +1,161 @@
+name: returns inportant parameters for product
+
+inputs:
+  dv_customers:  
+    description: "customers of datavisyn; seperated with ','"
+    required: true
+    type: string
+  repository_name:
+    description: "name of the current repository"
+    required: true
+    type: string
+  branch_name:  
+    description: "name of the current branch"
+    required: true
+    type: string
+  time_zone:  
+    description: "time zone to use to generate the image tag"
+    required: true
+    type: string    
+outputs:
+  app: 
+    description: "app name of the product"
+    value: ${{ steps.get-parameters.outputs.app }}
+  api_repo: 
+    description: "ecr repository for api"
+    value: ${{ steps.get-parameters.outputs.api_repo }}
+  web_repo: 
+    description: "ecr repository for api"
+    value: ${{ steps.get-parameters.outputs.web_repo }}    
+  stage: 
+    description: "stage of the branch - depending on the branch name"
+    value: ${{ steps.get-parameters.outputs.stage }}
+  customer: 
+    description: "customer of the branch - depending on the branch name"
+    value: ${{ steps.get-parameters.outputs.customer }}
+  sub_app: 
+    description: "sub_app of the repository (f.e. literature) - depending on the branch name"
+    value: ${{ steps.get-parameters.outputs.sub_app }} 
+  aws: 
+    description: "true, if image should be generated and pushed to aws; else false"
+    value: ${{ steps.get-parameters.outputs.aws }}
+  image_tag1: 
+    description: "image tag, that has the general name"
+    value: ${{ steps.get-parameters.outputs.image_tag1 }}
+  image_tag2: 
+    description: "image tag, that has a very specific name (included the current date)"
+    value: ${{ steps.get-parameters.outputs.image_tag2 }}                    
+runs:
+  using: "composite"
+  steps:
+    - name: get parameters
+      id: get-parameters
+      run: |
+        product_name=${{ env.REPOSITORY_NAME }}
+        post_fix=_product
+        product_name=${product_name%$post_fix}
+        app=$(jq  -rc '.[] | select(.type == "web") | .name' ./phovea_product.json)
+        api_repo="$product_name/"$(jq  -rc '.[] | select(.type == "api") | .label' ./phovea_product.json)
+        web_repo="$product_name/"$(jq  -rc '.[] | select(.type == "web") | .label' ./phovea_product.json)
+        # get everything from branch name
+        # branchname should look <develop|master|main>_<sub_app>_<customer>_<aws>
+        # for release candidates the branch name should look like: rc_<version>_<sub_app>_<customer>_<aws>
+        branch_name=${{ env.BRANCH_NAME }}
+        branch_name=${branch_name##*/}
+        echo $branch_name
+        post_fix=_aws
+        aws=false
+        if [[ $branch_name == *"_aws"* ]]; then
+          aws=true
+          branch_name=${branch_name%$post_fix}
+        fi
+        # develop branch
+        if [[ $branch_name == develop* ]] ; then 
+          stage=develop
+          branch_name=${branch_name#develop_}
+          branch_name=${branch_name#develop}
+        fi
+        # master / main branch
+        if [[ $branch_name == master* ]] || [[ $a == main* ]] ; then 
+          stage=production
+          branch_name=${branch_name#main_}
+          branch_name=${branch_name#main}
+          branch_name=${branch_name#master_}
+          branch_name=${branch_name#master}
+        fi
+        # release candidate
+        if [[ $branch_name == rc_* ]] ; then 
+          stage=production
+          branch_name=${branch_name#rc_}
+          rc_candidate=rc_${branch_name%%_*}
+          branch_name=${branch_name#*_}
+        fi
+        # version tag
+        if [[ $branch_name == v* ]] ; then 
+          stage=production
+          branch_name=${branch_name#v}
+          version=${branch_name%%_*}
+          branch_name=${branch_name#*_}
+        fi          
+        # check customer
+        customer=datavisyn
+        dv_customers=${{ env.DV_CUSTOMERS }}
+        array=($(echo "${dv_customers}" | tr ',' "\n"))
+        for c in "${array[@]}"
+        do
+          if [[ ${{ github.ref }} =~ _${c}_ ]]; then
+            branch_name=${branch_name//_$c/}
+            customer=$c
+          fi
+        done
+        # check if there is a sub_app part
+        sub_app=$(echo $branch_name | sed s/_//)
+        # get image tags
+        image_tag1=''
+        if [[ $stage == develop ]] ; then
+          image_tag1+=develop_
+        else
+          if [[ ! -z $rc_candidate ]] ; then
+            image_tag1+=${rc_candidate}_
+          elif [[ ! -z $version ]] ; then
+            image_tag1+=${version}_ 
+          else
+            image_tag1+=main_              
+          fi  
+        fi
+        if [[ ! -z $sub_app ]] ; then
+            image_tag1+=${sub_app}_
+        fi
+        if [[ $customer != "datavisyn" ]] ; then
+            image_tag1+=${customer}_
+        fi
+        image_tag1=${image_tag1::-1}
+        image_tag2=$image_tag1-$(TZ=${{ env.TIME_ZONE }} date +%Y%m%d-%H%M%S)
+        # echo parameters
+        echo "app=$app"
+        echo "api_repo=$api_repo"
+        echo "web_repo=$web_repo"
+        echo "stage=$stage"
+        echo "customer=$customer"
+        echo "sub_app=$sub_app"
+        echo "aws=$aws"
+        echo "image_tag1=$image_tag1"
+        echo "image_tag2=$image_tag2"
+        # echo to output
+        echo "::set-output name=app::$app"
+        echo "::set-output name=api_repo::$api_repo"
+        echo "::set-output name=web_repo::$web_repo"
+        echo "::set-output name=stage::$stage"
+        echo "::set-output name=customer::$customer"
+        echo "::set-output name=sub_app::$sub_app"
+        echo "::set-output name=aws::$aws"
+        echo "::set-output name=image_tag1::$image_tag1"
+        echo "::set-output name=image_tag2::$image_tag2"
+      env:  
+        DV_CUSTOMERS: ${{ inputs.dv_customers }}
+        REPOSITORY_NAME: ${{ inputs.repository_name }}
+        BRANCH_NAME: ${{ inputs.branch_name }}
+        TIME_ZONE: ${{ inputs.time_zone }}
+      shell: bash
+      
+
