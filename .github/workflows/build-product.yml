@@ -83,10 +83,11 @@ jobs:
           customer=datavisyn
           dv_customers=${{ secrets.DV_CUSTOMERS }}
           array=($(echo "${dv_customers}" | tr ',' "\n"))
-          for customer in "${array[@]}"
+          for c in "${array[@]}"
           do
-            if [[ ${{ github.ref }} =~ _${customer}_ ]]; then
-              branch_name=${branch_name//$customer/}
+            if [[ ${{ github.ref }} =~ _${c}_ ]]; then
+              branch_name=${branch_name//$c/}
+              customer=c
             fi
           done
           # check if there is a sub_app part
