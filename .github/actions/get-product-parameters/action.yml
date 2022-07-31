@@ -55,8 +55,8 @@ runs:
         post_fix=_product
         product_name=${product_name%$post_fix}
         app=$(jq  -rc '.[] | select(.type == "web") | .name' ./phovea_product.json)
-        api_repo="$product_name/"$(jq  -rc '.[] | select(.type == "api") | .label' ./phovea_product.json)
-        web_repo="$product_name/"$(jq  -rc '.[] | select(.type == "web") | .label' ./phovea_product.json)
+        api_repo="$product_name/server"
+        web_repo="$product_name/web"
         # get everything from branch name
         # branchname should look <develop|master|main>_<sub_app>_<customer>_<aws>
         # for release candidates the branch name should look like: rc_<version>_<sub_app>_<customer>_<aws>-<date>
@@ -90,6 +90,11 @@ runs:
           branch_name=${branch_name%%-*}
           branch_name=${branch_name#rc_}
           rc_candidate=rc_${branch_name%%_*}
+          if [[ $branch_name == *"_"* ]] ; then
+            branch_name=${branch_name#*_}
+          else
+            branch_name=""
+          fi
         fi
         # version tag
         if [[ $branch_name == v* ]] ; then 
