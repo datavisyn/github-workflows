@@ -73,6 +73,14 @@ jobs:
           known_repositories=${{ steps.get-known-repositories.outputs.known_repositories }}
           checked_repository="$(echo $known_repositories | jq -r '.' | jq --arg var $repository '.[$var]')"
           release_version="$(echo $checked_repository | jq -r '.version')"
+          sub_app=${{ steps.get-parameters.outputs.known_repositories }}
+          if [[ ! -z $sub_app ]] ; then
+            release_version+="-${sub_app}"
+          fi
+          customer=${{ steps.get-parameters.outputs.customer }}
+          if [[ $customer != "datavisyn" ]] ; then
+            release_version+="-${customer}"
+          fi
           generator_version="$(echo $known_repositories | jq -r '."generator-phovea" | .version')"
           new_branch_name=${{steps.get-parameters.outputs.image_tag2 }}
           new_branch_name=${new_branch_name/develop/"rc_$release_version"}
@@ -99,7 +107,7 @@ jobs:
           version=$(jq -r '.version' ./package.json)
           # change version in package.json
           npm_develop=git+ssh://git@github.com:phovea/generator-phovea#develop
-          sed -i "s|\"generator-phovea": \"$npm_develop\"|\"generator-phovea\": \"${{ steps.check-repository.outputs.generator_version }}\"|gI" ./package.json
+          sed -i "s|\"generator-phovea\": \"$npm_develop\"|\"generator-phovea\": \"${{ steps.check-repository.outputs.generator_version }}\"|gI" ./package.json
           sed -i "s|\"version\": \"$version\"|\"version\": \"${{ steps.check-repository.outputs.release_version }}\"|gI" ./package.json
           cat ./package.json
           # change phovea_product
@@ -108,14 +116,18 @@ jobs:
           content="[{"
           name=$(jq  -rc '.[] | select(.type == "web") | .repo' ./phovea_product.json)
           name=$(echo "$name" | sed -e 's|.*/||')
+          echo $name
           version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
+          echo $version
           owner="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .owner')"
           content+="\"type\": \"web\", \"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\",   \"additional\": ["
           readarray -t my_array < <(jq  -rc '.[] | select(.type == "web") | .additional[] ' ./phovea_product.json)
           for additional in "${my_array[@]}"; do
             name=$(echo $additional | jq  -rc '.name')
             name=$(echo "$name" | sed -e 's|.*/||')
+            echo $name
             version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
+            echo $version
             owner="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .owner')"
             content+="{\"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\"},"
           done
@@ -125,7 +137,9 @@ jobs:
           content+="{"
           name=$(jq  -rc '.[] | select(.type == "api") | .repo' ./phovea_product.json)
           name=$(echo "$name" | sed -e 's|.*/||')
+          echo $name
           version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
+          echo $version
           owner="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .owner')"
           content+="\"type\": \"web\", \"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\",   \"additional\": ["
           readarray -t my_array < <(jq  -rc '.[] | select(.type == "api") | .additional[]' ./phovea_product.json)
@@ -133,7 +147,9 @@ jobs:
             echo "$additional"
             name=$(echo $additional | jq  -rc '.name')
             name=$(echo "$name" | sed -e 's|.*/||')
+            echo $name
             version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
+            echo $version
             owner="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .owner')"
             content+="{\"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\"},"
           done
