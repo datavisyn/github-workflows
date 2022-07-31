@@ -10,39 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-frontend:
-    permissions:
-      id-token: write
-      contents: read  
-    runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: ["14.19"]
-    steps:      
-      - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-      - name: Set up node version ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Show node and npm version
-        run: |
-          node -v
-          npm -v
-      - name: Git config
-        if: "${{ env.GITHUB_TOKEN != '' }}"
-        run: git config --global url.https://${{ env.GITHUB_TOKEN }}@github.com/.insteadOf ssh://git@github.com/
-        env: 
-          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}       
-      - name: Install npm dependencies
-        run:  npm install
-      - name: Show installed npm dependencies
-        run: npm list --depth=1 || true
-
-
-build-node:
+  build-node:
     permissions:
       id-token: write
       contents: read  
@@ -71,20 +39,108 @@ build-node:
         env: 
           GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}       
       - name: Install generator
-        run:  
+        run: |
           npm install -g yo
           npm install -g generator-phovea@v11.0.0
-      - name: create workspace node
-        run: mkdir -p tmp/node        
-      - name: clone components for workspace
+      - name: get parameters
+        id: get-parameters
         run: |
-          cd tmp/node
-          name=$(jq  -rc '.[] | select(.type == "api") | .repo' ./phovea_product.json)
+          product_name=${{ github.event.repository.name }}
+          post_fix=_product
+          product_name=${product_name%$post_fix}
+          app=$(jq  -rc '.[] | select(.type == "web") | .name' ./phovea_product.json)
+          api_repo="$product_name/"$(jq  -rc '.[] | select(.type == "api") | .label' ./phovea_product.json)
+          web_repo="$product_name/"$(jq  -rc '.[] | select(.type == "web") | .label' ./phovea_product.json)
+          # get everything from branch name
+          # branchname should look <develop|master|main>_<sub_app>_<customer>_<aws>
+          # for release candidates the branch name should look like: rc_<version>_<sub_app>_<customer>_<aws>
+          branch_name=${{ github.ref }}
+          post_fix=_aws
+          aws=false
+          if [[ $branch_name == *"_aws"* ]]; then
+            aws=true
+            branch_name=${branch_name%$post_fix}
+          fi
+          # develop branch
+          if [[ $branch_name == develop* ]] ; then 
+            stage=develop
+            branch_name=${branch_name#develop_}
+            branch_name=${branch_name#develop}
+          fi
+          # master / main branch
+          if [[ $branch_name == master* ]] || [[ $a == main* ]] ; then 
+            stage=production
+            branch_name=${branch_name#main_}
+            branch_name=${branch_name#main}
+            branch_name=${branch_name#master_}
+            branch_name=${branch_name#master}
+          fi
+          # release candidate
+          if [[ $branch_name == rc_* ]] ; then 
+            stage=production
+            branch_name=${branch_name#rc_}
+            rc_candidate=rc_${branch_name%%_*}
+            branch_name=${branch_name#*_}
+          fi
+          # version tag
+          if [[ $branch_name == v* ]] ; then 
+            stage=production
+            branch_name=${branch_name#v}
+            version=${branch_name%%_*}
+            branch_name=${branch_name#*_}
+          fi          
+          # check customer
+          customer=datavisyn
+          dv_customers=${{ secrets.DV_CUSTOMERS }}
+          array=($(echo "${dv_customers}" | tr ',' "\n"))
+          for customer in "${array[@]}"
+          do
+            if [[ ${{ github.ref }} =~ _${customer}_ ]]; then
+              branch_name=${branch_name//$customer/}
+            fi
+          done
+          # check if there is a sub_app part
+          sub_app=$(echo $branch_name | sed s/_//)
+          # get image tags
+          image_tag1=''
+          if [[ $stage == develop ]] ; then
+            image_tag1+=develop_
+          else
+            if [[ ! -z $rc_candidate ]] ; then
+              image_tag1+=${rc_candidate}_
+            elif [[ ! -z $version ]] ; then
+              image_tag1+=${version}_ 
+            else
+              image_tag1+=main_              
+            fi  
+          fi
+          if [[ ! -z $sub_app ]] ; then
+              image_tag1+=${sub_app}_
+          fi
+          if [[ $customer != "datavisyn" ]] ; then
+              image_tag1+=${customer}_
+          fi
+          image_tag1=${image_tag1::-1}
+          image_tag2=$image_tag1-$(date +%Y%m%d-%H%M%S)
+          echo "::set-output name=app::$app"
+          echo "::set-output name=api_repo::$api_repo"
+          echo "::set-output name=web_repo::$web_repo"
+          echo "::set-output name=stage::$stage"
+          echo "::set-output name=customer::$customer"
+          echo "::set-output name=sub_app::$sub_app"
+          echo "::set-output name=aws::$aws"
+          echo "::set-output name=image_tag1::$image_tag1"
+          echo "::set-output name=image_tag2::$image_tag2"
+      - name: create workspace
+        run: |
+          mkdir -p ./tmp/web
+          ./tmp/web
+          name=$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json)
           name=$(echo "$name" | sed -e 's|.*/||')
-          repository=https://github.com/$(jq  -rc '.[] | select(.type == "api") | .repo' ./phovea_product.json).git
-          branch=$(jq  -rc '.[] | select(.type == "api") | .branch' ./phovea_product.json)
+          repository=https://github.com/$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json).git
+          branch=$(jq  -rc '.[] | select(.type == "api") | .branch' ../../phovea_product.json)
           git clone -b $branch --depth 1 $repository $name
-          readarray -t my_array < <(jq  -rc '.[] | select(.type == "api") | .additional[]' ./phovea_product.json)
+          readarray -t my_array < <(jq  -rc '.[] | select(.type == "api") | .additional[]' ../../phovea_product.json)
           for additional in "${my_array[@]}"; do
             echo "$additional"
             name=$(echo $additional | jq  -rc '.name')
@@ -96,61 +152,47 @@ build-node:
             echo "$branch"
             git clone -b $branch --depth 1 $repository $name
           done
-      - name: create workspace
+      - name: update workspace
         run: |
-          echo "create workspace"
+          cd ./tmp/web
           rm ./../../.yo-rc.json
-          yo phovea:workspace --defaultApp=patentbay --noAdditionals=true  --addWorkspaceRepos=false
+          yo phovea:workspace --defaultApp=${{ steps.get-parameters.outputs.app }} --noAdditionals=true  --addWorkspaceRepos=false
           yes | cp -r ./../../templates/web/* .
       - name: install dependencies
-        run: npm i     
+        run: |
+          cd ./tmp/web
+          npm i     
       - name: show installed dependencies
-        run: npm list --depth=1 || true
+        run: |
+          cd ./tmp/web
+          npm list --depth=1 || true
       - name: Build
-        run: npm run dist
-      - name: Move dist to build
-        run: mv ./dist/bundles.tar.gz ../build/nodes.tar.gz
-      - name: Get image tag
-        id: get-image-tag
         run: |
-          if [[ ${{ github.ref_name }} == *"main"* ]] ; then
-            tag1=$(jq -r '.version' ./package.json)
-          else
-            tag1=${{ github.ref_name }}
-          fi
-          tag2=$tag1-$(date +%Y%m%d-%H%M%S)
-          echo ::set-output name=tag1::${tag1}
-          echo ::set-output name=tag2::${tag2}
-      - name: Get repository name
-        id: get-repository
-        run: |
-          if [[ $ECR_REPOSITORY != null ]] ; then
-            repository=$ECR_REPOSITORY
-          else
-            repository=${{ github.event.repository.name }}
-            repository=${repository%_product}
-          fi
-          echo ::set-output name=repository::${repository}
-        env:
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}           
-      - name: Configure AWS credentials
+          cd ./tmp/web
+          npm run dist
+      - name: check if push image
+        if: ${{ ! steps.get-parameters.outputs.aws }}
+        run: exit 0          
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_ECR_ROLE }}
           aws-region: eu-central-1
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
       - name: Build, tag, and push image to Amazon ECR
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ steps.get-repository.outputs.repository }}
-          IMAGE_TAG1: ${{ steps.get-image-tag.outputs.tag1 }}
-          IMAGE_TAG2: ${{ steps.get-image-tag.outputs.tag2 }}
+          ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
+          ECR_REPOSITORY: ${{ steps.get-parameters.outputs.web_repo }}
+          IMAGE_TAG1: ${{ steps.get-parameters.outputs.image_tag1 }}
+          IMAGE_TAG2: ${{ steps.get-image-tag.outputs.image_tag2 }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2 .
+          cd ./tmp/web
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2 -f ./deploy/web/Dockerfile .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY
-
+      - name: Log out from Amazon ECR
+        if: always()
+        run: docker logout ${{ steps.lgin-ecr.outputs.registry }}
           
           
