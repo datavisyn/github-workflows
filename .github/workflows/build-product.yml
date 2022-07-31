@@ -9,6 +9,9 @@ concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
   cancel-in-progress: true
 
+env:
+  GENERATOR_VERSION: "v11.0.0"
+
 jobs:
   build-node:
     permissions:
@@ -42,7 +45,7 @@ jobs:
       - name: Install generator
         run: |
           npm install -g yo
-          npm install -g generator-phovea@v11.0.0
+          npm install -g generator-phovea@${{ env.GENERATOR_VERSION }}
       - name: get parameters
         id: get-parameters
         run: |
@@ -138,7 +141,7 @@ jobs:
           cd ./tmp/web
           name=$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json)
           name=$(echo "$name" | sed -e 's|.*/||')
-          repository=git@github.com:$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json).git
+          repository=https://${{ env.GITHUB_TOKEN }}@github.com/$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json).git
           branch=$(jq  -rc '.[] | select(.type == "api") | .branch' ../../phovea_product.json)
           git clone -b $branch --depth 1 $repository $name
           readarray -t my_array < <(jq  -rc '.[] | select(.type == "api") | .additional[]' ../../phovea_product.json)
@@ -147,12 +150,14 @@ jobs:
             name=$(echo $additional | jq  -rc '.name')
             name=$(echo "$name" | sed -e 's|.*/||')
             echo "$name"
-            repository=git@github.com:$(echo $additional | jq  -rc '.repo').git
+            repository=https://${{ env.GITHUB_TOKEN }}@github.com/$(echo $additional | jq  -rc '.repo').git
             branch=$(echo $additional | jq  -rc '.branch')
             echo "$repository"
             echo "$branch"
             git clone -b $branch --depth 1 $repository $name
           done
+        env: 
+          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}           
       - name: update workspace
         run: |
           cd ./tmp/web
