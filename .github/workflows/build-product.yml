@@ -2,9 +2,6 @@ name: Build Frontend and Backend Images for Product
 
 on: workflow_call
 
-permissions:
-  contents: read
-
 concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
   cancel-in-progress: true
