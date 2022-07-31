@@ -36,17 +36,21 @@ runs:
         phovea_type=${{ inputs.phovea_type }}
         name=$(jq --arg var ${phovea_type} -rc '.[] | select(.type == "${var}") | .repo' ../../phovea_product.json)
         name=$(echo "$name" | sed -e 's|.*/||')
+        echo $name
         repository=https://${{ env.GITHUB_TOKEN }}@github.com/$(jq --arg var ${phovea_type} -rc '.[] | select(.type == "${var}") | .repo' ../../phovea_product.json).git
+        echo $repository
         branch=$(jq --arg var ${phovea_type} -rc '.[] | select(.type == "${var}") | .branch' ../../phovea_product.json)
+        echo $branch
         git clone -b $branch --depth 1 $repository $name
         readarray -t my_array < <(jq --arg var ${phovea_type} -rc '.[] | select(.type == "${var}") | .additional[]' ../../phovea_product.json)
         for additional in "${my_array[@]}"; do
           echo "$additional"
           name=$(echo $additional | jq  -rc '.name')
           name=$(echo "$name" | sed -e 's|.*/||')
+          echo $name
           repository=https://${{ env.GITHUB_TOKEN }}@github.com/$(echo $additional | jq  -rc '.repo').git
-          branch=$(echo $additional | jq  -rc '.branch')
           echo "$repository"
+          branch=$(echo $additional | jq  -rc '.branch')
           echo "$branch"
           git clone -b $branch --depth 1 $repository $name
         done
