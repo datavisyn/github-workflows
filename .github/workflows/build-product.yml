@@ -291,21 +291,16 @@ jobs:
           rm ./../../.yo-rc.json
           yo phovea:workspace --defaultApp=${{ needs.prepare-build.outputs.app }} --noAdditionals=true  --addWorkspaceRepos=false
           yes | cp -r ./../../templates/api/* .
-      - name: install dependencies
-        run: |
-          cd ./tmp/api
-          npm i     
-      - name: show installed dependencies
-        run: |
-          cd ./tmp/api
-          npm list --depth=1 || true
       - name: Build
         run: |
           cd ./tmp/api
+          mkdir -p ./build/source
           name=$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json)
           name=$(echo "$name" | sed -e 's|.*/||')
           cd $name
           make build
+          cp -r ./build/lib/* ../build/source/
+          cp -r ./${name,,}.egg-info ../build/source/${name,,}.egg-info
           cd ..
           readarray -t my_array < <(jq  -rc '.[] | select(.type == "api") | .additional[]' ../../phovea_product.json)
           for additional in "${my_array[@]}"; do
@@ -315,6 +310,9 @@ jobs:
             echo "$name"
             cd $name
             make build
+            cp -r ./build/lib/* ../build/source/
+            cp -r ./${name,,}.egg-info ../build/source/${name,,}.egg-info
+            cd ..
           done
       - name: Configure AWS Credentials
         if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
