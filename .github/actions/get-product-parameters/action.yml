@@ -134,8 +134,14 @@ runs:
         if [[ $customer != "datavisyn" ]] ; then
             image_tag1+=${customer}_
         fi
-        image_tag1=${image_tag1::-1}
-        image_tag2=$image_tag1-$(TZ=${{ env.TIME_ZONE }} date +%Y%m%d-%H%M%S)
+        if [[ ! -z $rc_candidate ]] ; then
+          image_tag2=${{ env.BRANCH_NAME }}
+          image_tag2=${image_tag2##*/}
+          image_tag1=${image_tag2%%-*}
+        else
+          image_tag1=${image_tag1::-1}
+          image_tag2=$image_tag1-$(TZ=${{ env.TIME_ZONE }} date +%Y%m%d-%H%M%S)
+        fi    
         # echo parameters
         echo "app=$app"
         echo "api_repo=$api_repo"
