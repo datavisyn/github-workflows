@@ -33,12 +33,13 @@ runs:
       run: |
         mkdir -p ./tmp/${{ inputs.phovea_type }}
         cd ./tmp/${{ inputs.phovea_type }}
-        name=$(jq --arg var ${{ inputs.phovea_type }} -rc '.[] | select(.type == "${var}") | .repo' ../../phovea_product.json)
+        phovea_type=${{ inputs.phovea_type }}
+        name=$(jq --arg var ${phovea_type} -rc '.[] | select(.type == "${var}") | .repo' ../../phovea_product.json)
         name=$(echo "$name" | sed -e 's|.*/||')
-        repository=https://${{ env.GITHUB_TOKEN }}@github.com/$(jq  -rc '.[] | select(.type == "${var}") | .repo' ../../phovea_product.json).git
-        branch=$(jq  --arg var ${{ inputs.phovea_type }} -rc '.[] | select(.type == "${var}") | .branch' ../../phovea_product.json)
+        repository=https://${{ env.GITHUB_TOKEN }}@github.com/$(jq --arg var ${phovea_type} -rc '.[] | select(.type == "${var}") | .repo' ../../phovea_product.json).git
+        branch=$(jq --arg var ${phovea_type} -rc '.[] | select(.type == "${var}") | .branch' ../../phovea_product.json)
         git clone -b $branch --depth 1 $repository $name
-        readarray -t my_array < <(jq --arg var ${{ inputs.phovea_type }} -rc '.[] | select(.type == "${var}") | .additional[]' ../../phovea_product.json)
+        readarray -t my_array < <(jq --arg var ${phovea_type} -rc '.[] | select(.type == "${var}") | .additional[]' ../../phovea_product.json)
         for additional in "${my_array[@]}"; do
           echo "$additional"
           name=$(echo $additional | jq  -rc '.name')
