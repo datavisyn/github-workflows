@@ -11,6 +11,7 @@ concurrency:
 
 env:
   GENERATOR_VERSION: "v11.0.0"
+  TIME_ZONE: "Europe/Vienna"
 
 jobs:
   build-node:
@@ -44,7 +45,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}       
       - name: Install generator
         run: |
-          npm install -g yo
+          npm install -g yo@4.3.0
           npm install -g generator-phovea@${{ env.GENERATOR_VERSION }}
       - name: get parameters
         id: get-parameters
@@ -127,14 +128,14 @@ jobs:
               image_tag1+=${customer}_
           fi
           image_tag1=${image_tag1::-1}
-          image_tag2=$image_tag1-$(date +%Y%m%d-%H%M%S)
+          image_tag2=$image_tag1-$(TZ={{ env.TIME_ZONE }} date +%Y%m%d-%H%M%S)
           # echo parameters
           echo "app=$app"
           echo "api_repo=$api_repo"
           echo "web_repo=$web_repo"
           echo "stage=$stage"
           echo "customer=$customer"
-          echo ":sub_app=$sub_app"
+          echo "sub_app=$sub_app"
           echo "aws=$aws"
           echo "image_tag1=$image_tag1"
           echo "image_tag2=$image_tag2"
@@ -205,7 +206,7 @@ jobs:
           ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
           ECR_REPOSITORY: ${{ steps.get-parameters.outputs.web_repo }}
           IMAGE_TAG1: ${{ steps.get-parameters.outputs.image_tag1 }}
-          IMAGE_TAG2: ${{ steps.get-image-tag.outputs.image_tag2 }}
+          IMAGE_TAG2: ${{ steps.get-parameters.outputs.image_tag2 }}
         run: |
           cd ./tmp/web
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2 -f ./deploy/web/Dockerfile .
