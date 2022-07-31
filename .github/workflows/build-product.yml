@@ -204,18 +204,18 @@ jobs:
         run: |
           cd ./tmp/web
           npm run dist
-      - name: check if push image
-        if: ${{ ! needs.prepare-build.outputs.aws }}
-        run: exit 0          
       - name: Configure AWS Credentials
+        if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ secrets.AWS_ECR_ROLE }}
           aws-region: eu-central-1
       - name: Login to Amazon ECR
+        if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}      
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
       - name: Build, tag, and push image to Amazon ECR
+        if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}      
         env:
           ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
           ECR_REPOSITORY: ${{ needs.prepare-build.outputs.web_repo }}
@@ -227,7 +227,7 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2
       - name: Log out from Amazon ECR
-        if: always()
+        if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' && always() }}      
         run: docker logout ${{ steps.login-ecr.outputs.registry }}
   deploy:
     needs: [prepare-build, build-node] 
