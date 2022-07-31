@@ -134,7 +134,7 @@ jobs:
       - name: create workspace
         run: |
           mkdir -p ./tmp/web
-          ./tmp/web
+          cd ./tmp/web
           name=$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json)
           name=$(echo "$name" | sed -e 's|.*/||')
           repository=https://github.com/$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json).git
