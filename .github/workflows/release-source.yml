@@ -236,9 +236,9 @@ jobs:
           route: POST /repos/{owner}/{repo}/releases
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
-          tag_name: ${{ steps.get-release-version.outputs.release_version }}
+          tag_name: "v${{ steps.get-release-version.outputs.release_version }}"
           target_commitish: main
-          name: ${{ steps.get-release-version.outputs.release_version }}
+          name: "v${{ steps.get-release-version.outputs.release_version }}"
           body: '"${{ steps.release-notes.outputs.commits }}"'
           draft: false 
           prerelease: false

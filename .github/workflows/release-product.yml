@@ -15,7 +15,8 @@ env:
 
 
 jobs:
-  release-repository:
+  create-release-candidate:
+    if: ${{ github.event_name != 'pull_request' }}
     runs-on: ubuntu-20.04
     steps:
       - name: check actor
@@ -46,7 +47,7 @@ jobs:
           time_zone: ${{ env.TIME_ZONE }}
       - name: delete tmp files
         run: |
-          rm -rf ./tmp           
+          rm -rf ./tmp
       - name: read known repositories
         id: get-known-repositories
         run: |
@@ -202,3 +203,59 @@ jobs:
           echo "data: ${{ steps.create-pr.outputs.data }}"
           echo "status: ${{ steps.create-pr.outputs.status }}"
           exit 1                                  
+  create-release:
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && startsWith(github.head_ref, 'rc_') }}
+    runs-on: ubuntu-20.04
+    steps:
+      - name: check actor
+        if: ${{ !contains('["datavisyn-bot", "anita-steiner","dvvanessastoiber", "puehringer","dvdanielamoitzi", "thinkh"]', github.actor) }}
+        run: |
+          echo "you are not allowed to run this job!"
+          exit 1
+      - name: check branch
+        if: ${{ !contains(github.ref, 'main') }}
+        run: |
+          echo 'only the develop branches can be released.'
+          exit 1  
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+      - name: get release version
+        id: get-release-version
+        run: |
+          release_version=$(jq -r '.version' ./package.json)
+          echo "::set-output name=release_version::$release_version"
+      - name: delete release branch
+        run: |
+          git fetch
+          git status
+          if git rev-parse --verify --quiet origin/${{ github.head_ref }}; then
+            echo "delete release branch: ${{ github.head_ref }}"
+            git branch -D ${{ github.head_ref }}
+            git push origin --delete ${{ github.head_ref }}
+            git status
+          fi
+      - name: create release
+        id: create-release
+        uses: octokit/request-action@v2.x
+        with:
+          route: POST /repos/{owner}/{repo}/releases
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          tag_name: "v${{ steps.get-release-version.outputs.release_version }}"
+          target_commitish: main
+          name: "v${{ steps.get-release-version.outputs.release_version }}"
+          body: "release of v${{ steps.get-release-version.outputs.release_version }}"
+          draft: false 
+          prerelease: false
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+      - name: check release status
+        if: ${{ steps.create-release.outputs.status != 201 }}
+        run: |
+          echo "something went wrong with the creation of the release"
+          echo "data: ${{ steps.create-release.outputs.data }}"
+          echo "status: ${{ steps.create-release.outputs.status }}"       
+          exit 1                   
+     
