@@ -215,8 +215,8 @@ jobs:
           labels: "[${{ steps.get-parameters.outputs.labels }}]"
         env:
           GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-      - name: check pr status
-        if: ${{ steps.get-parameters.outputs.labels != '' && steps.add-labels.outputs.status != 201 }}
+      - name: check add labels status
+        if: ${{ steps.get-parameters.outputs.labels != '' && steps.add-labels.outputs.status != 200 }}
         run: |
           echo "something went wrong with adding the labels"
           echo "data: ${{ steps.add-labels.outputs.data }}"

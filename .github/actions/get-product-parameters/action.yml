@@ -148,8 +148,6 @@ runs:
           image_tag1=${image_tag1::-1}
           image_tag2=$image_tag1-$(TZ=${{ env.TIME_ZONE }} date +%Y%m%d-%H%M%S)
         fi
-        # only for tests
-        labels="'customer: dummy'"
         # echo parameters
         echo "app=$app"
         echo "api_repo=$api_repo"
