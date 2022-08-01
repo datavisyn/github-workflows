@@ -60,7 +60,7 @@ jobs:
       - name: create additional tag
         id: get-add-image-tag
         run: |
-          additional_image_tag={{ steps.get-parameters.outputs.image_tag1 }}
+          additional_image_tag=${{ steps.get-parameters.outputs.image_tag1 }}
           additional_image_tag=${additional_image_tag/main/qa}
           echo "additional_image_tag=${additional_image_tag}"
           echo "::set-output name=additional_image_tag::$additional_image_tag"        
