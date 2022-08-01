@@ -3,7 +3,8 @@ name: Deploy product repository
 on: workflow_call
      
 permissions:
-  contents: write
+  id-token: write
+  contents: read
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
