@@ -1,0 +1,77 @@
+name: Deploy product repository
+
+on: workflow_call
+     
+permissions:
+  contents: write
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
+  cancel-in-progress: true
+
+env: 
+  GA_VERSION: "main"
+  GITHUB_USER: "datavisyn-bot"
+
+
+jobs:
+  deploy_qa:
+    if: ${{ github.event.label.name == 'deploy_to_qa' }}
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Dump GitHub context
+        id: github_context_step
+        run: echo '${{ toJSON(github) }}'
+      - name: Dump job context
+        run: echo '${{ toJSON(job) }}'
+      - name: Dump steps context
+        run: echo '${{ toJSON(steps) }}'
+      - name: Dump runner context
+        run: echo '${{ toJSON(runner) }}'
+      - name: Dump strategy context
+        run: echo '${{ toJSON(strategy) }}'
+      - name: Dump matrix context
+        run: echo '${{ toJSON(matrix) }}'     
+      - name: check actor
+        if: ${{ !contains('["datavisyn-bot", "anita-steiner","dvvanessastoiber", "puehringer","dvdanielamoitzi", "thinkh"]', github.actor) }}
+        run: |
+          echo "you are not allowed to run this job!"
+          exit 1
+      - name: check branch
+        if: ${{ !startsWith(github.ref, 'rc_') }}
+        run: |
+          echo 'only the release candidates can be deployed to qa.'
+          exit 1  
+      - name: deploy to qa
+        run: |
+          echo 'deploy to qa'
+  deploy_prod:        
+    if: ${{ github.event.label.name == 'deploy_to_prod' }}
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Dump GitHub context
+        id: github_context_step
+        run: echo '${{ toJSON(github) }}'
+      - name: Dump job context
+        run: echo '${{ toJSON(job) }}'
+      - name: Dump steps context
+        run: echo '${{ toJSON(steps) }}'
+      - name: Dump runner context
+        run: echo '${{ toJSON(runner) }}'
+      - name: Dump strategy context
+        run: echo '${{ toJSON(strategy) }}'
+      - name: Dump matrix context
+        run: echo '${{ toJSON(matrix) }}'     
+      - name: check actor
+        if: ${{ !contains('["datavisyn-bot", "anita-steiner","dvvanessastoiber", "puehringer","dvdanielamoitzi", "thinkh"]', github.actor) }}
+        run: |
+          echo "you are not allowed to run this job!"
+          exit 1
+      - name: check branch
+        if: ${{ !startsWith(github.ref, 'rc_') }}
+        run: |
+          echo 'only the release candidates can be deployed to prod.'
+          exit 1  
+      - name: deploy to prod
+        run: |
+          echo 'deploy to prod'

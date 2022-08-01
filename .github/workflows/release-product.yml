@@ -25,7 +25,7 @@ jobs:
           echo "you are not allowed to run this job!"
           exit 1
       - name: check branch
-        if: ${{ !contains(github.ref, 'develop') }}
+        if: ${{ !startsWith(github.ref, 'develop') }}
         run: |
           echo 'only the develop branches can be released.'
           exit 1  
