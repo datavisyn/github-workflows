@@ -204,6 +204,7 @@ jobs:
           echo "status: ${{ steps.create-pr.outputs.status }}"
           exit 1
       - name: add labels to pull request
+        if: ${{ steps.get-parameters.outputs.labels != '' }}
         id: add-labels
         uses: octokit/request-action@v2.x
         with:
