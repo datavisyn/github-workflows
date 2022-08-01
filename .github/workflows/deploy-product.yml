@@ -42,6 +42,8 @@ jobs:
         run: |
           echo "only the release candidates can be deployed to qa: {{ github.head_ref }}"
           exit 1
+      # checkout repo to get package.json    
+      - uses: actions/checkout@v3
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
         with:
