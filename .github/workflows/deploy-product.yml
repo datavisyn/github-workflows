@@ -72,9 +72,6 @@ jobs:
           ecr_repository_name: ${{ steps.get-parameters.outputs.api_repo }}
           current_image_tag: ${{ github.head_ref }}
           additional_image_tag: "${{ steps.get-add-image-tag.outputs.additional_image_tag }}"      
-      - name: delete tmp files
-        run: |
-          rm -rf ./tmp                     
       - name: remove label from pull request
         if: ${{ github.event.label.name == 'deploy_to_qa' && failure() }}
         id: remove-labels
