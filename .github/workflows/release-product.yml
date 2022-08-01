@@ -211,7 +211,7 @@ jobs:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
           issue_number: ${{ fromJson(steps.create-pr.outputs.data).number }}
-          labels: [${{ steps.get-parameters.outputs.labels }}]
+          labels: "[${{ steps.get-parameters.outputs.labels }}]"
         env:
           GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
       - name: check pr status
