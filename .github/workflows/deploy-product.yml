@@ -20,19 +20,6 @@ jobs:
     if: ${{ github.event.label.name == 'deploy_to_qa' }}
     runs-on: ubuntu-20.04
     steps:
-      - name: Dump GitHub context
-        id: github_context_step
-        run: echo '${{ toJSON(github) }}'
-      - name: Dump job context
-        run: echo '${{ toJSON(job) }}'
-      - name: Dump steps context
-        run: echo '${{ toJSON(steps) }}'
-      - name: Dump runner context
-        run: echo '${{ toJSON(runner) }}'
-      - name: Dump strategy context
-        run: echo '${{ toJSON(strategy) }}'
-      - name: Dump matrix context
-        run: echo '${{ toJSON(matrix) }}'     
       - name: check actor
         if: ${{ !contains('["datavisyn-bot", "anita-steiner","dvvanessastoiber", "puehringer","dvdanielamoitzi", "thinkh"]', github.actor) }}
         run: |
@@ -95,19 +82,6 @@ jobs:
     if: ${{ github.event.label.name == 'deploy_to_prod' }}
     runs-on: ubuntu-20.04
     steps:
-      - name: Dump GitHub context
-        id: github_context_step
-        run: echo '${{ toJSON(github) }}'
-      - name: Dump job context
-        run: echo '${{ toJSON(job) }}'
-      - name: Dump steps context
-        run: echo '${{ toJSON(steps) }}'
-      - name: Dump runner context
-        run: echo '${{ toJSON(runner) }}'
-      - name: Dump strategy context
-        run: echo '${{ toJSON(strategy) }}'
-      - name: Dump matrix context
-        run: echo '${{ toJSON(matrix) }}'     
       - name: check actor
         if: ${{ !contains('["datavisyn-bot", "anita-steiner","dvvanessastoiber", "puehringer","dvdanielamoitzi", "thinkh"]', github.actor) }}
         run: |
@@ -121,8 +95,52 @@ jobs:
       - name: check qa deployment
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'deploy_to_qa')}}
         run: |
-          echo 'deloy to qa before you deploy to prod.'
+          echo 'deploy to qa before you deploy to prod.'
           exit 1
-      - name: deploy to prod
+      # checkout repo to get package.json    
+      - uses: actions/checkout@v3
+      # checkout this workflow repository to get actions
+      - uses: actions/checkout@v3
+        with:
+          repository: datavisyn/github-workflows
+          ref: main
+          path: ./tmp/github-workflows
+      - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
+        id: get-parameters
+        with:
+          dv_customers: ${{ secrets.DV_CUSTOMERS }}
+          repository_name: ${{ github.event.repository.name }}
+          branch_name: ${{ github.base_ref }}
+          time_zone: ${{ env.TIME_ZONE }}
+      - name: create additional tag
+        id: get-add-image-tag
         run: |
-          echo 'deploy to prod'
+          additional_image_tag=${{ steps.get-parameters.outputs.image_tag1 }}
+          echo "additional_image_tag=${additional_image_tag}"
+          echo "::set-output name=additional_image_tag::$additional_image_tag"        
+      - uses: ./tmp/github-workflows/.github/actions/retag-image
+        name: retag existing images
+        with:
+          aws_role: ${{ secrets.AWS_ECR_ROLE }} 
+          ecr_repository_name: ${{ steps.get-parameters.outputs.api_repo }}
+          current_image_tag: ${{ github.head_ref }}
+          additional_image_tag: "${{ steps.get-add-image-tag.outputs.additional_image_tag }}"      
+      - name: remove label from pull request
+        if: ${{ github.event.label.name == 'deploy_to_prod' && failure() }}
+        id: remove-labels
+        uses: octokit/request-action@v2.x
+        with:
+          route: DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          issue_number: ${{ github.event.pull_request.number }}
+          name: "deploy_to_prod"
+        env:
+          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+      - name: check remove labels status
+        if: ${{ steps.remove-labels.conclusion.success && steps.remove-labels.outputs.status != 200 }}
+        run: |
+          echo "something went wrong with removing the labels"
+          echo "data: ${{ steps.remove-labels.outputs.data }}"
+          echo "status: ${{ steps.remove-labels.outputs.status }}"
+          exit 1
