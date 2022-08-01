@@ -213,9 +213,9 @@ jobs:
           echo "you are not allowed to run this job!"
           exit 1
       - name: check branch
-        if: ${{ !contains(github.ref, 'main') }}
+        if: ${{ !startsWith(github.ref, 'main') }}
         run: |
-          echo 'only the develop branches can be released.'
+          echo 'only the main branches can be released.'
           exit 1  
       - uses: actions/checkout@v3
         with:
@@ -243,7 +243,7 @@ jobs:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
           tag_name: "v${{ steps.get-release-version.outputs.release_version }}"
-          target_commitish: main
+          target_commitish: ${{ github.href }}
           name: "v${{ steps.get-release-version.outputs.release_version }}"
           body: "release of v${{ steps.get-release-version.outputs.release_version }}"
           draft: false 
