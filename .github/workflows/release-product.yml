@@ -216,7 +216,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
       - name: check pr status
-        if: ${{ steps.add-labels.outputs.status != 201 }}
+        if: ${{ steps.get-parameters.outputs.labels != '' && steps.add-labels.outputs.status != 201 }}
         run: |
           echo "something went wrong with adding the labels"
           echo "data: ${{ steps.add-labels.outputs.data }}"
