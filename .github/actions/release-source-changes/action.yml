@@ -1,4 +1,4 @@
-name: changes for the release
+name: changes of source repositories for the release
 
 inputs:
   known_repositories:

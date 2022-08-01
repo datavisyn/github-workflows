@@ -121,7 +121,7 @@ jobs:
           ref: main
           path: ./tmp/github-workflows
       - name: prepare develop
-        uses: ./tmp/github-workflows/.github/actions/release-changes
+        uses: ./tmp/github-workflows/.github/actions/release-source-changes
         with:
           known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
           repository_version: ${{ steps.get-release-version.outputs.release_version }}
@@ -273,7 +273,7 @@ jobs:
           ref: main
           path: ./tmp/github-workflows
       - name: prepare develop
-        uses: ./tmp/github-workflows/.github/actions/release-changes
+        uses: ./tmp/github-workflows/.github/actions/release-source-changes
         with:
           known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
           repository_version: ${{ steps.get-release-version.outputs.next_dev_version }}

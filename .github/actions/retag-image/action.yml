@@ -1,0 +1,40 @@
+name: Login to AWS ECR and retag existing image
+
+inputs:
+  aws_role:  
+    description: "aws role to push to the ecr registry"
+    required: true
+    type: string
+  ecr_repository_name:  
+    description: "ecr repository name to use"
+    required: true
+    type: string
+  current_image_tag:  
+    description: "current tag of the image"
+    required: true
+    type: string    
+  additional_image_tag:  
+    description: "additional image tag"
+    required: true
+    type: string
+       
+runs:
+  using: "composite"
+  steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ inputs.aws_role }}
+        aws-region: eu-central-1
+    # - name: Login to Amazon ECR
+    #   id: login-ecr
+    #   uses: aws-actions/amazon-ecr-login@v1
+    - name: retag image
+      run: |
+        MANIFEST=$(aws ecr batch-get-image --repository-name $REPOSITORY_NAME --image-ids imageTag=$CURRENT_IMAGE_TAG --output json | jq --raw-output --join-output '.images[0].imageManifest')
+        aws ecr put-image --repository-name $REPOSITORY_NAME --image-tag $ADDITIONAL_IMAGE_TAG --image-manifest "$MANIFEST"
+      env:
+        REPOSITORY_NAME: ${{ inputs.ecr_repository_name }}
+        CURRENT_IMAGE_TAG: ${{ inputs.current_image_tag }}
+        ADDITIONAL_IMAGE_TAG: ${{ inputs.additional_image_tag }}
+      shell: bash  
