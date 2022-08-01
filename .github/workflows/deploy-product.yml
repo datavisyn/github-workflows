@@ -38,7 +38,7 @@ jobs:
           echo "you are not allowed to run this job!"
           exit 1
       - name: check branch
-        if: ${{ !startsWith(github.ref, 'rc_') }}
+        if: ${{ !startsWith(github.head_ref, 'rc_') }}
         run: |
           echo 'only the release candidates can be deployed to qa.'
           exit 1  
@@ -68,10 +68,15 @@ jobs:
           echo "you are not allowed to run this job!"
           exit 1
       - name: check branch
-        if: ${{ !startsWith(github.ref, 'rc_') }}
+        if: ${{ !startsWith(github.head_ref, 'rc_') }}
         run: |
           echo 'only the release candidates can be deployed to prod.'
-          exit 1  
+          exit 1 
+      - name: check qa deployment
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'deploy_to_qa')}}
+        run: |
+          echo 'deloy to qa before you deploy to prod.'
+          exit 1
       - name: deploy to prod
         run: |
           echo 'deploy to prod'
