@@ -27,7 +27,7 @@ jobs:
       - name: check branch
         if: ${{ github.ref != 'develop' && !startsWith(github.ref, 'develop') }}
         run: |
-          echo 'only the develop branches can be released.'
+          echo 'only the develop branches can be released: ${{ github.ref }}'
           exit 1  
       - uses: actions/checkout@v3
         with:
