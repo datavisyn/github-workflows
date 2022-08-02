@@ -242,17 +242,17 @@ jobs:
           workflow_file_name: "publish.yml"
           ref: "main"
           github_user: ${{ env.GITHUB_USER }}                    
-      - name: delete release branch
-        run: |
-          echo "delete release branch"
-          git fetch
-          git status
-          git checkout develop
-          git branch -D $BRANCH_NAME
-          git push origin --delete $BRANCH_NAME
-          git status
-        env:
-          BRANCH_NAME: ${{ steps.get-release-version.outputs.new_branch_name }} 
+      # - name: delete release branch
+      #   run: |
+      #     echo "delete release branch"
+      #     git fetch
+      #     git status
+      #     git checkout develop
+      #     git branch -D $BRANCH_NAME
+      #     git push origin --delete $BRANCH_NAME
+      #     git status
+      #   env:
+      #     BRANCH_NAME: ${{ steps.get-release-version.outputs.new_branch_name }} 
       - name: create release
         id: create-release
         uses: octokit/request-action@v2.x
