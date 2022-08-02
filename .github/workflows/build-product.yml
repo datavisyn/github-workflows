@@ -54,7 +54,7 @@ jobs:
       # checkout specific product repository    
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       - name: Set up node version ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
@@ -69,7 +69,7 @@ jobs:
         run: |
           git config --global url.https://${{ env.GITHUB_TOKEN }}@github.com/.insteadOf ssh://git@github.com/
         env: 
-          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+          GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
         with:
@@ -80,7 +80,7 @@ jobs:
         with:
           phovea_type: web
           generator_version: ${{ env.GENERATOR_VERSION }}
-          github_token:  ${{ secrets.DATAVISYN_BOT_REPO_TOKEN ||  github.token }}
+          github_token:  ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           app_name:  ${{ needs.prepare-build.outputs.app }}             
       - name: install dependencies
         run: |
@@ -133,7 +133,7 @@ jobs:
         run: |
           git config --global url.https://${{ env.GITHUB_TOKEN }}@github.com/.insteadOf ssh://git@github.com/
         env: 
-          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}       
+          GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}       
       # needs wheel for make
       - name: install requirements
         run: |
@@ -149,7 +149,7 @@ jobs:
         with:
           phovea_type: api
           generator_version: ${{ env.GENERATOR_VERSION }}
-          github_token:  ${{ secrets.DATAVISYN_BOT_REPO_TOKEN ||  github.token }}
+          github_token:  ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           app_name:  ${{ needs.prepare-build.outputs.app }}   
       - name: Build
         run: |

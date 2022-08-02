@@ -49,7 +49,7 @@ jobs:
         with:
           node_version: ${{ matrix.node-version }}
           npm_registry: ${{ env.NPM_REGISTRY }}
-          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || '' }}
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       - uses: ./tmp/github-workflows/.github/actions/publish-node
         with:
           npm_token:  ${{ secrets.NPM_TOKEN }}
@@ -82,7 +82,7 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/build-python
         with:
           python_version: ${{ matrix.python-version }}
-          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || '' }}  
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}  
       - uses: ./tmp/github-workflows/.github/actions/publish-python
         with:
           pypi_registry: ${{ env.PYPI_REGISTRY }}
