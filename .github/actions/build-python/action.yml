@@ -14,7 +14,7 @@ inputs:
 runs:
   using: "composite"
   steps:      
-    - name: Set up python ${{ inputs.python_version }}
+    - name: Set up python
       uses: actions/setup-python@v3
       with:
         python-version: ${{ inputs.python_version }}
@@ -24,8 +24,8 @@ runs:
         pip --version
       shell: bash  
     - name: Git config
-      if: "${{ env.GITHUB_TOKEN != '' }}"
-      run: git config --global url."https://${{ env.GITHUB_TOKEN }}@github".insteadOf https://github
+      if: ${{ inputs.github_ro_token != '' }}
+      run: git config --global url."https://$GITHUB_TOKEN@github".insteadOf https://github
       shell: bash
       env: 
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}           

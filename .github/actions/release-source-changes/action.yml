@@ -23,9 +23,9 @@ runs:
   steps:      
     - name: change release
       run: |
-        echo ${{ inputs.prepare_release }}
+        echo $PREPARE_RELEASE
         # change git references with version references in package.json and requirements.txt
-        known_repositories=${{ inputs.known_repositories }}
+        known_repositories=$KNOWN_REPOSITORIES
         echo $known_repositories | jq -r '.'
         repositories=$(echo $known_repositories | jq -r '.')
         echo "repositories: ${repositories}"
@@ -37,7 +37,7 @@ runs:
           pip_version=$(echo $repositories | jq -r --arg var $repository '.[$var].pip_version')
           pip_develop=$(echo $repositories | jq -r --arg var $repository '.[$var].pip_develop')
           echo $repository: $npm_version $npm_develop $pip_version $pip_develop
-          if ${{ inputs.prepare_release }}; then
+          if $PREPARE_RELEASE; then
             if [[ $npm_version != null && $npm_develop != null ]] ; then
               sed -i "s|\"$repository\": \"$npm_develop\"|\"$repository\": \"$npm_version\"|gI" ./package.json
             fi
@@ -56,12 +56,17 @@ runs:
         version=$(jq -r '.version' ./package.json)
         cat ./requirements.txt
         # change version in package.json
-        sed -i "s|\"version\": \"$version\"|\"version\": \"${{ inputs.repository_version }}\"|gI" ./package.json
+        sed -i "s|\"version\": \"$version\"|\"version\": \"$REPOSITORY_VERSION\"|gI" ./package.json
         cat ./package.json
         #change version of github action references
-        if ${{ inputs.prepare_release }}; then
+        if $PREPARE_RELEASE; then
           find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@main/@$GA_VERSION/g" {} \;
         else
           find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@$GA_VERSION/@main/g" {} \;  
         fi
+      env:
+        PREPARE_RELEASE: ${{ inputs.prepare_release }}
+        KNOWN_REPOSITORIES: ${{ inputs.known_repositories }}
+        REPOSITORY_VERSION: ${{ inputs.repository_version }}
+        GA_VERSION: ${{ inputs.ga_version }}
       shell: bash

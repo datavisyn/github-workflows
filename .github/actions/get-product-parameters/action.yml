@@ -54,7 +54,7 @@ runs:
     - name: get parameters
       id: get-parameters
       run: |
-        product_name=${{ env.REPOSITORY_NAME }}
+        product_name=$REPOSITORY_NAME
         post_fix=_product
         product_name=${product_name%$post_fix}
         app=$(jq  -rc '.[] | select(.type == "web") | .name' ./phovea_product.json)
@@ -63,7 +63,7 @@ runs:
         # get everything from branch name
         # branchname should look <develop|master|main>_<sub_app>_<customer>_<aws>
         # for release candidates the branch name should look like: rc_<version>_<sub_app>_<customer>_<aws>-<date>
-        branch_name=${{ env.BRANCH_NAME }}
+        branch_name=$BRANCH_NAME
         branch_name=${branch_name##*/}
         echo $branch_name
         post_fix=_aws
@@ -108,7 +108,7 @@ runs:
         # check customer
         customer=datavisyn
         labels=''
-        dv_customers=${{ env.DV_CUSTOMERS }}
+        dv_customers=$DV_CUSTOMERS
         array=($(echo "${dv_customers}" | tr ',' "\n"))
         for c in "${array[@]}"
         do
@@ -141,12 +141,12 @@ runs:
             image_tag1+=${customer}_
         fi
         if [[ ! -z $rc_candidate ]] ; then
-          image_tag2=${{ env.BRANCH_NAME }}
+          image_tag2=$BRANCH_NAME
           image_tag2=${image_tag2##*/}
           image_tag1=${image_tag2%%-*}
         else
           image_tag1=${image_tag1::-1}
-          image_tag2=$image_tag1-$(TZ=${{ env.TIME_ZONE }} date +%Y%m%d-%H%M%S)
+          image_tag2=$image_tag1-$(TZ=$TIME_ZONE date +%Y%m%d-%H%M%S)
         fi
         # dummy
         aws=true

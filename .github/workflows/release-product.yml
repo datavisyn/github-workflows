@@ -27,8 +27,10 @@ jobs:
       - name: check branch
         if: ${{ github.ref != 'refs/heads/develop' && !startsWith(github.ref, 'refs/heads/develop') }}
         run: |
-          echo 'only the develop branches can be released: ${{ github.ref }}'
-          exit 1  
+          echo 'only the develop branches can be released: $GITHUB_REF'
+          exit 1 
+        env:
+          GITHUB_REF: ${{ github.ref }}
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
@@ -51,13 +53,13 @@ jobs:
       - name: read known repositories
         id: get-known-repositories
         run: |
-          if [[ ${{github.event.repository.private}} = true ]]; then
-            curl -H 'Authorization: token ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}' \
+          if [[ $REPO_IS_PRIVATE = true ]]; then
+            curl -H 'Authorization: token $GITHUB_TOKEN' \
               -H 'Accept: application/vnd.github.v4.raw' \
               -o known_repositories.json \
               -L https://raw.githubusercontent.com/datavisyn/github-maintenance/main/release/next_repositories_sources.json
           else
-            curl -H 'Authorization: token ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}' \
+            curl -H 'Authorization: token $GITHUB_TOKEN' \
               -H 'Accept: application/vnd.github.v4.raw' \
               -o known_repositories.json \
               -L https://raw.githubusercontent.com/datavisyn/github-maintenance/main/release/next_repositories_sources_public.json
@@ -66,26 +68,29 @@ jobs:
           echo ${known_repositories}
           rm ./known_repositories.json
           echo "::set-output name=known_repositories::$known_repositories"
+        env:
+          REPO_IS_PRIVATE: ${{github.event.repository.private}} || false
+          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
       - name: check repository
         id: check-repository
         run: |
           repository=$(jq  -rc '.[] | select(.type == "web") | .repo' ./phovea_product.json)
           repository=$(echo "$repository" | sed -e 's|.*/||')
-          known_repositories=${{ steps.get-known-repositories.outputs.known_repositories }}
+          known_repositories=$KNOWN_REPOSITORIES
           checked_repository="$(echo $known_repositories | jq -r '.' | jq --arg var $repository '.[$var]')"
           release_version="$(echo $checked_repository | jq -r '.version')"
-          sub_app=${{ steps.get-parameters.outputs.known_repositories }}
+          sub_app=$SUB_APP
           if [[ ! -z $sub_app ]] ; then
             release_version+="-${sub_app}"
           fi
-          customer=${{ steps.get-parameters.outputs.customer }}
+          customer=$CUSTOMER
           if [[ $customer != "datavisyn" ]] ; then
             release_version+="-${customer}"
           fi
           generator_version="$(echo $known_repositories | jq -r '."generator-phovea" | .version')"
-          new_branch_name=${{steps.get-parameters.outputs.image_tag2 }}
+          new_branch_name=$IMAGE_TAG2
           new_branch_name=${new_branch_name/develop/"rc_$release_version"}
-          main_branch_name=${{steps.get-parameters.outputs.image_tag1 }}
+          main_branch_name=$IMAGE_TAG1
           main_branch_name=${main_branch_name/develop/main}
           echo "new_branch_name=$new_branch_name"
           echo "main_branch_name=$main_branch_name"
@@ -94,15 +99,21 @@ jobs:
           echo ::set-output name=generator_version::${generator_version}
           echo ::set-output name=new_branch_name::${new_branch_name}
           echo ::set-output name=main_branch_name::${main_branch_name}
+        env:
+          KNOWN_REPOSITORIES: ${{ steps.get-known-repositories.outputs.known_repositories }}
+          SUB_APP: ${{ steps.get-parameters.outputs.sub_app }}
+          CUSTOMER: ${{ steps.get-parameters.outputs.customer }}
+          IMAGE_TAG1: ${{steps.get-parameters.outputs.image_tag1 }}
+          IMAGE_TAG2: ${{steps.get-parameters.outputs.image_tag2 }}
       - name: create/get release branch
         run: |
           echo "create/get release branch"
-          if git rev-parse --verify --quiet origin/${{ env.BRANCH_NAME }}; then
+          if git rev-parse --verify --quiet origin/$BRANCH_NAME; then
             echo "branch exists!"
-            git checkout ${{ env.BRANCH_NAME }} 
+            git checkout $BRANCH_NAME 
           else
             echo "create branch"
-            git checkout -b ${{ env.BRANCH_NAME }}
+            git checkout -b $BRANCH_NAME
           fi
         env:
           BRANCH_NAME: ${{ steps.check-repository.outputs.new_branch_name }}          
@@ -111,12 +122,12 @@ jobs:
           version=$(jq -r '.version' ./package.json)
           # change version in package.json
           npm_develop=git+ssh://git@github.com:phovea/generator-phovea#develop
-          sed -i "s|\"generator-phovea\": \"$npm_develop\"|\"generator-phovea\": \"${{ steps.check-repository.outputs.generator_version }}\"|gI" ./package.json
-          sed -i "s|\"version\": \"$version\"|\"version\": \"${{ steps.check-repository.outputs.release_version }}\"|gI" ./package.json
+          sed -i "s|\"generator-phovea\": \"$npm_develop\"|\"generator-phovea\": \"$GENERATOR_VERSION\"|gI" ./package.json
+          sed -i "s|\"version\": \"$version\"|\"version\": \"$RELEASE_VERSION\"|gI" ./package.json
           cat ./package.json
           # change phovea_product
           # frontend
-          known_repositories=${{ steps.get-known-repositories.outputs.known_repositories }}
+          known_repositories=$KNOWN_REPOSITORIES
           content="[{"
           name=$(jq  -rc '.[] | select(.type == "web") | .repo' ./phovea_product.json)
           name=$(echo "$name" | sed -e 's|.*/||')
@@ -164,15 +175,24 @@ jobs:
           rm ./phovea_product2.json
           #change version of github action references
           find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@main/@$GA_VERSION/g" {} \;
+        env:
+          GENERATOR_VERSION: ${{ steps.check-repository.outputs.generator_version }}
+          RELEASE_VERSION: ${{ steps.check-repository.outputs.release_version }}
+          KNOWN_REPOSITORIES: ${{ steps.get-known-repositories.outputs.known_repositories }}
       - name: setup git config
         run: |
-          git config user.name "${{ github.actor }}"
-          git config user.email "<>"          
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "<>"
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}          
       - name: push branch
         run: |
           echo "push branch"
-          git commit -am "[skip ci]Prepare release ${{ steps.check-repository.outputs.release_version }}"
-          git push origin ${{ steps.check-repository.outputs.new_branch_name }}
+          git commit -am "[skip ci]Prepare release v$RELEASE_VERSION"
+          git push origin $BRANCH_NAME
+        env:
+          RELEASE_VERSION: ${{ steps.check-repository.outputs.release_version }}
+          BRANCH_NAME: ${{ steps.check-repository.outputs.new_branch_name }}
       - name: trigger build
         uses: datavisyn/github-action-trigger-workflow@v1
         with:
@@ -189,8 +209,8 @@ jobs:
           route: POST /repos/{owner}/{repo}/pulls
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
-          title: "Release ${{ steps.check-repository.outputs.release_version }}"
-          body: 'This pr will create version ${{ steps.check-repository.outputs.release_version }}'
+          title: "Release v${{ steps.check-repository.outputs.release_version }}"
+          body: 'This pr will create version v${{ steps.check-repository.outputs.release_version }}'
           head: "${{ steps.check-repository.outputs.new_branch_name }}"
           base: "${{ steps.check-repository.outputs.main_branch_name }}"
           draft: false
@@ -200,9 +220,12 @@ jobs:
         if: ${{ steps.create-pr.outputs.status != 201 }}
         run: |
           echo "something went wrong with the pr"
-          echo "data: ${{ steps.create-pr.outputs.data }}"
-          echo "status: ${{ steps.create-pr.outputs.status }}"
+          echo "data: $DATA"
+          echo "status: $STATUS"
           exit 1
+        env:
+          STATUS: ${{ steps.create-pr.outputs.status }}
+          DATA: ${{ steps.create-pr.outputs.data }}
       - name: add labels to pull request
         if: ${{ steps.get-parameters.outputs.labels != '' }}
         id: add-labels
@@ -219,9 +242,12 @@ jobs:
         if: ${{ steps.get-parameters.outputs.labels != '' && steps.add-labels.outputs.status != 200 }}
         run: |
           echo "something went wrong with adding the labels"
-          echo "data: ${{ steps.add-labels.outputs.data }}"
-          echo "status: ${{ steps.add-labels.outputs.status }}"
-          exit 1                                         
+          echo "data: $DATA"
+          echo "status: $STATUS"
+          exit 1
+        env:
+          STATUS: ${{ steps.add-labels.outputs.status }}
+          DATA: ${{ steps.add-labels.outputs.data }}                                               
   create-release:
     if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && startsWith(github.head_ref, 'rc_') }}
     runs-on: ubuntu-20.04
@@ -248,12 +274,14 @@ jobs:
         run: |
           git fetch
           git status
-          if git rev-parse --verify --quiet origin/${{ github.head_ref }}; then
-            echo "delete release branch: ${{ github.head_ref }}"
-            git branch -D ${{ github.head_ref }}
-            git push origin --delete ${{ github.head_ref }}
+          if git rev-parse --verify --quiet origin/$GITHUB_REF; then
+            echo "delete release branch: $GITHUB_REF"
+            git branch -D $GITHUB_REF
+            git push origin --delete $GITHUB_REF
             git status
           fi
+        env:
+          GITHUB_REF: ${{ github.head_ref }}
       - name: create release
         id: create-release
         uses: octokit/request-action@v2.x
@@ -274,7 +302,9 @@ jobs:
         if: ${{ steps.create-release.outputs.status != 201 }}
         run: |
           echo "something went wrong with the creation of the release"
-          echo "data: ${{ steps.create-release.outputs.data }}"
-          echo "status: ${{ steps.create-release.outputs.status }}"       
+          echo "data: $DATA"
+          echo "status: $STATUS"       
           exit 1                   
-     
+        env:
+          STATUS: ${{ steps.create-release.outputs.status }}
+          DATA: ${{ steps.create-release.outputs.data }} 

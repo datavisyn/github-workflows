@@ -27,17 +27,19 @@ runs:
     - name: Install generator
       run: |
         npm install -g yo@4.3.0
-        npm install -g generator-phovea@${{ inputs.generator_version }}
+        npm install -g generator-phovea@$GENERATOR_VERSION
+      env:
+        GENERATOR_VERSION: ${{ inputs.generator_version }}  
       shell: bash     
     - name: create workspace
       run: |
-        mkdir -p ./tmp/${{ inputs.phovea_type }}
-        cd ./tmp/${{ inputs.phovea_type }}
-        phovea_type=${{ inputs.phovea_type }}
+        mkdir -p ./tmp/$PHOVEA_TYPE
+        cd ./tmp/$PHOVEA_TYPE
+        phovea_type=$PHOVEA_TYPE
         name=$(jq --arg var ${phovea_type} -rc '.[] | select(.type == $var) | .repo' ../../phovea_product.json)
         name=$(echo "$name" | sed -e 's|.*/||')
         echo $name
-        repository=https://${{ env.GITHUB_TOKEN }}@github.com/$(jq --arg var ${phovea_type} -rc '.[] | select(.type == $var) | .repo' ../../phovea_product.json).git
+        repository=https://$GITHUB_TOKEN@github.com/$(jq --arg var ${phovea_type} -rc '.[] | select(.type == $var) | .repo' ../../phovea_product.json).git
         echo $repository
         branch=$(jq --arg var ${phovea_type} -rc '.[] | select(.type == $var) | .branch' ../../phovea_product.json)
         echo $branch
@@ -48,7 +50,7 @@ runs:
           name=$(echo $additional | jq  -rc '.name')
           name=$(echo "$name" | sed -e 's|.*/||')
           echo $name
-          repository=https://${{ env.GITHUB_TOKEN }}@github.com/$(echo $additional | jq  -rc '.repo').git
+          repository=https://$GITHUB_TOKEN@github.com/$(echo $additional | jq  -rc '.repo').git
           echo "$repository"
           branch=$(echo $additional | jq  -rc '.branch')
           echo "$branch"
@@ -56,12 +58,16 @@ runs:
         done
       env: 
         GITHUB_TOKEN: ${{ inputs.github_token }}
+        PHOVEA_TYPE: ${{ inputs.phovea_type }}
       shell: bash             
     - name: update workspace
       run: |
-        cd ./tmp/${{ inputs.phovea_type }}
+        cd ./tmp/$PHOVEA_TYPE
         rm ./../../.yo-rc.json
-        yo phovea:workspace --defaultApp=${{ inputs.app_name }} --noAdditionals=true  --addWorkspaceRepos=false
-        cp -r ./../../templates/${{ inputs.phovea_type }}/* .
+        yo phovea:workspace --defaultApp=$APP_NAME --noAdditionals=true  --addWorkspaceRepos=false
+        cp -r ./../../templates/$PHOVEA_TYPE/* .
+      env:  
+        PHOVEA_TYPE: ${{ inputs.phovea_type }}
+        APP_NAME: ${{ inputs.app_name }}
       shell: bash  
 

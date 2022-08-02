@@ -47,13 +47,13 @@ jobs:
       - name: read known repositories
         id: get-known-repositories
         run: |
-          if [[ ${{github.event.repository.private}} = true ]]; then
-            curl -H 'Authorization: token ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}' \
+          if [[ $REPO_IS_PRIVATE = true ]]; then
+            curl -H 'Authorization: token $GITHUB_TOKEN' \
               -H 'Accept: application/vnd.github.v4.raw' \
               -o known_repositories.json \
               -L https://raw.githubusercontent.com/datavisyn/github-maintenance/main/release/next_repositories_sources.json
           else
-            curl -H 'Authorization: token ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}' \
+            curl -H 'Authorization: token $GITHUB_TOKEN' \
               -H 'Accept: application/vnd.github.v4.raw' \
               -o known_repositories.json \
               -L https://raw.githubusercontent.com/datavisyn/github-maintenance/main/release/next_repositories_sources_public.json
@@ -61,12 +61,15 @@ jobs:
           known_repositories=$(echo $(jq -c '.' ./known_repositories.json) | jq -R '.')
           echo ${known_repositories}
           rm ./known_repositories.json
-          echo "::set-output name=known_repositories::$known_repositories"     
+          echo "::set-output name=known_repositories::$known_repositories" 
+        env:
+          REPO_IS_PRIVATE: ${{github.event.repository.private}} || false
+          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}              
       - name: get release version
         id: get-release-version
         run: |
-          known_repositories=${{ steps.get-known-repositories.outputs.known_repositories }}
-          repository=${{ github.event.repository.name }}
+          known_repositories=$KNOWN_REPOSITORIES
+          repository=$REPOSITORY_NAME
           echo "repository: ${repository}"
           echo $known_repositories | jq -r '.'
           checked_repository="$(echo $known_repositories | jq -r '.' | jq --arg var $repository '.[$var]')"
@@ -78,6 +81,9 @@ jobs:
           echo ::set-output name=new_branch_name::${new_branch_name}
           echo ::set-output name=next_dev_version::${next_dev_version}
           echo ::set-output name=private::${private}
+        env:
+          KNOWN_REPOSITORIES: ${{ steps.get-known-repositories.outputs.known_repositories }}
+          REPOSITORY_NAME: ${{ github.event.repository.name }}
       - uses: octokit/request-action@v2.x
         id: get-latest-release
         continue-on-error: true
@@ -94,23 +100,26 @@ jobs:
       - name: check release version
         if: ${{ steps.get-latest-release.outputs.status == 200 }}
         run: |
-          echo "latest release: ${{ steps.get-latest-release.outputs.data }}"
-          echo "release version: ${{ steps.get-release-version.outputs.release_version }}"
-          if [ "${{ steps.get-release-version.outputs.release_version }}" == "${{ fromJson(steps.get-latest-release.outputs.data).tag_name }}" ]; then
+          echo "latest release: $LATEST_RELEASE"
+          echo "release version: $RELEASE_VERSION"
+          if [ "$RELEASE_VERSION" == "$LATEST_RELEASE" ]; then
             echo "nothing todo!"
             exit 1 
             # check if exit 1 is really the best solution
           fi
           # TODO: semver - check if version is lower than given version
+        env:
+          LATEST_RELEASE: ${{ fromJson(steps.get-latest-release.outputs.data).tag_name }}
+          RELEASE_VERSION: ${{ steps.get-release-version.outputs.release_version }}
       - name: create/get release branch
         run: |
           echo "create/get release branch"
-          if git rev-parse --verify --quiet origin/${{ env.BRANCH_NAME }}; then
+          if git rev-parse --verify --quiet origin/$BRANCH_NAME; then
             echo "branch exists!"
-            git checkout ${{ env.BRANCH_NAME }} 
+            git checkout $BRANCH_NAME 
           else
             echo "create branch"
-            git checkout -b ${{ env.BRANCH_NAME }}
+            git checkout -b $BRANCH_NAME
           fi
         env:
           BRANCH_NAME: ${{ steps.get-release-version.outputs.new_branch_name }}
@@ -152,13 +161,18 @@ jobs:
           echo ::set-output name=commits::${commit_titles}
       - name: setup git config
         run: |
-          git config user.name "${{ github.actor }}"
-          git config user.email "<>"          
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "<>" 
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}        
       - name: push branch
         run: |
           echo "push branch" 
-          git commit -am "[skip ci]Prepare release ${{ steps.get-release-version.outputs.release_version }}"
-          git push origin ${{ steps.get-release-version.outputs.new_branch_name }}
+          git commit -am "[skip ci]Prepare release $RELEASE_VERSION"
+          git push origin $BRANCH_NAME
+        env:
+          RELEASE_VERSION: ${{ steps.get-release-version.outputs.release_version }}
+          BRANCH_NAME: ${{ steps.get-release-version.outputs.new_branch_name }}
       - name: trigger build
         uses: datavisyn/github-action-trigger-workflow@v1
         with:
@@ -186,9 +200,12 @@ jobs:
         if: ${{ steps.create-pr.outputs.status != 201 }}
         run: |
           echo "something went wrong with the pr"
-          echo "data: ${{ steps.create-pr.outputs.data }}"
-          echo "status: ${{ steps.create-pr.outputs.status }}"
-          exit 1                                  
+          echo "data: $DATA"
+          echo "status: $STATUS"
+          exit 1
+        env:
+          DATA: ${{ steps.create-pr.outputs.data }}
+          STATUS: ${{ steps.create-pr.outputs.status }}                                 
       - name: merge pull request
         id: merge-pr
         uses: octokit/request-action@v2.x
@@ -207,9 +224,12 @@ jobs:
         if: ${{ steps.merge-pr.outputs.status != 200 }}
         run: |
           echo "something went wrong with the merge of the pr"
-          echo "data: ${{ steps.merge-pr.outputs.data }}"
-          echo "status: ${{ steps.merge-pr.outputs.status }}"          
+          echo "data: $DATA"
+          echo "status: $STATUS"          
           exit 1
+        env:
+          DATA: ${{ steps.merge-pr.outputs.data }}
+          STATUS: ${{ steps.merge-pr.outputs.status }}           
       - name: trigger publish
         uses: datavisyn/github-action-trigger-workflow@v1
         if: ${{ !steps.get-release-version.outputs.private || steps.get-release-version.outputs.private == 'false' }}
@@ -226,9 +246,11 @@ jobs:
           git fetch
           git status
           git checkout develop
-          git branch -D ${{ steps.get-release-version.outputs.new_branch_name }}
-          git push origin --delete ${{ steps.get-release-version.outputs.new_branch_name }}
+          git branch -D $BRANCH_NAME
+          git push origin --delete $BRANCH_NAME
           git status
+        env:
+          BRANCH_NAME: ${{ steps.get-release-version.outputs.new_branch_name }} 
       - name: create release
         id: create-release
         uses: octokit/request-action@v2.x
@@ -249,9 +271,12 @@ jobs:
         if: ${{ steps.create-release.outputs.status != 201 }}
         run: |
           echo "something went wrong with the creation of the release"
-          echo "data: ${{ steps.create-release.outputs.data }}"
-          echo "status: ${{ steps.create-release.outputs.status }}"       
-          exit 1                   
+          echo "data: $DATA"
+          echo "status: $STATUS"       
+          exit 1
+        env:
+          DATA: ${{ steps.create-release.outputs.data }}
+          STATUS: ${{ steps.create-release.outputs.status }}                     
       - name: git fetch
         run: |
           git status

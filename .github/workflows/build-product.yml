@@ -55,7 +55,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-      - name: Set up node version ${{ matrix.node-version }}
+      - name: Set up node version
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
@@ -65,9 +65,8 @@ jobs:
           node -v
           npm -v
       - name: Git config
-        if: "${{ env.GITHUB_TOKEN != '' }}"
         run: |
-          git config --global url.https://${{ env.GITHUB_TOKEN }}@github.com/.insteadOf ssh://git@github.com/
+          git config --global url.https://$GITHUB_TOKEN@github.com/.insteadOf ssh://git@github.com/
         env: 
           GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       # checkout this workflow repository to get actions
@@ -120,7 +119,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "14.19"
-      - name: Set up python ${{ matrix.python-version }}
+      - name: Set up python
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
@@ -129,9 +128,8 @@ jobs:
           python --version
           pip --version
       - name: Git config
-        if: "${{ env.GITHUB_TOKEN != '' }}"
         run: |
-          git config --global url.https://${{ env.GITHUB_TOKEN }}@github.com/.insteadOf ssh://git@github.com/
+          git config --global url.https://$GITHUB_TOKEN@github.com/.insteadOf ssh://git@github.com/
         env: 
           GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}       
       # needs wheel for make

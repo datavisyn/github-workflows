@@ -19,7 +19,7 @@ inputs:
 runs:
   using: "composite"
   steps:      
-    - name: Set up node version ${{inputs.node_version }}
+    - name: Set up node version
       uses: actions/setup-node@v3
       with:
         node-version: ${{ inputs.node_version }}
@@ -30,8 +30,8 @@ runs:
         npm -v
       shell: bash  
     - name: Git config
-      if: "${{ env.GITHUB_TOKEN != '' }}"
-      run: git config --global url.https://${{ env.GITHUB_TOKEN }}@github.com/.insteadOf ssh://git@github.com/
+      if: ${{ inputs.github_ro_token != '' }}
+      run: git config --global url.https://$GITHUB_TOKEN@github.com/.insteadOf ssh://git@github.com/
       env: 
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash         

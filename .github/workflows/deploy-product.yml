@@ -28,8 +28,10 @@ jobs:
       - name: check branch
         if: ${{ !startsWith(github.head_ref, 'rc_') }}
         run: |
-          echo "only the release candidates can be deployed to qa: {{ github.head_ref }}"
+          echo "only the release candidates can be deployed to qa: $HEAD_RED"
           exit 1
+        env:
+          HEAD_REF: ${{ github.head_ref }}
       # checkout repo to get package.json    
       - uses: actions/checkout@v3
       # checkout this workflow repository to get actions
@@ -48,10 +50,12 @@ jobs:
       - name: create additional tag
         id: get-add-image-tag
         run: |
-          additional_image_tag=${{ steps.get-parameters.outputs.image_tag1 }}
+          additional_image_tag=$IMAGE_TAG
           additional_image_tag=${additional_image_tag/main/qa}
           echo "additional_image_tag=${additional_image_tag}"
-          echo "::set-output name=additional_image_tag::$additional_image_tag"        
+          echo "::set-output name=additional_image_tag::$additional_image_tag"
+        env:
+          IMAGE_TAG: ${{ steps.get-parameters.outputs.image_tag1 }}         
       - uses: ./tmp/github-workflows/.github/actions/retag-image
         name: retag existing images
         with:
@@ -75,9 +79,12 @@ jobs:
         if: ${{ steps.remove-labels.conclusion.success && steps.remove-labels.outputs.status != 200 }}
         run: |
           echo "something went wrong with removing the labels"
-          echo "data: ${{ steps.remove-labels.outputs.data }}"
-          echo "status: ${{ steps.remove-labels.outputs.status }}"
-          exit 1           
+          echo "data: $DATA"
+          echo "status: $STATUS"
+          exit 1
+        env:
+          STATUS: ${{ steps.remove-labels.outputs.status }}
+          DATA: ${{ steps.remove-labels.outputs.data }}            
   deploy_prod:        
     if: ${{ github.event.label.name == 'deploy_to_prod' }}
     runs-on: ubuntu-20.04
@@ -115,9 +122,11 @@ jobs:
       - name: create additional tag
         id: get-add-image-tag
         run: |
-          additional_image_tag=${{ steps.get-parameters.outputs.image_tag1 }}
+          additional_image_tag=$IMAGE_TAG
           echo "additional_image_tag=${additional_image_tag}"
-          echo "::set-output name=additional_image_tag::$additional_image_tag"        
+          echo "::set-output name=additional_image_tag::$additional_image_tag"
+        env:
+          IMAGE_TAG: ${{ steps.get-parameters.outputs.image_tag1 }}      
       - uses: ./tmp/github-workflows/.github/actions/retag-image
         name: retag existing images
         with:
@@ -141,6 +150,9 @@ jobs:
         if: ${{ steps.remove-labels.conclusion.success && steps.remove-labels.outputs.status != 200 }}
         run: |
           echo "something went wrong with removing the labels"
-          echo "data: ${{ steps.remove-labels.outputs.data }}"
-          echo "status: ${{ steps.remove-labels.outputs.status }}"
+          echo "data: $DATA"
+          echo "status: $STATUS"
           exit 1
+        env:
+          STATUS: ${{ steps.remove-labels.outputs.status }}
+          DATA: ${{ steps.remove-labels.outputs.data }}
