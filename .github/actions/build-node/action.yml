@@ -35,12 +35,15 @@ runs:
       env: 
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash         
-    - name: Install npm dependencies
+    - name: Install npm dependencies(1)
       run:  npm install
       shell: bash
     - name: Patch npm dependencies in package-lock.json
       run: npx npm-force-resolutions
-      shell: bash      
+      shell: bash
+    - name: Install npm dependencies(2)
+      run:  npm install
+      shell: bash          
     - name: Show installed npm dependencies
       run: npm list --depth=1 || true
       shell: bash
