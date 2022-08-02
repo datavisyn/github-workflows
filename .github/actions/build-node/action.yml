@@ -38,6 +38,9 @@ runs:
     - name: Install npm dependencies
       run:  npm install
       shell: bash
+    - name: Patch npm dependencies in package-lock.json
+      run: npx npm-force-resolutions
+      shell: bash      
     - name: Show installed npm dependencies
       run: npm list --depth=1 || true
       shell: bash

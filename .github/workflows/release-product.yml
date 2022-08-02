@@ -69,7 +69,7 @@ jobs:
           rm ./known_repositories.json
           echo "::set-output name=known_repositories::$known_repositories"
         env:
-          REPO_IS_PRIVATE: ${{github.event.repository.private}} || false
+          REPO_IS_PRIVATE: ${{github.event.repository.private}}
           GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
       - name: check repository
         id: check-repository
