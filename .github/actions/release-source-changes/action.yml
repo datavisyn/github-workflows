@@ -29,7 +29,7 @@ runs:
         echo $known_repositories | jq -r '.'
         repositories=$(echo $known_repositories | jq -r '.')
         echo "repositories: ${repositories}"
-        readarray -t my_array < <(echo $known_repositories | jq -rc '. | keys[]')
+        readarray -t my_array < <(echo ${repositories} | jq -rc '. | keys[]')
         echo "my_array: ${my_array[*]}"
         for repository in "${my_array[@]}"; do
           npm_version=$(echo $repositories | jq -r --arg var $repository '.[$var].npm_version')
