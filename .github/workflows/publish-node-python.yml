@@ -5,7 +5,6 @@ on: workflow_call
 env: 
   NPM_REGISTRY: "https://registry.npmjs.org/"
   PYPI_REGISTRY: "https://pypi.org/pypi"
-  PYPI_USERNAME: "datavisyn"
 
 permissions:
   contents: read
@@ -86,5 +85,5 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/publish-python
         with:
           pypi_registry: ${{ env.PYPI_REGISTRY }}
-          pypi_username: ${{ env.PYPI_USERNAME }}
+          pypi_username: ${{ secrets.PYPI_USERNAME }}
           pypi_password: ${{ secrets.PYPI_PASSWORD }} 
