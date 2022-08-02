@@ -170,7 +170,7 @@ jobs:
       - name: push branch
         run: |
           echo "push branch" 
-          git commit -am "[skip ci]Prepare release $RELEASE_VERSION"
+          git commit -am "[skip ci]Prepare release v$RELEASE_VERSION"
           git push origin $BRANCH_NAME
         env:
           RELEASE_VERSION: ${{ steps.get-release-version.outputs.release_version }}
@@ -191,7 +191,7 @@ jobs:
           route: POST /repos/{owner}/{repo}/pulls
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
-          title: "Release ${{ steps.get-release-version.outputs.release_version }}"
+          title: "Release v${{ steps.get-release-version.outputs.release_version }}"
           body: '"${{ steps.release_notes.outputs.readme }}"'
           head: "${{ steps.get-release-version.outputs.new_branch_name }}"
           base: "main"
@@ -216,7 +216,7 @@ jobs:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
           pull_number: ${{ fromJson(steps.create-pr.outputs.data).number }}
-          commit_title: "Release ${{ steps.get-release-version.outputs.release_version }}"
+          commit_title: "Release v${{ steps.get-release-version.outputs.release_version }}"
           merge_method: "squash"
           base: "main"
           draft: false
