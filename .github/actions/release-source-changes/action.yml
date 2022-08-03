@@ -23,7 +23,6 @@ runs:
   steps:      
     - name: change release
       run: |
-        echo $PREPARE_RELEASE
         # change git references with version references in package.json and requirements.txt
         known_repositories=$KNOWN_REPOSITORIES
         echo $known_repositories | jq -r '.'
