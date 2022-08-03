@@ -121,7 +121,7 @@ runs:
         # check if there is a sub_app part
         sub_app=$(echo $branch_name | sed s/_//)
         # get image tags
-        image_tag1=''
+        image_tag1="test-"
         if [[ $stage == develop ]] ; then
           image_tag1+=develop_
         else
