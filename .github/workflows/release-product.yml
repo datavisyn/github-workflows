@@ -245,8 +245,8 @@ jobs:
         run: |
           release_version=$(jq -r '.version' ./package.json)
           main_branch_name=$BRANCH_NAME
-          main_branch_name=${branch_name##*/}
-          develop_branch_name=${branch_name/main/develop}
+          main_branch_name=${main_branch_name##*/}
+          develop_branch_name=${main_branch_name/main/develop}
           echo "release_version=$release_version"
           echo "main_branch_name=$main_branch_name"
           echo "develop_branch_name=$develop_branch_name"
