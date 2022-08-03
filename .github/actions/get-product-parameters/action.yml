@@ -135,7 +135,7 @@ runs:
         fi
         if [[ ! -z $sub_app ]] ; then
             image_tag1+=${sub_app}_
-            labels+= "'sub_app: ${sub_app}'"
+            labels+= $(echo "'sub_app: ${sub_app}'")
         fi
         if [[ $customer != "datavisyn" ]] ; then
             image_tag1+=${customer}_
