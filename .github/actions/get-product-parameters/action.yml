@@ -115,7 +115,7 @@ runs:
           if [[ ${{ github.ref }} =~ _${c}_ ]]; then
             branch_name=${branch_name//_$c/}
             customer=$c
-            labels+= "'customer: $customer'"
+            labels+=$(echo "'customer: $customer'")
           fi
         done
         # check if there is a sub_app part
