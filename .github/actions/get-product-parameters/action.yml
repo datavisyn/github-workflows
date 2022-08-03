@@ -113,8 +113,11 @@ runs:
         for c in "${array[@]}"
         do
           if [[ ${{ github.ref }} =~ _${c}_ ]]; then
+            echo $branch_name
             branch_name=${branch_name//_$c/}
+            echo $branch_name
             customer=$c
+            echo $customer
             labels+=$(echo "'customer: $customer'")
           fi
         done
