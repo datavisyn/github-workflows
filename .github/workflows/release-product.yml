@@ -15,6 +15,9 @@ env:
 
 
 jobs:
+  ###############################################################################################################
+  ## CREATE RELEASE CANDIDATE: to start the release
+  ###############################################################################################################
   create-release-candidate:
     if: ${{ github.event_name != 'pull_request' }}
     runs-on: ubuntu-20.04
@@ -57,9 +60,6 @@ jobs:
           repository_name: ${{ github.event.repository.name }}
           branch_name: ${{ github.ref }}
           time_zone: ${{ env.TIME_ZONE }}
-      - name: delete tmp files
-        run: |
-          rm -rf ./tmp
       - name: read known repositories
         id: get-known-repositories
         run: |
@@ -131,67 +131,16 @@ jobs:
         env:
           BRANCH_NAME: ${{ steps.check-repository.outputs.new_branch_name }}          
       - name: prepare release
+        uses: ./tmp/github-workflows/.github/actions/release-product-changes
+        with:
+          known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
+          repository_version: ${{ steps.check-repository.outputs.release_version }}
+          generator_version: ${{ steps.check-repository.outputs.generator_version }
+          ga_version:  ${{ env.GA_VERSION }}
+          prepare_release: true
+      - name: delete tmp files
         run: |
-          version=$(jq -r '.version' ./package.json)
-          # change version in package.json
-          npm_develop=git+ssh://git@github.com:phovea/generator-phovea#develop
-          sed -i "s|\"generator-phovea\": \"$npm_develop\"|\"generator-phovea\": \"$GENERATOR_VERSION\"|gI" ./package.json
-          sed -i "s|\"version\": \"$version\"|\"version\": \"$RELEASE_VERSION\"|gI" ./package.json
-          cat ./package.json
-          # change phovea_product
-          # frontend
-          known_repositories=$KNOWN_REPOSITORIES
-          content="[{"
-          name=$(jq  -rc '.[] | select(.type == "web") | .repo' ./phovea_product.json)
-          name=$(echo "$name" | sed -e 's|.*/||')
-          echo $name
-          version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
-          echo $version
-          owner="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .owner')"
-          content+="\"type\": \"web\", \"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\",   \"additional\": ["
-          readarray -t my_array < <(jq  -rc '.[] | select(.type == "web") | .additional[] ' ./phovea_product.json)
-          for additional in "${my_array[@]}"; do
-            name=$(echo $additional | jq  -rc '.name')
-            name=$(echo "$name" | sed -e 's|.*/||')
-            echo $name
-            version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
-            echo $version
-            owner="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .owner')"
-            content+="{\"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\"},"
-          done
-          content=${content::-1}
-          content+="]},"
-          # backend
-          content+="{"
-          name=$(jq  -rc '.[] | select(.type == "api") | .repo' ./phovea_product.json)
-          name=$(echo "$name" | sed -e 's|.*/||')
-          echo $name
-          version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
-          echo $version
-          owner="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .owner')"
-          content+="\"type\": \"api\", \"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\",   \"additional\": ["
-          readarray -t my_array < <(jq  -rc '.[] | select(.type == "api") | .additional[]' ./phovea_product.json)
-          for additional in "${my_array[@]}"; do
-            echo "$additional"
-            name=$(echo $additional | jq  -rc '.name')
-            name=$(echo "$name" | sed -e 's|.*/||')
-            echo $name
-            version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
-            echo $version
-            owner="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .owner')"
-            content+="{\"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\"},"
-          done
-          content=${content::-1}
-          content+="]}]"          
-          echo -e $content > ./phovea_product2.json
-          jq '.' ./phovea_product2.json > ./phovea_product.json
-          rm ./phovea_product2.json
-          #change version of github action references
-          find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@main/@$GA_VERSION/g" {} \;
-        env:
-          GENERATOR_VERSION: ${{ steps.check-repository.outputs.generator_version }}
-          RELEASE_VERSION: ${{ steps.check-repository.outputs.release_version }}
-          KNOWN_REPOSITORIES: ${{ steps.get-known-repositories.outputs.known_repositories }}
+          rm -rf ./tmp          
       - name: setup git config
         run: |
           git config user.name "$GITHUB_ACTOR"
@@ -260,7 +209,10 @@ jobs:
           exit 1
         env:
           STATUS: ${{ steps.add-labels.outputs.status }}
-          DATA: ${{ steps.add-labels.outputs.data }}                                               
+          DATA: ${{ steps.add-labels.outputs.data }}
+  ###############################################################################################################
+  ## CREATE RELEASE: after PR is merged
+  ###############################################################################################################                                                       
   create-release:
     if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && startsWith(github.head_ref, 'rc_') }}
     runs-on: ubuntu-20.04
@@ -292,8 +244,17 @@ jobs:
         id: get-release-version
         run: |
           release_version=$(jq -r '.version' ./package.json)
+          main_branch_name=$BRANCH_NAME
+          main_branch_name=${branch_name##*/}
+          develop_branch_name=${branch_name/main/develop}
           echo "release_version=$release_version"
+          echo "main_branch_name=$main_branch_name"
+          echo "develop_branch_name=$develop_branch_name"
           echo "::set-output name=release_version::$release_version"
+          echo "::set-output name=main_branch_name::$main_branch_name"
+          echo "::set-output name=develop_branch_name::$develop_branch_name"
+        env:
+          BRANCH_NAME: github.ref  
       - name: delete release branch
         run: |
           git fetch
@@ -332,3 +293,47 @@ jobs:
         env:
           STATUS: ${{ steps.create-release.outputs.status }}
           DATA: ${{ steps.create-release.outputs.data }} 
+      - name: git fetch
+        run: |
+          git status
+          echo "git fetch"
+          git fetch
+          git checkout $MAIN_BRANCH
+          git pull --rebase
+          git checkout $DEVELOP_BRANCH
+          git pull --rebase
+          git status
+        env:
+          DEVELOP_BRANCH: ${{ steps.get-release-version.outputs.develop_branch_name }}
+          MAIN_BRANCH:  ${{ steps.get-release-version.outputs.main_branch_name }}
+      - name: merge $MAIN_BRANCH to $DEVELOP_BRANCH
+        run: |
+          echo "merge main to $DEVELOP_BRANCH"
+          git merge -X theirs $MAIN_BRANCH --allow-unrelated-histories
+        env:
+          DEVELOP_BRANCH: ${{ steps.get-release-version.outputs.develop_branch_name }}
+          MAIN_BRANCH:  ${{ steps.get-release-version.outputs.main_branch_name }}          
+      # checkout this workflow repository to get actions    
+      - uses: actions/checkout@v3
+        with:
+          repository: datavisyn/github-workflows
+          ref: main
+          path: ./tmp/github-workflows
+      - name: prepare develop
+        uses: ./tmp/github-workflows/.github/actions/release-product-changes
+        with:
+          known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
+          repository_version: ${{ steps.get-release-version.outputs.release_version }}"-SNAPSHOT"
+          ga_version:  main
+          prepare_release: false          
+      - name: delete tmp files
+        run: |
+          rm -rf ./tmp/github-workflows          
+      - name: push develop
+        run: |
+          echo "push develop"
+          git add .
+          git commit --allow-empty -am "Prepare next development"
+          git push origin $DEVELOP_BRANCH
+        env:
+          DEVELOP_BRANCH: ${{ steps.get-release-version.outputs.develop_branch_name }}

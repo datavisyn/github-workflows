@@ -144,7 +144,7 @@ jobs:
           repository: datavisyn/github-workflows
           ref: main
           path: ./tmp/github-workflows
-      - name: prepare develop
+      - name: prepare release
         uses: ./tmp/github-workflows/.github/actions/release-source-changes
         with:
           known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
@@ -319,7 +319,7 @@ jobs:
         with:
           known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
           repository_version: ${{ steps.get-release-version.outputs.next_dev_version }}
-          ga_version:  ${{ env.GA_VERSION }}
+          ga_version:  main
           prepare_release: false          
       - name: delete tmp files
         run: |
