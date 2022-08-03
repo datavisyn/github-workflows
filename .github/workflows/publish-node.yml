@@ -24,10 +24,20 @@ jobs:
         node-version: ["14.19"]
     steps:
       - name: check actor
-        if: ${{ !contains('["datavisyn-bot", "anita-steiner","dvvanessastoiber", "puehringer","dvdanielamoitzi", "thinkh"]', github.actor) }}
         run: |
+          dv_devops=$DV_DEVOPS
+          actor=$GITHUB_ACTOR
+          array=($(echo "${dv_devops}" | tr ',' "\n"))
+          for e in "${array[@]}"; do 
+            if [[ "$e" == "$actor" ]] ; then
+              exit 0
+            fi
+          done
           echo "you are not allowed to run this job!"
           exit 1
+        env: 
+          DV_DEVOPS: ${{ secrets.DV_DEVOPS }}
+          GITHUB_ACTOR: ${{ github.actor }}
       - name: check branch
         if: ${{ github.ref != 'refs/heads/main' }}
         run: |
