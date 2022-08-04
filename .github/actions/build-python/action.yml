@@ -18,6 +18,10 @@ runs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ inputs.python_version }}
+    # needs wheel for make
+    - name: install additional requirements
+      run: |
+        pip install setuptools wheel        
     - name: Show python and pip version
       run: |
         python --version
