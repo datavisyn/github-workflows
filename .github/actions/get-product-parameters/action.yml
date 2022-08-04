@@ -64,10 +64,15 @@ runs:
         # branchname should look <develop|master|main>_<sub_app>_<customer>_<aws>
         # for release candidates the branch name should look like: rc_<version>_<sub_app>_<customer>_<aws>-<date>
         branch_name=$BRANCH_NAME
-        branch_name=${branch_name##*/}
+        branch_name_orig=${branch_name##*/}
+        branch_name=$branch_name_orig
         echo $branch_name
         post_fix=_aws
         aws=false
+        stage=''
+        version=''
+        rc_candidate=''
+        sub_app=''
         if [[ $branch_name == *"_aws"* ]]; then
           aws=true
           branch_name=${branch_name%$post_fix}
@@ -104,25 +109,34 @@ runs:
           branch_name=${branch_name#v}
           version=${branch_name%%_*}
           branch_name=${branch_name#*_}
+          if [[ "$branch_name" == "$version" ]] ; then
+            branch_name=""
+          fi  
         fi          
         # check customer
         customer=datavisyn
-        labels=''
+        labels=()
         dv_customers=$DV_CUSTOMERS
         array=($(echo "${dv_customers}" | tr ',' "\n"))
         for c in "${array[@]}"
         do
-          if [[ ${{ github.ref }} =~ _${c}_ ]]; then
-            echo $branch_name
+          if [[ $BRANCH_NAME =~ _${c}_ || $BRANCH_NAME =~ _${c}- ]]; then
             branch_name=${branch_name//_$c/}
-            echo $branch_name
             customer=$c
-            echo $customer
-            labels+=$(echo "'customer: $customer'")
+            echo "customer: $customer"
+            if [[ "$branch_name" == "$customer" ]]; then
+              branch_name=""
+            fi
+            labels+=("'customer: $customer'")
           fi
         done
         # check if there is a sub_app part
-        sub_app=$(echo $branch_name | sed s/_//)
+        if [[ "$branch_name_orig" == "$branch_name" || "$branch_name_orig" == "${branch_name}_aws"  || "$branch_name_orig" == "${branch_name}_${customer}_aws" ]]; then
+          feature_branch=$branch_name
+        else
+          sub_app=$(echo $branch_name | sed s/_//)
+        fi
+        
         # get image tags
         image_tag1="test-"
         if [[ $stage == develop ]] ; then
@@ -132,13 +146,15 @@ runs:
             image_tag1+=${rc_candidate}_
           elif [[ ! -z $version ]] ; then
             image_tag1+=${version}_ 
+          elif [[ ! -z $feature_branch ]] ; then
+            image_tag1+=${feature_branch}_ 
           else
             image_tag1+=main_              
           fi  
         fi
         if [[ ! -z $sub_app ]] ; then
             image_tag1+=${sub_app}_
-            labels+= $(echo "'sub_app: ${sub_app}'")
+            labels+=("'sub_app: ${sub_app}'")
         fi
         if [[ $customer != "datavisyn" ]] ; then
             image_tag1+=${customer}_
@@ -151,8 +167,7 @@ runs:
           image_tag1=${image_tag1::-1}
           image_tag2=$image_tag1-$(TZ=$TIME_ZONE date +%Y%m%d-%H%M%S)
         fi
-        # dummy
-        aws=true
+        labels=$(IFS=',';echo "${labels[*]}";IFS=$' \t\n')
         # echo parameters
         echo "app=$app"
         echo "api_repo=$api_repo"
