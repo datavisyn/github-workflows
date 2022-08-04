@@ -1,6 +1,10 @@
 name: Publish node repositories
 
-on: workflow_call
+on: 
+  workflow_call:
+    secrets:
+      DV_DEVOPS:
+        required: true
 
 env: 
   NPM_REGISTRY: "https://registry.npmjs.org/"
