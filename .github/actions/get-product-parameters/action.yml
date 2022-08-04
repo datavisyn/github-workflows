@@ -58,8 +58,9 @@ runs:
         post_fix=_product
         product_name=${product_name%$post_fix}
         app=$(jq  -rc '.[] | select(.type == "web") | .name' ./phovea_product.json)
-        api_repo="$product_name/server"
-        web_repo="$product_name/web"
+        # product tolowercase
+        api_repo="${product_name,,}/server"
+        web_repo="${product_name,,}/web"
         # get everything from branch name
         # branchname should look <develop|master|main>_<sub_app>_<customer>_<aws>
         # for release candidates the branch name should look like: rc_<version>_<sub_app>_<customer>_<aws>-<date>
