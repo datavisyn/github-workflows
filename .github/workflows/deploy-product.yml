@@ -38,7 +38,7 @@ jobs:
       - name: check branch
         if: ${{ !startsWith(github.head_ref, 'rc_') }}
         run: |
-          echo "only the release candidates can be deployed to qa: $HEAD_RED"
+          echo "only the release candidates can be deployed to qa: $HEAD_REF"
           exit 1
         env:
           HEAD_REF: ${{ github.head_ref }}
