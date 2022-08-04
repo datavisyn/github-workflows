@@ -3,7 +3,7 @@ name: Build python repositories
 on: workflow_call
 
 env: 
-  PYPI_REGISTRY: "https://pypi.org/pypi"
+  PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "test"
 
 permissions:

@@ -4,7 +4,7 @@ on: workflow_call
 
 env: 
   NPM_REGISTRY: "https://registry.npmjs.org/"
-  PYPI_REGISTRY: "https://pypi.org/pypi"
+  PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
 
 permissions:
   contents: read
