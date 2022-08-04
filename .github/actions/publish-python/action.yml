@@ -23,13 +23,13 @@ runs:
       run: |
         echo "publish"
         pip install twine
-        echo -e "[pypi]" >> ~/.pypirc
-        echo -e "repository = $PYPI_REPOSITORY" >> ~/.pypirc
-        echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
-        echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+        echo -e "[pypi]" >> $HOME/.pypirc
+        echo -e "repository = $PYPI_REPOSITORY" >> $HOME/.pypirc
+        echo -e "username = $TWINE_USERNAME" >> $HOME/.pypirc
+        echo -e "password = $TWINE_PASSWORD" >> $HOME/.pypirc
         twine upload dist_python/*
       shell: bash
       env: 
         PYPI_REPOSITORY: ${{ inputs.pypi_registry }}
-        PYPI_USERNAME: ${{ inputs.pypi_username }}
-        PYPI_PASSWORD: ${{ inputs.pypi_password }}      
+        TWINE_USERNAME: ${{ inputs.pypi_username }}
+        TWINE_PASSWORD: ${{ inputs.pypi_password }}      
