@@ -21,13 +21,13 @@ runs:
   steps:      
     - name: Publish to pip registry
       run: |
-          echo "publish"
-          pip install twine
-#          echo -e "[pypi]" >> ~/.pypirc
-#          echo -e "repository = $PYPI_REPOSITORY" >> ~/.pypirc
-#          echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
-#          echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
-#          twine upload dist_python/*
+        echo "publish"
+        pip install twine
+        echo -e "[pypi]" >> ~/.pypirc
+        echo -e "repository = $PYPI_REPOSITORY" >> ~/.pypirc
+        echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
+        echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+        twine upload dist_python/*
       shell: bash
       env: 
         PYPI_REPOSITORY: ${{ inputs.pypi_registry }}
