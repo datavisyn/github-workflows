@@ -5,6 +5,10 @@ inputs:
     description: "aws role to push to the ecr registry"
     required: true
     type: string
+  aws_region:  
+    description: "aws region to use"
+    required: true
+    type: string    
   ecr_repository_name:  
     description: "ecr repository name to use"
     required: true
@@ -25,7 +29,7 @@ runs:
       uses: aws-actions/configure-aws-credentials@v1
       with:
         role-to-assume: ${{ inputs.aws_role }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        aws-region: ${{ inputs.aws_region }}
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1

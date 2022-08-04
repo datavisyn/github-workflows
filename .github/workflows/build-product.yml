@@ -96,8 +96,9 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/build-push-image
         if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
         with:
-          aws_role: ${{ secrets.AWS_ECR_ROLE }} 
-          ecr_registry: ${{ secrets.AWS_ECR_REGISTRY }}
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }} 
+          aws_region: ${{ secrets.DV_AWS_REGION }} 
+          ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ needs.prepare-build.outputs.web_repo }}
           docker_file: ./deploy/web/Dockerfile
           CURRENT_DIRECTORY: ./tmp/web
@@ -176,8 +177,9 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/build-push-image
         if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
         with:
-          aws_role: ${{ secrets.AWS_ECR_ROLE }} 
-          ecr_registry: ${{ secrets.AWS_ECR_REGISTRY }}
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }} 
+          aws_region: ${{ secrets.DV_AWS_REGION }}
+          ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ needs.prepare-build.outputs.api_repo }}
           docker_file: ./deploy/api/Dockerfile
           CURRENT_DIRECTORY: ./tmp/api

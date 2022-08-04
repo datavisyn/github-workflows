@@ -69,7 +69,8 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/retag-image
         name: retag existing images
         with:
-          aws_role: ${{ secrets.AWS_ECR_ROLE }} 
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }} 
+          aws_region: ${{ secrets.DV_AWS_REGION }}
           ecr_repository_name: ${{ steps.get-parameters.outputs.api_repo }}
           current_image_tag: ${{ github.head_ref }}
           additional_image_tag: "${{ steps.get-add-image-tag.outputs.additional_image_tag }}"      
@@ -150,7 +151,8 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/retag-image
         name: retag existing images
         with:
-          aws_role: ${{ secrets.AWS_ECR_ROLE }} 
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }} 
+          aws_region: ${{ secrets.DV_AWS_REGION }} 
           ecr_repository_name: ${{ steps.get-parameters.outputs.api_repo }}
           current_image_tag: ${{ github.head_ref }}
           additional_image_tag: "${{ steps.get-add-image-tag.outputs.additional_image_tag }}"      
