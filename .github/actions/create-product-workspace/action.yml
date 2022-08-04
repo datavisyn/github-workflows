@@ -28,7 +28,7 @@ runs:
       run: |
         npm install -g yo@4.3.0
         if [[ $GENERATOR_VERSION == "develop" ]]
-         npm install -g "https://github.com/phovea/generator-phovea.git#develop"
+          npm install -g "https://github.com/phovea/generator-phovea.git#develop"
         else
           npm install -g generator-phovea@$GENERATOR_VERSION
         fi  
