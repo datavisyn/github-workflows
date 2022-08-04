@@ -5,6 +5,8 @@ on:
     secrets:
       DV_DEVOPS:
         required: true
+      NPM_TOKEN:
+        required: true 
 
 env: 
   NPM_REGISTRY: "https://registry.npmjs.org/"

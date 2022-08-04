@@ -1,6 +1,17 @@
 name: Publish python and node repositories
 
-on: workflow_call
+on: 
+  workflow_call:
+    secrets:
+      DV_DEVOPS:
+        required: true
+      PYPI_USERNAME:
+        required: true 
+      PYPI_PASSWORD:
+        required: true
+      NPM_TOKEN:
+        required: true 
+          
 
 env: 
   NPM_REGISTRY: "https://registry.npmjs.org/"
