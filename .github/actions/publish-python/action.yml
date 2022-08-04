@@ -3,7 +3,7 @@ name: Publish python package
 inputs:
   pypi_registry:
     description: "registry where to publish python package"
-    default: "https://pypi.org/pypi"
+    default: "https://upload.pypi.org/legacy/"
     required: true
     type: string
   pypi_username:
