@@ -125,6 +125,7 @@ runs:
         array=($(echo "${dv_customers}" | tr ',' "\n"))
         for c in "${array[@]}"
         do
+          echo $c
           if [[ $BRANCH_NAME =~ _${c}_ || $BRANCH_NAME =~ _${c}- ]]; then
             branch_name=${branch_name//_$c/}
             customer=$c
