@@ -12,10 +12,14 @@ inputs:
     required: true
     type: string
   github_token:  
-    description: "github token to use for clonging"
+    description: "github token to use for cloning"
     default: "XXX"
     required: true
     type: string
+  gitlab_token:  
+    description: "gitlab token to use for cloning"
+    required: false
+    type: string    
   app_name:  
     description: "name of the app for the product"
     default: "XXX"
@@ -54,7 +58,12 @@ runs:
           name=$(echo $additional | jq  -rc '.name')
           name=$(echo "$name" | sed -e 's|.*/||')
           echo $name
-          repository=https://$GITHUB_TOKEN@github.com/$(echo $additional | jq  -rc '.repo').git
+          repository=$(echo $additional | jq  -rc '.repo')
+          if [[ $repository == *"gitlab"* && ! -z $GITLAB_TOKEN ]] ; then
+            repository=${repository/"https://"/"https://$GITLAB_TOKEN@"}
+          else
+            repository=https://$GITHUB_TOKEN@github.com/$(echo $additional | jq  -rc '.repo').git
+          fi
           echo "$repository"
           branch=$(echo $additional | jq  -rc '.branch')
           echo "$branch"
@@ -63,6 +72,7 @@ runs:
       env: 
         GITHUB_TOKEN: ${{ inputs.github_token }}
         PHOVEA_TYPE: ${{ inputs.phovea_type }}
+        GITLAB_TOKEN: ${{ inputs.gitlab_token }}
       shell: bash             
     - name: update workspace
       run: |
