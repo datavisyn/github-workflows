@@ -89,7 +89,6 @@ runs:
         branch_name_orig=${branch_name##*/}
         branch_name=$branch_name_orig
         echo $branch_name
-        post_fix=_aws
         aws=false
         stage=''
         version=''
@@ -97,6 +96,12 @@ runs:
         sub_app=''
         if [[ $branch_name == *"_aws"* ]]; then
           aws=true
+          post_fix=_aws
+          branch_name=${branch_name%$post_fix}
+        fi
+        if [[ $branch_name == *"_ods"* ]]; then
+          aws=true
+          post_fix=_ods
           branch_name=${branch_name%$post_fix}
         fi
         # develop branch
