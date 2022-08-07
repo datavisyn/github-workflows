@@ -61,7 +61,7 @@ jobs:
   build-node:
     needs: prepare-build 
     runs-on: ubuntu-20.04
-    if: ${{ needs.prepare-build.outputs.build_node }}
+    if: ${{ needs.prepare-build.outputs.build_node && needs.prepare-build.outputs.build_node == 'true'}}
     strategy:
       fail-fast: false
       matrix:
@@ -127,7 +127,7 @@ jobs:
   build-python:
     needs: prepare-build 
     runs-on: ubuntu-20.04
-    if: ${{ needs.prepare-build.outputs.build_python }}
+    if: ${{ needs.prepare-build.outputs.build_python && needs.prepare-build.outputs.build_python == 'true'}}
     strategy:
       fail-fast: false
       matrix:
