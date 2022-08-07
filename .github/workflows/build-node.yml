@@ -1,6 +1,10 @@
 name: Build node repositories
 
-on: workflow_call
+on: 
+  workflow_call:
+    secrets:
+      DATAVISYN_BOT_REPO_TOKEN:
+        required: false
 
 env: 
   NPM_REGISTRY: "https://registry.npmjs.org/"

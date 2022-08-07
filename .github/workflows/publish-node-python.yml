@@ -11,7 +11,8 @@ on:
         required: true
       NPM_TOKEN:
         required: true 
-          
+      DATAVISYN_BOT_REPO_TOKEN:
+        required: false          
 
 env: 
   NPM_REGISTRY: "https://registry.npmjs.org/"

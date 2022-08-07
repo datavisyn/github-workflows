@@ -9,7 +9,9 @@ on:
         required: true 
       PYPI_PASSWORD:
         required: true        
-
+      DATAVISYN_BOT_REPO_TOKEN:
+        required: false 
+        
 env: 
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
 

@@ -1,6 +1,18 @@
 name: Deploy product repository
 
-on: workflow_call
+on: 
+  workflow_call:
+    secrets:
+      DATAVISYN_BOT_REPO_TOKEN:
+        required: true
+      DV_DEVOPS:
+        required: true
+      DV_CUSTOMERS:
+        required: true
+      DV_AWS_ECR_ROLE:
+        required: true
+      DV_AWS_REGION:
+        required: true
      
 permissions:
   id-token: write

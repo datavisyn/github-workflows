@@ -1,6 +1,14 @@
 name: Release product repository
 
-on: workflow_call
+on: 
+  workflow_call:
+    secrets:
+      DATAVISYN_BOT_REPO_TOKEN:
+        required: true
+      DV_DEVOPS:
+        required: true
+      DV_CUSTOMERS:
+        required: true
      
 permissions:
   contents: write
