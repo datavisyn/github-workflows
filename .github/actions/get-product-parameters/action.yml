@@ -62,6 +62,17 @@ runs:
           app=$(jq  -rc '.[] | select(.type == "web") | .repo' ./phovea_product.json)
           app=${app##*/}
         fi
+        # build api/web
+        build_node=true
+        build_python=true
+        check_type=$(jq  -rc '.[] | select(.type == "web")' ./phovea_product.json)
+        if [[ -z $check_type ]] ; then
+          build_node=false
+        fi  
+        check_type=$(jq  -rc '.[] | select(.type == "api")' ./phovea_product.json)
+        if [[ -z $check_type ]] ; then
+          build_python=false
+        fi
         # product tolowercase
         api_repo="${product_name,,}/server"
         web_repo="${product_name,,}/web"
@@ -184,6 +195,8 @@ runs:
         echo "image_tag1=$image_tag1"
         echo "image_tag2=$image_tag2"
         echo "labels=$labels"
+        echo "build_python=$build_python"
+        echo "build_node=$build_node"
         # echo to output
         echo "::set-output name=app::$app"
         echo "::set-output name=api_repo::$api_repo"
@@ -195,6 +208,8 @@ runs:
         echo "::set-output name=image_tag1::$image_tag1"
         echo "::set-output name=image_tag2::$image_tag2"
         echo "::set-output name=labels::$labels"
+        echo "::set-output name=build_node::$build_node"
+        echo "::set-output name=build_python::$build_python"
       env:  
         DV_CUSTOMERS: ${{ inputs.dv_customers }}
         REPOSITORY_NAME: ${{ inputs.repository_name }}
