@@ -98,7 +98,7 @@ jobs:
         run: |
           cd ./tmp/web
           cat ./package.json
-          # cat ~./.gitconfig
+          cat .yo-rc-workspace.json
           npm i     
       - name: show installed dependencies
         run: |
