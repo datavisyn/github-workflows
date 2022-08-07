@@ -47,7 +47,13 @@ outputs:
     value: ${{ steps.get-parameters.outputs.image_tag2 }}
   labels: 
     description: "labels for the pr (seperated with ',')"
-    value: ${{ steps.get-parameters.outputs.labels }}                         
+    value: ${{ steps.get-parameters.outputs.labels }} 
+  build_node: 
+    description: "true, if node part should be built; else false"
+    value: ${{ steps.get-parameters.outputs.build_node }} 
+  build_python: 
+    description: "true, if python part should be built; else false"
+    value: ${{ steps.get-parameters.outputs.build_python }}                               
 runs:
   using: "composite"
   steps:
