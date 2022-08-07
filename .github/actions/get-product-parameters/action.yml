@@ -58,7 +58,7 @@ runs:
         post_fix=_product
         product_name=${product_name%$post_fix}
         app=$(jq  -rc '.[] | select(.type == "web") | .name' ./phovea_product.json)
-        if [[ ! -z $app ]] ; then
+        if [[ -z $app ]] ; then
           app=$(jq  -rc '.[] | select(.type == "web") | .repo' ./phovea_product.json)
           app=${app##*/}
         fi
