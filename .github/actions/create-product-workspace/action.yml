@@ -77,7 +77,7 @@ runs:
     - name: update workspace
       run: |
         cd ./tmp/$PHOVEA_TYPE
-        rm ./../../.yo-rc.json
+        rm -f ./../../.yo-rc.json
         yo phovea:workspace --defaultApp=$APP_NAME --noAdditionals=true  --addWorkspaceRepos=false
         cp -r ./../../templates/$PHOVEA_TYPE/* .
         ls -lah
