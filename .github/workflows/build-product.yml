@@ -93,7 +93,8 @@ jobs:
           phovea_type: web
           generator_version: ${{ env.GENERATOR_VERSION }}
           github_token:  ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-          app_name:  ${{ needs.prepare-build.outputs.app }}             
+          app_name:  ${{ needs.prepare-build.outputs.app }}
+          gitlab_token:  ${{ secrets.GITLAB_TOKEN }} 
       - name: install dependencies
         run: |
           cd ./tmp/web
@@ -164,7 +165,8 @@ jobs:
           phovea_type: api
           generator_version: ${{ env.GENERATOR_VERSION }}
           github_token:  ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-          app_name:  ${{ needs.prepare-build.outputs.app }}   
+          app_name:  ${{ needs.prepare-build.outputs.app }} 
+          gitlab_token:  ${{ secrets.GITLAB_TOKEN }}  
       - name: Build
         run: |
           cd ./tmp/api
