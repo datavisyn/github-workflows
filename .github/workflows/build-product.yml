@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GENERATOR_VERSION: "develop"
+  GENERATOR_VERSION: "visyn_scripts"
   TIME_ZONE: "Europe/Vienna"
 
 permissions:
