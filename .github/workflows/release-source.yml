@@ -148,7 +148,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
-          ref: ${{ github.ref }}
+          ref: ${{ github.action_ref }}
           path: ./tmp/github-workflows
       - name: prepare release
         uses: ./tmp/github-workflows/.github/actions/release-source-changes
@@ -318,7 +318,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
-          ref: ${{ github.ref }}
+          ref: ${{ github.action_ref }}
           path: ./tmp/github-workflows
       - name: prepare develop
         uses: ./tmp/github-workflows/.github/actions/release-source-changes
