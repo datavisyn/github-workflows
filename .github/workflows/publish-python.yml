@@ -11,7 +11,7 @@ on:
         required: true        
       DATAVISYN_BOT_REPO_TOKEN:
         required: false 
-        
+
 env: 
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
 
@@ -56,7 +56,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
-          ref: main
+          ref: ${{ github.ref }}
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/build-python
         with:
