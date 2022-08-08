@@ -47,7 +47,13 @@ runs:
         name=$(jq --arg var ${phovea_type} -rc '.[] | select(.type == $var) | .repo' ../../phovea_product.json)
         name=$(echo "$name" | sed -e 's|.*/||')
         echo $name
-        repository=https://$GITHUB_TOKEN@github.com/$(jq --arg var ${phovea_type} -rc '.[] | select(.type == $var) | .repo' ../../phovea_product.json).git
+        repository=$(jq --arg var ${phovea_type} -rc '.[] | select(.type == $var) | .repo' ../../phovea_product.json)
+        repository=$(echo $additional | jq  -rc '.repo')
+        if [[ $repository == *"gitlab"* && ! -z $GITLAB_TOKEN ]] ; then
+          repository=${repository/"https://"/"https://$GITLAB_TOKEN@"}
+        else
+          repository=https://$GITHUB_TOKEN@github.com/${repository}.git
+        fi
         echo $repository
         branch=$(jq --arg var ${phovea_type} -rc '.[] | select(.type == $var) | .branch' ../../phovea_product.json)
         echo $branch
@@ -62,7 +68,7 @@ runs:
           if [[ $repository == *"gitlab"* && ! -z $GITLAB_TOKEN ]] ; then
             repository=${repository/"https://"/"https://$GITLAB_TOKEN@"}
           else
-            repository=https://$GITHUB_TOKEN@github.com/$(echo $additional | jq  -rc '.repo').git
+            repository=https://$GITHUB_TOKEN@github.com/${repository}.git
           fi
           echo "$repository"
           branch=$(echo $additional | jq  -rc '.branch')
