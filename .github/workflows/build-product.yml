@@ -85,8 +85,9 @@ jobs:
           git config --global url.https://$GITHUB_TOKEN@github.com/.insteadOf ssh://git@github.com/
           if [[ ! -z $GITLAB_TOKEN && ! -z $GITLAB_HOST ]] ; then
             echo "set gitlab config"
-            git config --global url."https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git@$GITLAB_HOST:"
-            git config --global url."git+https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git+ssh://git@$GITLAB_HOST:"
+            git config --global url."https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "ssh://git@$GITLAB_HOST/"
+            # git config --global url."https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git@$GITLAB_HOST:"
+            # git config --global url."git+https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git+ssh://git@$GITLAB_HOST:"
           fi         
         env: 
           GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
@@ -223,7 +224,10 @@ jobs:
   deploy:
     needs: [prepare-build, build-node, build-python] 
     runs-on: ubuntu-20.04
-    if: ${{ needs.prepare-build.outputs.stage == 'develop' && needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
-    steps:           
+    if: ${{ allways() && needs.prepare-build.outputs.stage == 'develop' && needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
+    steps:
+      - name: fail if conditional job failed
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1      
       - name: Deploy
         run: echo "Deploy" 
