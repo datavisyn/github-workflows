@@ -34,7 +34,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: ["14.19"]
+        node-version: ["16.16"]
     steps: 
       - name: check actor
         run: |

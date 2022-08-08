@@ -9,7 +9,7 @@ on:
         required: true 
       DATAVISYN_BOT_REPO_TOKEN:
         required: false 
-        
+
 env: 
   NPM_REGISTRY: "https://registry.npmjs.org/"
 
@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: ["14.19"]
+        node-version: ["16.16"]
     steps:
       - name: check actor
         run: |
