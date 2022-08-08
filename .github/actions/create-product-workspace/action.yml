@@ -31,11 +31,7 @@ runs:
     - name: Install generator
       run: |
         npm install -g yo@4.3.0
-        if [[ $GENERATOR_VERSION == v* ]] ; then
-          npm install -g generator-phovea@$GENERATOR_VERSION
-        else
-          npm install -g "https://github.com/phovea/generator-phovea.git#$GENERATOR_VERSION"
-        fi  
+        npm install -g "https://github.com/phovea/generator-phovea.git#$GENERATOR_VERSION"
       env:
         GENERATOR_VERSION: ${{ inputs.generator_version }}  
       shell: bash     
