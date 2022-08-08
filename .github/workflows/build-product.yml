@@ -224,7 +224,7 @@ jobs:
   deploy:
     needs: [prepare-build, build-node, build-python] 
     runs-on: ubuntu-20.04
-    if: ${{ allways() && needs.prepare-build.outputs.stage == 'develop' && needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
+    if: ${{ always() && needs.prepare-build.outputs.stage == 'develop' && needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
     steps:
       - name: fail if conditional job failed
         if: ${{ contains(needs.*.result, 'failure') }}
