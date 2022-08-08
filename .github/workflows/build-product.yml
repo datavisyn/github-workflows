@@ -83,8 +83,15 @@ jobs:
       - name: Git config
         run: |
           git config --global url.https://$GITHUB_TOKEN@github.com/.insteadOf ssh://git@github.com/
+          if [[ ! -z $GITLAB_TOKEN && ! -z $GITLAB_HOST ]] ; then
+            echo "set gitlab config"
+            git config --global url."https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git@$GITLAB_HOST:"
+            git config --global url."git+https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git+ssh://git@$GITLAB_HOST:"
+          fi         
         env: 
           GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_HOST:  ${{ secrets.GITLAB_HOST }} 
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
         with:
