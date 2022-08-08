@@ -129,6 +129,7 @@ jobs:
         run: |
           cd ./tmp/web
           npm list --depth=1 || true
+          cat ./package-lock.json
       - name: Build
         run: |
           cd ./tmp/web
