@@ -36,7 +36,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash         
     - name: Install npm dependencies(1)
-      run:  npm install
+      run:  npm install -ddd
       shell: bash
     - name: Show installed npm dependencies
       run: npm list --depth=1 || true
