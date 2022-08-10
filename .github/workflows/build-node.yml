@@ -5,9 +5,12 @@ on:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
+      NODE_VERSIONS:
+        required: false  
 
 env: 
   NPM_REGISTRY: "https://registry.npmjs.org/"
+  NODE_VERSIONS: ["14.19"]
 
 permissions:
   contents: read
@@ -26,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: ["14.19"]
+        node-version: ${{ secrets.NODE_VERSIONS || env.NODE_VERSIONS }}
     steps:
       # checkout specific source repository    
       - uses: actions/checkout@v3
