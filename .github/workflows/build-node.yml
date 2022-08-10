@@ -6,11 +6,12 @@ on:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
       NODE_VERSIONS:
-        required: false  
+        required: false
+        default: ["14.19"]
 
 env: 
   NPM_REGISTRY: "https://registry.npmjs.org/"
-  NODE_VERSIONS: ["14.19"]
+  NODE_VERSIONS: ${{ secrets.NODE_VERSIONS }} 
 
 permissions:
   contents: read
@@ -29,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: ${{ secrets.NODE_VERSIONS || env.NODE_VERSIONS }}
+        node-version: ${{ env.NODE_VERSIONS }}
     steps:
       # checkout specific source repository    
       - uses: actions/checkout@v3
