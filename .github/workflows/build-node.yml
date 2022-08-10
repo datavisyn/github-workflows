@@ -10,7 +10,7 @@ on:
 
 env: 
   NPM_REGISTRY: "https://registry.npmjs.org/"
-  NODE_VERSIONS: ${{ secrets.NODE_VERSIONS || ["14.19"] }} 
+  NODE_VERSIONS: ${{ secrets.NODE_VERSIONS || '["14.19"]' }} 
 
 permissions:
   contents: read
