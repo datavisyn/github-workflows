@@ -49,7 +49,8 @@ runs:
           lock_exists=true
         fi
         echo "Lock file exists: $lock_exists"
-        echo "::set-output name=lock_exists::${lock_exists}" 
+        echo "::set-output name=lock_exists::${lock_exists}"
+      shell: bash   
     - name: Update git dependencies
       if: ${{ steps.check-package-lock.outputs.lock_exists && steps.check-package-lock.outputs.lock_exists == 'true' }}
       run: |
