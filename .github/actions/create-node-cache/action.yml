@@ -64,5 +64,5 @@ runs:
           git commit --allow-empty -am "Prepare cache"
           git push origin $BRANCH_NAME
         env:
-          BRANCH_NAME: ${{ steps.get-current-branch.outputs.branch_name }} 
+          BRANCH_NAME: "dist_cache" 
         shell: bash
