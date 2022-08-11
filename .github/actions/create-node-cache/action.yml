@@ -27,6 +27,7 @@ runs:
           else
             echo "create branch"
             git checkout -b ${{ env.BRANCH_NAME }}
+            git rm -rf .
           fi
           branch_name=${GITHUB_REF#refs/heads/}
           echo "branch_name=$branch_name"
