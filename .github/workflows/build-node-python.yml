@@ -47,7 +47,10 @@ jobs:
           node_version: ${{ matrix.node-version }}
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token:  ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}           
-
+      - uses: ./tmp/github-workflows/.github/actions/create-node-cache
+        with:
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }} 
+          
   build-python:
     if: ${{ github.ref != 'refs/heads/dist_cache' }}
     runs-on: ubuntu-20.04
