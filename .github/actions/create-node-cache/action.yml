@@ -1,0 +1,61 @@
+name: Create node cache
+
+inputs:
+  github_ro_token:  
+    description: "github read-only token"
+    default: "admin"
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps: 
+      - uses: actions/checkout@v3
+        with:
+          path: ./tmp/repository
+          token: ${{ inputs.github_ro_token }} # has to set because otherwise it will not work
+      - name: create dist_cache branch
+        id: create-cache-branch
+        run: |
+          cd ./tmp/repository
+          git fetch
+          #exists=$(git show-ref --quiet --heads ${{ env.BRANCH_NAME }})
+          #echo $exists
+          if git rev-parse --verify --quiet origin/${{ env.BRANCH_NAME }}; then
+            echo "branch exists!"
+            git checkout ${{ env.BRANCH_NAME }} 
+          else
+            echo "create branch"
+            git checkout -b ${{ env.BRANCH_NAME }}
+          fi
+          branch_name=${GITHUB_REF#refs/heads/}
+          echo "branch_name=$branch_name"
+          echo ::set-output name=branch_name::${branch_name}
+        env:
+          BRANCH_NAME: "dist_cache"
+        shell: bash   
+      - name: create dist_cache branch
+        run: |          
+          echo "copy to $BRANCH_NAME"
+          cp -r ./dist ./tmp/repository/$BRANCH_NAME
+        env:
+          BRANCH_NAME: ${{ steps.create-cache-branch.outputs.branch_name }} 
+        shell: bash   
+      - name: setup git config
+        run: |
+          cd ./tmp/repository
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "<>"
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+        shell: bash  
+      - name: push branch
+        run: |
+          echo "push branch" 
+          cd ./tmp/repository
+          git add .
+          git commit --allow-empty -am "Prepare cache"
+          git push origin $BRANCH_NAME
+        env:
+          BRANCH_NAME: ${{ steps.create-cache-branch.outputs.branch_name }} 
+        shell: bash
