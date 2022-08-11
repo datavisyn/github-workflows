@@ -61,7 +61,7 @@ runs:
           echo "push branch" 
           cd ./tmp/repository
           git add .
-          git commit --allow-empty -am "Prepare cache"
+          git commit --allow-empty -am "[skip ci]Prepare cache"
           git push origin $BRANCH_NAME
         env:
           BRANCH_NAME: "dist_cache" 
