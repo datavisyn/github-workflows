@@ -43,6 +43,7 @@ runs:
       - name: create dist_cache branch
         run: |
           echo "copy to $BRANCH_NAME"
+          mkdir -p ./tmp/repository/$BRANCH_NAME/dist
           cp -r ./dist ./tmp/repository/$BRANCH_NAME/dist
           ls -lah ./tmp/repository/$BRANCH_NAME
         env:
