@@ -17,7 +17,8 @@ runs:
           echo "branch_name=$branch_name"
           echo ::set-output name=branch_name::${branch_name}
         env:
-          BRANCH_NAME: "dist_cache"  
+          BRANCH_NAME: "dist_cache" 
+        shell: bash   
       - uses: actions/checkout@v3
         with:
           path: ./tmp/repository
@@ -40,7 +41,9 @@ runs:
           BRANCH_NAME: "dist_cache"
         shell: bash   
       - name: create dist_cache branch
-        run: |          
+        run: |
+          ls -lah .
+          ls -lah ./dist        
           echo "copy to $BRANCH_NAME"
           cp -r ./dist ./tmp/repository/$BRANCH_NAME
           ls -lah ./tmp/repository/$BRANCH_NAME
