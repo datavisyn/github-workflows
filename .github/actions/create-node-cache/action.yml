@@ -9,13 +9,20 @@ inputs:
 
 runs:
   using: "composite"
-  steps: 
+  steps:
+      - name: get current branch
+        id: get-current-branch
+        run: |
+          branch_name=${GITHUB_REF#refs/heads/}
+          echo "branch_name=$branch_name"
+          echo ::set-output name=branch_name::${branch_name}
+        env:
+          BRANCH_NAME: "dist_cache"  
       - uses: actions/checkout@v3
         with:
           path: ./tmp/repository
           token: ${{ inputs.github_ro_token }} # has to set because otherwise it will not work
       - name: create dist_cache branch
-        id: create-cache-branch
         run: |
           cd ./tmp/repository
           git fetch
@@ -29,9 +36,6 @@ runs:
             git checkout -b ${{ env.BRANCH_NAME }}
             git rm -rf .
           fi
-          branch_name=${GITHUB_REF#refs/heads/}
-          echo "branch_name=$branch_name"
-          echo ::set-output name=branch_name::${branch_name}
         env:
           BRANCH_NAME: "dist_cache"
         shell: bash   
@@ -39,8 +43,9 @@ runs:
         run: |          
           echo "copy to $BRANCH_NAME"
           cp -r ./dist ./tmp/repository/$BRANCH_NAME
+          ls -lah ./tmp/repository/$BRANCH_NAME
         env:
-          BRANCH_NAME: ${{ steps.create-cache-branch.outputs.branch_name }} 
+          BRANCH_NAME: ${{ steps.get-current-branch.outputs.branch_name }} 
         shell: bash   
       - name: setup git config
         run: |
