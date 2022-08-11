@@ -7,11 +7,12 @@ on:
         required: false
       PYTHON_VERSION:
         required: false
-        default: "3.10"   
+ 
 
 env: 
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "test"
+  PYTHON_VERSION: "3.10" 
 
 permissions:
   contents: read
@@ -35,5 +36,5 @@ jobs:
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/build-python
         with:
-          python_version: ${{ env.PYTHON_VERSION }}
+          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
