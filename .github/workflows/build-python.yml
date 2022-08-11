@@ -24,6 +24,7 @@ concurrency:
 
 jobs:
   build-python:
+    if: ${{ github.ref != 'refs/heads/dist_cache' }}
     runs-on: ubuntu-20.04
     steps:
       # checkout specific source repository  

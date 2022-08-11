@@ -22,6 +22,7 @@ concurrency:
 
 jobs:
   build-node:
+    if: ${{ github.ref != 'refs/heads/dist_cache' }}
     permissions:
       id-token: write
       contents: read  
@@ -48,6 +49,7 @@ jobs:
           github_ro_token:  ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}           
 
   build-python:
+    if: ${{ github.ref != 'refs/heads/dist_cache' }}
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false

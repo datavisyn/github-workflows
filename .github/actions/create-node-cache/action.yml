@@ -44,7 +44,7 @@ runs:
         run: |
           echo "copy to $BRANCH_NAME"
           mkdir -p ./tmp/repository/$BRANCH_NAME/dist
-          cp -r ./dist ./tmp/repository/$BRANCH_NAME/dist
+          cp -r ./dist ./tmp/repository/$BRANCH_NAME
           ls -lah ./tmp/repository/$BRANCH_NAME
         env:
           BRANCH_NAME: ${{ steps.get-current-branch.outputs.branch_name }} 
