@@ -26,6 +26,7 @@ runs:
         registry-url: ${{ inputs.npm_registry }}
     - name: Show node and npm version
       run: |
+        npm i -g npm@8.17.0
         node -v
         npm -v
       shell: bash  
