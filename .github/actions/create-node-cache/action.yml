@@ -42,8 +42,6 @@ runs:
         shell: bash   
       - name: create dist_cache branch
         run: |
-          ls -lah .
-          ls -lah ./dist        
           echo "copy to $BRANCH_NAME"
           cp -r ./dist ./tmp/repository/$BRANCH_NAME
           ls -lah ./tmp/repository/$BRANCH_NAME
@@ -66,5 +64,5 @@ runs:
           git commit --allow-empty -am "Prepare cache"
           git push origin $BRANCH_NAME
         env:
-          BRANCH_NAME: ${{ steps.create-cache-branch.outputs.branch_name }} 
+          BRANCH_NAME: ${{ steps.get-current-branch.outputs.branch_name }} 
         shell: bash
