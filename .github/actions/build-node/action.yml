@@ -26,7 +26,7 @@ runs:
         registry-url: ${{ inputs.npm_registry }}
     - name: Show node and npm version
       run: |
-        npm i -g npm@8.17.0
+        npm i -g npm@8.5.1
         node -v
         npm -v
       shell: bash  
@@ -43,7 +43,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash         
     - name: Install npm dependencies(1)
-      run:  npm install -ddd
+      run: npm install
       shell: bash
     - name: Show installed npm dependencies (1)
       run: npm list --depth=1 || true
