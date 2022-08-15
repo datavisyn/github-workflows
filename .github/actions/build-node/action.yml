@@ -31,7 +31,7 @@ runs:
         #yarn config set registry https://registry.npmjs.org/
         node -v
         npm -v
-        yarn init -2
+        # yarn init -2
       shell: bash  
     - name: Git config
       if: ${{ inputs.github_ro_token != '' }}
