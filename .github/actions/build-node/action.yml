@@ -26,8 +26,8 @@ runs:
         registry-url: ${{ inputs.npm_registry }}
     - name: Show node and npm version
       run: |
-        corepack enable
-        #npm i -g yarn@1.22.19
+        #corepack enable
+        npm i -g yarn@1.22.19
         #yarn config set registry https://registry.npmjs.org/
         node -v
         npm -v
@@ -45,7 +45,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash         
     - name: Install npm dependencies(1)
-      run: yarn install --network-timeout 500000
+      run: yarn install --network-timeout 500000 --network-concurrency 1
       shell: bash
     - name: Show installed npm dependencies (1)
       run: yarn info --name-only || true
