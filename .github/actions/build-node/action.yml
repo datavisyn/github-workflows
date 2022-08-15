@@ -48,7 +48,7 @@ runs:
       run: yarn install --network-timeout 500000 --network-concurrency 1
       shell: bash
     - name: Show installed npm dependencies (1)
-      run: yarn info --name-only || true
+      run: yarn list --depth=1 || true
       shell: bash
     - name: Check package-lock.json
       id: check-package-lock
@@ -71,7 +71,7 @@ runs:
       shell: bash
     - name: Show installed npm dependencies (2)
       if: ${{ steps.check-package-lock.outputs.lock_exists && steps.check-package-lock.outputs.lock_exists == 'true' }}
-      run: yarn info --name-only || true
+      run: yarn list --depth=1 || true
       shell: bash          
     - name: Build
       run: npm run dist
