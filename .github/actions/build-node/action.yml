@@ -45,7 +45,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash         
     - name: Install npm dependencies(1)
-      run: yarn install --network-timeout 500000
+      run: yarn install
       shell: bash
     - name: Show installed npm dependencies (1)
       run: yarn list --depth=1 || true
