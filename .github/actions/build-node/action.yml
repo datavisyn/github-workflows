@@ -26,7 +26,7 @@ runs:
         registry-url: ${{ inputs.npm_registry }}
     - name: Show node and npm version
       run: |
-        npm i -g npm@8.5.1
+        npm i -g yarn@1.22.19
         node -v
         npm -v
       shell: bash  
@@ -43,10 +43,10 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash         
     - name: Install npm dependencies(1)
-      run: npm install
+      run: yarn install
       shell: bash
     - name: Show installed npm dependencies (1)
-      run: npm list --depth=1 || true
+      run: yarn list --depth=1 || true
       shell: bash
     - name: Check package-lock.json
       id: check-package-lock
@@ -69,7 +69,7 @@ runs:
       shell: bash
     - name: Show installed npm dependencies (2)
       if: ${{ steps.check-package-lock.outputs.lock_exists && steps.check-package-lock.outputs.lock_exists == 'true' }}
-      run: npm list --depth=1 || true
+      run: yarn list --depth=1 || true
       shell: bash          
     - name: Build
       run: npm run dist
