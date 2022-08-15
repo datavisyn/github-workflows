@@ -35,8 +35,8 @@ runs:
       run: |
         git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
         # only for tests
-        git clone --branch dist_cache git@github.com:datavisyn/tdp_core.git dist_cache
-        rm -rf dist_cache
+        #git clone --branch dist_cache git@github.com:datavisyn/tdp_core.git dist_cache
+        #rm -rf dist_cache
       env: 
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash         
