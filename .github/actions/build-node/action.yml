@@ -34,6 +34,7 @@ runs:
       if: ${{ inputs.github_ro_token != '' }}
       run: |
         git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
+        git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
         # only for tests
         #git clone --branch dist_cache git@github.com:datavisyn/tdp_core.git dist_cache
         #rm -rf dist_cache
