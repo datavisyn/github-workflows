@@ -26,12 +26,12 @@ runs:
         registry-url: ${{ inputs.npm_registry }}
     - name: Show node and npm version
       run: |
-        #corepack enable
-        npm i -g yarn@2
-        #yarn config set registry https://registry.npmjs.org/
+        corepack enable
+        npm i -g yarn@1.22.19
+        # yarn config set registry https://registry.npmjs.org/
         node -v
         npm -v
-        # yarn init -2
+        yarn -v
       shell: bash  
     - name: Git config
       if: ${{ inputs.github_ro_token != '' }}
@@ -44,35 +44,12 @@ runs:
       env: 
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash         
-    - name: Install npm dependencies(1)
+    - name: Install dependencies
       run: yarn install
       shell: bash
-    - name: Show installed npm dependencies (1)
-      run: yarn list --depth=1 || true
+    - name: Show installed dependencies
+      run: yarn info --name-only
       shell: bash
-    - name: Check package-lock.json
-      id: check-package-lock
-      run: |
-        lock_exists=false
-        if [[ -f ./package-lock.json ]]; then
-          lock_exists=true
-        fi
-        echo "Lock file exists: $lock_exists"
-        echo "::set-output name=lock_exists::${lock_exists}"
-      shell: bash   
-    - name: Update git dependencies
-      if: ${{ steps.check-package-lock.outputs.lock_exists && steps.check-package-lock.outputs.lock_exists == 'true' }}
-      run: |
-        readarray -t array < <(jq -r '.dependencies * (.devDependencies//{}) * (.optionalDependencies//{}) * (.peerDependencies//{}) |to_entries[] | select(.value | contains("git")) | .key' ./package.json)
-        for repository in "${array[@]}"; do
-          echo "update repository: $repository"
-          npm update $repository
-        done       
-      shell: bash
-    - name: Show installed npm dependencies (2)
-      if: ${{ steps.check-package-lock.outputs.lock_exists && steps.check-package-lock.outputs.lock_exists == 'true' }}
-      run: yarn list --depth=1 || true
-      shell: bash          
     - name: Build
       run: npm run dist
       shell: bash
