@@ -3,7 +3,7 @@ name: Build node source
 inputs:
   node_version:
     description: "node version to use"
-    default: "3.10"
+    default: "16.16"
     required: true
     type: string
   github_ro_token:  

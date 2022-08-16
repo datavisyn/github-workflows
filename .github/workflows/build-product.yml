@@ -13,7 +13,10 @@ on:
         required: false
       DV_AWS_ECR_REGISTRY:
         required: false  
-       
+      NODE_VERSION:
+        required: false
+      PYTHON_VERSION:
+        required: false              
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
@@ -22,6 +25,8 @@ concurrency:
 env:
   GENERATOR_VERSION: "visyn_scripts"
   TIME_ZONE: "Europe/Vienna"
+  NODE_VERSION: "16.16"
+  PYTHON_VERSION: "3.10"
 
 permissions:
   id-token: write
@@ -43,19 +48,6 @@ jobs:
       build_python: ${{ steps.get-parameters.outputs.build_python }}
     runs-on: ubuntu-20.04
     steps: 
-      - name: Dump GitHub context
-        id: github_context_step
-        run: echo '${{ toJSON(github) }}'
-      - name: Dump job context
-        run: echo '${{ toJSON(job) }}'
-      - name: Dump steps context
-        run: echo '${{ toJSON(steps) }}'
-      - name: Dump runner context
-        run: echo '${{ toJSON(runner) }}'
-      - name: Dump strategy context
-        run: echo '${{ toJSON(strategy) }}'
-      - name: Dump matrix context
-        run: echo '${{ toJSON(matrix) }}'     
       # checkout specific repository    
       - uses: actions/checkout@v3
       # checkout this workflow repository to get actions
@@ -75,10 +67,6 @@ jobs:
     needs: prepare-build 
     runs-on: ubuntu-20.04
     if: ${{ needs.prepare-build.outputs.build_node && needs.prepare-build.outputs.build_node == 'true'}}
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: ["16.16"]
     steps: 
       # checkout specific product repository    
       - uses: actions/checkout@v3
@@ -87,7 +75,7 @@ jobs:
       - name: Set up node version
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           registry-url: ${{ env.NPM_REGISTRY }}
       - name: Show node and npm version
         run: |
@@ -150,10 +138,6 @@ jobs:
     needs: prepare-build 
     runs-on: ubuntu-20.04
     if: ${{ needs.prepare-build.outputs.build_python && needs.prepare-build.outputs.build_python == 'true'}}
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10"]
     steps: 
       # checkout specific product repository    
       - uses: actions/checkout@v3
@@ -161,11 +145,11 @@ jobs:
       - name: Set up node version 
         uses: actions/setup-node@v3
         with:
-          node-version: "16.16"
+          node-version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
       - name: Set up python
         uses: actions/setup-python@v3
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
       - name: Show python and pip version
         run: |
           python --version
