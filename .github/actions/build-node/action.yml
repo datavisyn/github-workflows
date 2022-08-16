@@ -44,7 +44,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash         
     - name: Install dependencies
-      run: yarn install
+      run: yarn install --no-immutable
       shell: bash
     - name: Show installed dependencies
       run: yarn info --name-only
