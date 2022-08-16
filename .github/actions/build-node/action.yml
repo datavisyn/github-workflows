@@ -27,7 +27,6 @@ runs:
     - name: Show node and npm version
       run: |
         corepack enable
-        npm i -g yarn@1.22.19
         # yarn config set registry https://registry.npmjs.org/
         node -v
         npm -v
