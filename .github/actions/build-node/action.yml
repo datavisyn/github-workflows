@@ -27,19 +27,14 @@ runs:
     - name: Show node and npm version
       run: |
         corepack enable
-        # yarn config set registry https://registry.npmjs.org/
         node -v
         npm -v
-        yarn -v
       shell: bash  
     - name: Git config
       if: ${{ inputs.github_ro_token != '' }}
       run: |
         git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
         git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
-        # only for tests
-        #git clone --branch dist_cache git@github.com:datavisyn/tdp_core.git dist_cache
-        #rm -rf dist_cache
       env: 
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash         

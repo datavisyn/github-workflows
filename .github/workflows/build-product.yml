@@ -79,11 +79,13 @@ jobs:
           registry-url: ${{ env.NPM_REGISTRY }}
       - name: Show node and npm version
         run: |
+          corepack enable
           node -v
           npm -v
       - name: Git config
         run: |
-          git config --global url.https://$GITHUB_TOKEN@github.com/.insteadOf ssh://git@github.com/
+          git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
+          git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
           if [[ ! -z $GITLAB_TOKEN && ! -z $GITLAB_HOST ]] ; then
             echo "set gitlab config"
             git config --global url."https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "ssh://git@$GITLAB_HOST/"
@@ -112,12 +114,12 @@ jobs:
           cd ./tmp/web
           cat ./package.json
           cat .yo-rc-workspace.json
-          npm i     
+          yarn install --no-immutable     
       - name: show installed dependencies
         run: |
           cd ./tmp/web
-          npm list --depth=1 || true
-          cat ./package-lock.json
+          yarn info --name-only
+          cat ./yarn-lock.json
       - name: Build
         run: |
           cd ./tmp/web
