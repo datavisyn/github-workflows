@@ -112,6 +112,7 @@ jobs:
       - name: install dependencies
         run: |
           cd ./tmp/web
+          touch ./yarn.lock
           cat ./package.json
           cat .yo-rc-workspace.json
           yarn install --no-immutable     
@@ -119,7 +120,7 @@ jobs:
         run: |
           cd ./tmp/web
           yarn info --name-only
-          cat ./yarn-lock.json
+          cat ./yarn.lock
       - name: Build
         run: |
           cd ./tmp/web
