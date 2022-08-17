@@ -5,10 +5,13 @@ on:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
+      PYTHON_VERSION:
+        required: false
 
 env: 
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "test"
+  PYTHON_VERSION: "3.10" 
 
 permissions:
   contents: read
@@ -21,10 +24,6 @@ concurrency:
 jobs:
   build-python:
     runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10"]
     steps:
       # checkout specific source repository  
       - uses: actions/checkout@v3
@@ -36,5 +35,5 @@ jobs:
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/build-python
         with:
-          python_version: ${{ matrix.python-version }}
+          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}

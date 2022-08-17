@@ -13,7 +13,10 @@ on:
         required: false
       DV_AWS_ECR_REGISTRY:
         required: false  
-       
+      NODE_VERSION:
+        required: false
+      PYTHON_VERSION:
+        required: false       
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
@@ -22,6 +25,8 @@ concurrency:
 env:
   GENERATOR_VERSION: "develop"
   TIME_ZONE: "Europe/Vienna"
+  NODE_VERSION: "14.19"
+  PYTHON_VERSION: "3.10"  
 
 permissions:
   id-token: write
@@ -62,10 +67,6 @@ jobs:
     needs: prepare-build 
     runs-on: ubuntu-20.04
     if: ${{ needs.prepare-build.outputs.build_node && needs.prepare-build.outputs.build_node == 'true'}}
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: ["14.19"]
     steps: 
       # checkout specific product repository    
       - uses: actions/checkout@v3
@@ -74,7 +75,7 @@ jobs:
       - name: Set up node version
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           registry-url: ${{ env.NPM_REGISTRY }}
       - name: Show node and npm version
         run: |
@@ -127,7 +128,7 @@ jobs:
           ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ needs.prepare-build.outputs.web_repo }}
           docker_file: ./deploy/web/Dockerfile
-          CURRENT_DIRECTORY: ./tmp/web
+          current_directory: ./tmp/web
           image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
           image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}          
 
@@ -135,10 +136,6 @@ jobs:
     needs: prepare-build 
     runs-on: ubuntu-20.04
     if: ${{ needs.prepare-build.outputs.build_python && needs.prepare-build.outputs.build_python == 'true'}}
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10"]
     steps: 
       # checkout specific product repository    
       - uses: actions/checkout@v3
@@ -146,11 +143,11 @@ jobs:
       - name: Set up node version 
         uses: actions/setup-node@v3
         with:
-          node-version: "14.19"
+          node-version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
       - name: Set up python
         uses: actions/setup-python@v3
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
       - name: Show python and pip version
         run: |
           python --version
@@ -217,7 +214,7 @@ jobs:
           ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ needs.prepare-build.outputs.api_repo }}
           docker_file: ./deploy/api/Dockerfile
-          CURRENT_DIRECTORY: ./tmp/api
+          current_directory: ./tmp/api
           image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
           image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
   deploy:

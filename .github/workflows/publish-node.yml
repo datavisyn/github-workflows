@@ -9,9 +9,12 @@ on:
         required: true 
       DATAVISYN_BOT_REPO_TOKEN:
         required: false 
-        
+      NODE_VERSION:
+        required: false
+
 env: 
   NPM_REGISTRY: "https://registry.npmjs.org/"
+  NODE_VERSION: "14.19"
 
 permissions:
   contents: read
@@ -26,10 +29,6 @@ jobs:
       id-token: write
       contents: read  
     runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: ["14.19"]
     steps:
       - name: check actor
         run: |
@@ -63,7 +62,7 @@ jobs:
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/build-node
         with:
-          node_version: ${{ matrix.node-version }}
+          node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }} 
       - uses: ./tmp/github-workflows/.github/actions/publish-node
