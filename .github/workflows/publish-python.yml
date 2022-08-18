@@ -10,9 +10,9 @@ on:
       PYPI_PASSWORD:
         required: true        
       DATAVISYN_BOT_REPO_TOKEN:
-        required: false 
-      PYTHON_VERSION:
         required: false
+      PYTHON_VERSION:
+        required: false        
 
 env: 
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
@@ -55,7 +55,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
-          ref: main
+          ref: node16
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/build-python
         with:

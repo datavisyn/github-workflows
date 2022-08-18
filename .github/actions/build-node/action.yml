@@ -3,7 +3,7 @@ name: Build node source
 inputs:
   node_version:
     description: "node version to use"
-    default: "3.10"
+    default: "16.16"
     required: true
     type: string
   github_ro_token:  
@@ -26,26 +26,23 @@ runs:
         registry-url: ${{ inputs.npm_registry }}
     - name: Show node and npm version
       run: |
+        corepack enable
         node -v
         npm -v
       shell: bash  
     - name: Git config
       if: ${{ inputs.github_ro_token != '' }}
-      run: git config --global url.https://$GITHUB_TOKEN@github.com/.insteadOf ssh://git@github.com/
+      run: |
+        git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
+        git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
       env: 
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash         
-    - name: Install npm dependencies(1)
-      run:  npm install
+    - name: Install dependencies
+      run: yarn install --no-immutable
       shell: bash
-    - name: Patch npm dependencies in package-lock.json
-      run: npx npm-force-resolutions
-      shell: bash
-    - name: Install npm dependencies(2)
-      run:  npm install
-      shell: bash          
-    - name: Show installed npm dependencies
-      run: npm list --depth=1 || true
+    - name: Show installed dependencies
+      run: yarn info --name-only
       shell: bash
     - name: Build
       run: npm run dist
