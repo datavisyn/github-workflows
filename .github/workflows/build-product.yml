@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GENERATOR_VERSION: "visyn_scripts"
+  GENERATOR_VERSION: "develop"
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: "16.16"
   PYTHON_VERSION: "3.10"
