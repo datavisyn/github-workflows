@@ -42,7 +42,8 @@ jobs:
           array=($(echo "${dv_devops}" | tr ',' "\n"))
           echo "${#array[@]}"
           for e in "${array[@]}"; do
-            echo e
+            echo $e
+            echo $actor
             if [[ "$e" == "$actor" ]] ; then
               echo "ok"
               exit 0
