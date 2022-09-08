@@ -40,8 +40,11 @@ jobs:
           echo ${#dv_devops}
           actor=$GITHUB_ACTOR
           array=($(echo "${dv_devops}" | tr ',' "\n"))
-          for e in "${array[@]}"; do 
+          echo "${#array[@]}"
+          for e in "${array[@]}"; do
+            echo e
             if [[ "$e" == "$actor" ]] ; then
+              echo "ok"
               exit 0
             fi
           done
