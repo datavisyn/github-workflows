@@ -3,8 +3,6 @@ name: Release source repository
 on: 
   workflow_call:
     secrets:
-      DV_DEVOPS:
-        required: true
       DATAVISYN_BOT_REPO_TOKEN:
         required: true
 
