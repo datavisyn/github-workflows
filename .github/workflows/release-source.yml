@@ -2,6 +2,9 @@ name: Release source repository
 
 on: 
   workflow_call:
+    secrets:
+      DV_DEVOPS:
+        required: true
 
 permissions:
   contents: write
@@ -34,6 +37,7 @@ jobs:
       - name: check actor
         run: |
           dv_devops=$DV_DEVOPS
+          echo ${#dv_devops}
           actor=$GITHUB_ACTOR
           array=($(echo "${dv_devops}" | tr ',' "\n"))
           for e in "${array[@]}"; do 
