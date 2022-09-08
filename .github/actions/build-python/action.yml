@@ -43,9 +43,9 @@ runs:
     - name: Linting
       run: make lint check-format
       shell: bash             
-    # - name: Run tests
-    #   run: make test
-    #   shell: bash
+    - name: Run tests
+      run: make test
+      shell: bash
     - name: Build wheel
       run: make build 
       shell: bash 

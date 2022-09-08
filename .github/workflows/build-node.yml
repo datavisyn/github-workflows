@@ -9,7 +9,7 @@ on:
         required: false
 env: 
   NPM_REGISTRY: "https://registry.npmjs.org/"
-  NODE_VERSION: "14.19"
+  NODE_VERSION: "16.16"
 
 permissions:
   contents: read
@@ -23,7 +23,7 @@ jobs:
   build-node:
     permissions:
       id-token: write
-      contents: read  
+      contents: write  
     runs-on: ubuntu-20.04
     steps:
       # checkout specific source repository    

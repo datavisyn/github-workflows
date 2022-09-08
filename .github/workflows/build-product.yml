@@ -16,7 +16,7 @@ on:
       NODE_VERSION:
         required: false
       PYTHON_VERSION:
-        required: false       
+        required: false              
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
@@ -25,8 +25,8 @@ concurrency:
 env:
   GENERATOR_VERSION: "develop"
   TIME_ZONE: "Europe/Vienna"
-  NODE_VERSION: "14.19"
-  PYTHON_VERSION: "3.10"  
+  NODE_VERSION: "16.16"
+  PYTHON_VERSION: "3.10"
 
 permissions:
   id-token: write
@@ -54,7 +54,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
-          ref: main
+          ref: node16
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
         id: get-parameters
@@ -79,11 +79,13 @@ jobs:
           registry-url: ${{ env.NPM_REGISTRY }}
       - name: Show node and npm version
         run: |
+          corepack enable
           node -v
           npm -v
       - name: Git config
         run: |
-          git config --global url.https://$GITHUB_TOKEN@github.com/.insteadOf ssh://git@github.com/
+          git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
+          git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
           if [[ ! -z $GITLAB_TOKEN && ! -z $GITLAB_HOST ]] ; then
             echo "set gitlab config"
             git config --global url."https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git@$GITLAB_HOST:"
@@ -97,7 +99,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
-          ref: main
+          ref: node16
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/create-product-workspace
         with:
@@ -109,13 +111,15 @@ jobs:
       - name: install dependencies
         run: |
           cd ./tmp/web
+          touch ./yarn.lock
           cat ./package.json
           cat .yo-rc-workspace.json
-          npm i     
+          yarn install --no-immutable     
       - name: show installed dependencies
         run: |
           cd ./tmp/web
-          npm list --depth=1 || true
+          yarn info --name-only
+          cat ./yarn.lock
       - name: Build
         run: |
           cd ./tmp/web
@@ -173,7 +177,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
-          ref: main
+          ref: node16
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/create-product-workspace
         with:

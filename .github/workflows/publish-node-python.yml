@@ -12,14 +12,14 @@ on:
       NPM_TOKEN:
         required: true 
       DATAVISYN_BOT_REPO_TOKEN:
-        required: false          
+        required: false 
       NODE_VERSION:
         required: false
       PYTHON_VERSION:
-        required: false 
+        required: false                 
 
-env: 
-  NODE_VERSION: "14.19"
+env:
+  NODE_VERSION: "16.16"
   NPM_REGISTRY: "https://registry.npmjs.org/"
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
