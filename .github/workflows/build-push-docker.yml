@@ -1,0 +1,57 @@
+name: Build and push docker
+
+on: 
+  workflow_call:
+    secrets:
+      DV_AWS_ECR_ROLE:
+        required: true
+      DV_AWS_REGION:
+        required: true
+      DV_AWS_ECR_REGISTRY:
+        required: true     
+      DV_ECR_REPOSITORY:  
+        required: true
+    inputs:    
+      docker_file:  
+        description: "dockerfile to use"
+        required: true
+        type: string
+      current_directory:  
+        description: "current directory for building the Dockerfile"
+        required: true
+        type: string    
+      image_tag:  
+        description: "image tag"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: read
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      # checkout specific source repository
+      - uses: actions/checkout@v3
+      # checkout this workflow repository to get actions
+      - uses: actions/checkout@v3
+        with:
+          repository: datavisyn/github-workflows
+          ref: main
+          path: ./tmp/github-workflows
+      - uses: ./tmp/github-workflows/.github/actions/build-push-image
+        with:
+        with:
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }} 
+          aws_region: ${{ secrets.DV_AWS_REGION }} 
+          ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
+          ecr_repository: ${{ secrets.DV_ECR_REPOSITORY }}
+          docker_file: ${{ inputs.docker_file }}
+          current_directory: ${{ inputs.current_directory }}
+          image_tag1: ${{ inputs.image_tag }}
