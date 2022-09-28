@@ -10,7 +10,7 @@ on:
       DV_AWS_ECR_REGISTRY:
         required: true     
       DV_ECR_REPOSITORY:  
-        required: true
+        required: false
     inputs:    
       docker_file:  
         description: "dockerfile to use"
@@ -23,6 +23,10 @@ on:
       image_tag:  
         description: "image tag"
         required: true
+        type: string
+      ecr_repository:
+        description: "ecr repository to use"
+        required: false
         type: string
 
 permissions:
@@ -50,7 +54,7 @@ jobs:
           aws_role: ${{ secrets.DV_AWS_ECR_ROLE }} 
           aws_region: ${{ secrets.DV_AWS_REGION }} 
           ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
-          ecr_repository: ${{ secrets.DV_ECR_REPOSITORY }}
+          ecr_repository: ${{ inputs.ecr_repository || secrets.DV_ECR_REPOSITORY }}
           docker_file: ${{ inputs.docker_file }}
           current_directory: ${{ inputs.current_directory }}
           image_tag1: ${{ inputs.image_tag }}
