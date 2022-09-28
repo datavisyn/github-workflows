@@ -48,11 +48,14 @@ runs:
     - name: Build, tag, and push image to Amazon ECR
       run: |
         cd $CURRENT_DIRECTORY
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2 -f $DOCKER_FILE .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
-        if [[! -z $IMAGE_TAG2 ]] ; then
+        if [[ -z $IMAGE_TAG2 ]] ; then
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -f $DOCKER_FILE .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
+        else
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2 -f $DOCKER_FILE .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2
-        fi  
+        fi
       env:
         ECR_REGISTRY: ${{ inputs.ecr_registry }}
         ECR_REPOSITORY: ${{ inputs.ecr_repository }}
