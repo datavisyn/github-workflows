@@ -46,7 +46,6 @@ jobs:
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/build-push-image
         with:
-        with:
           aws_role: ${{ secrets.DV_AWS_ECR_ROLE }} 
           aws_region: ${{ secrets.DV_AWS_REGION }} 
           ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
