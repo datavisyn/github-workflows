@@ -7,13 +7,26 @@ on:
         required: true
       DV_DEVOPS:
         required: true
-      DV_CUSTOMERS:
+      DV_QMS:
+        required: true        
+      DV_AWS_ECR_REGISTRY:
+        required: false         
+    inputs:
+      stage:
+        description: "stage that should be deployed (develop|qa|production)"
         required: true
-      DV_AWS_ECR_ROLE:
+        type: choice
+        options: 
+        - develop
+        - qa
+        - production
+        default: develop
+      customer:
+        description: "customer for that the app should be deployed"
         required: true
-      DV_AWS_REGION:
-        required: true
-     
+        type: choice
+        options: ${{ secrets.POSSIBLE_CUSTOMERS }}
+        default: datavisyn   
 permissions:
   id-token: write
   contents: read
@@ -24,20 +37,20 @@ concurrency:
 
 env: 
   GA_VERSION: "main"
-  GITHUB_USER: "datavisyn-bot"
-
 
 jobs:
-  deploy_qa:
-    if: ${{ github.event.label.name == 'deploy_to_qa' }}
+  deploy:
     runs-on: ubuntu-20.04
     steps:
       - name: check actor
         run: |
           dv_devops=$DV_DEVOPS
+          dv_qms=$DV_QMS
           actor=$GITHUB_ACTOR
-          array=($(echo "${dv_devops}" | tr ',' "\n"))
-          for e in "${array[@]}"; do 
+          array1=($(echo "${dv_devops}" | tr ',' "\n"))
+          array2=($(echo "${dv_qms}" | tr ',' "\n"))
+          array1+=(${array2[@]})
+          for e in "${array1[@]}"; do 
             if [[ "$e" == "$actor" ]] ; then
               exit 0
             fi
@@ -46,14 +59,8 @@ jobs:
           exit 1
         env: 
           DV_DEVOPS: ${{ secrets.DV_DEVOPS }}
+          DV_QMS: ${{ secrets.DV_QMS }}
           GITHUB_ACTOR: ${{ github.actor }}
-      - name: check branch
-        if: ${{ !startsWith(github.head_ref, 'rc_') }}
-        run: |
-          echo "only the release candidates can be deployed to qa: $HEAD_REF"
-          exit 1
-        env:
-          HEAD_REF: ${{ github.head_ref }}
       # checkout repo to get package.json    
       - uses: actions/checkout@v3
       # checkout this workflow repository to get actions
@@ -65,128 +72,33 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
         id: get-parameters
         with:
-          dv_customers: ${{ secrets.DV_CUSTOMERS }}
           repository_name: ${{ github.event.repository.name }}
           branch_name: ${{ github.base_ref }}
+          has_workspace_branches: ${{ secrets.HAS_WORKSPACE_BRANCHES }}
           time_zone: ${{ env.TIME_ZONE }}
-      - name: create additional tag
-        id: get-add-image-tag
+      - name: Get images
+        id: get-images
         run: |
-          additional_image_tag=$IMAGE_TAG
-          additional_image_tag=${additional_image_tag/main/qa}
-          echo "additional_image_tag=${additional_image_tag}"
-          echo "::set-output name=additional_image_tag::$additional_image_tag"
+          images=()
+          backend_image=$ECR_REGISTRY/$BACKEND_REPO:$IMAGE_TAG
+          frontend_image=$ECR_REGISTRY/$FRONTEND_REPO:$IMAGE_TAG
+          images+=($frontend_image)
+          images+=($backend_image)
+          images="$(IFS=',';echo "${images[*]}")"
+          echo "images: $images"
+          echo "::set-env name=images::$images"
         env:
-          IMAGE_TAG: ${{ steps.get-parameters.outputs.image_tag1 }}         
-      - uses: ./tmp/github-workflows/.github/actions/retag-image
-        name: retag existing images
+          ECR_REGISTRY: ${{ secrets.DV_AWS_ECR_REGISTRY }}
+          FRONTEND_REPO: ${{ steps.get-parameters.outputs.web_repo }}
+          BACKEND_REPO: ${{ steps.get-parameters.outputs.api_repo }}
+          IMAGE_TAG: ${{ steps.get-parameters.outputs.image_tag1 }}
+      - name: trigger deployment
+        uses: datavisyn/github-action-trigger-workflow@v1   
         with:
-          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }} 
-          aws_region: ${{ secrets.DV_AWS_REGION }}
-          ecr_repository_name: ${{ steps.get-parameters.outputs.api_repo }}
-          current_image_tag: ${{ github.head_ref }}
-          additional_image_tag: "${{ steps.get-add-image-tag.outputs.additional_image_tag }}"      
-      - name: remove label from pull request
-        if: ${{ github.event.label.name == 'deploy_to_qa' && failure() }}
-        id: remove-labels
-        uses: octokit/request-action@v2.x
-        with:
-          route: DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          issue_number: ${{ github.event.pull_request.number }}
-          name: "deploy_to_qa"
-        env:
-          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-      - name: check remove labels status
-        if: ${{ steps.remove-labels.conclusion.success && steps.remove-labels.outputs.status != 200 }}
-        run: |
-          echo "something went wrong with removing the labels"
-          echo "data: $DATA"
-          echo "status: $STATUS"
-          exit 1
-        env:
-          STATUS: ${{ steps.remove-labels.outputs.status }}
-          DATA: ${{ steps.remove-labels.outputs.data }}            
-  deploy_prod:        
-    if: ${{ github.event.label.name == 'deploy_to_prod' }}
-    runs-on: ubuntu-20.04
-    steps:
-      - name: check actor
-        run: |
-          dv_devops=$DV_DEVOPS
-          actor=$GITHUB_ACTOR
-          array=($(echo "${dv_devops}" | tr ',' "\n"))
-          for e in "${array[@]}"; do 
-            if [[ "$e" == "$actor" ]] ; then
-              exit 0
-            fi
-          done
-          echo "you are not allowed to run this job!"
-          exit 1
-        env: 
-          DV_DEVOPS: ${{ secrets.DV_DEVOPS }}
-          GITHUB_ACTOR: ${{ github.actor }}
-      - name: check branch
-        if: ${{ !startsWith(github.head_ref, 'rc_') }}
-        run: |
-          echo 'only the release candidates can be deployed to prod.'
-          exit 1 
-      - name: check qa deployment
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'deploy_to_qa')}}
-        run: |
-          echo 'deploy to qa before you deploy to prod.'
-          exit 1
-      # checkout repo to get package.json    
-      - uses: actions/checkout@v3
-      # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
-        with:
-          repository: datavisyn/github-workflows
-          ref: node16
-          path: ./tmp/github-workflows
-      - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
-        id: get-parameters
-        with:
-          dv_customers: ${{ secrets.DV_CUSTOMERS }}
-          repository_name: ${{ github.event.repository.name }}
-          branch_name: ${{ github.base_ref }}
-          time_zone: ${{ env.TIME_ZONE }}
-      - name: create additional tag
-        id: get-add-image-tag
-        run: |
-          additional_image_tag=$IMAGE_TAG
-          echo "additional_image_tag=${additional_image_tag}"
-          echo "::set-output name=additional_image_tag::$additional_image_tag"
-        env:
-          IMAGE_TAG: ${{ steps.get-parameters.outputs.image_tag1 }}      
-      - uses: ./tmp/github-workflows/.github/actions/retag-image
-        name: retag existing images
-        with:
-          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }} 
-          aws_region: ${{ secrets.DV_AWS_REGION }} 
-          ecr_repository_name: ${{ steps.get-parameters.outputs.api_repo }}
-          current_image_tag: ${{ github.head_ref }}
-          additional_image_tag: "${{ steps.get-add-image-tag.outputs.additional_image_tag }}"      
-      - name: remove label from pull request
-        if: ${{ github.event.label.name == 'deploy_to_prod' && failure() }}
-        id: remove-labels
-        uses: octokit/request-action@v2.x
-        with:
-          route: DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          issue_number: ${{ github.event.pull_request.number }}
-          name: "deploy_to_prod"
-        env:
-          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-      - name: check remove labels status
-        if: ${{ steps.remove-labels.conclusion.success && steps.remove-labels.outputs.status != 200 }}
-        run: |
-          echo "something went wrong with removing the labels"
-          echo "data: $DATA"
-          echo "status: $STATUS"
-          exit 1
-        env:
-          STATUS: ${{ steps.remove-labels.outputs.status }}
-          DATA: ${{ steps.remove-labels.outputs.data }}
+          owner: "datavisyn" 
+          repo:  "infrastructure-k8s"
+          github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+          workflow_file_name: "deploy-app.yml"
+          ref: "main"
+          github_user: ${{ secrets.DV_BOT_USER }}
+          client_payload: '{ "app": "${{steps.get-parameters.outputs.app}}", "customer": "${{inputs.customer}}", "stage": "${{inputs.stage}}", "sub_app": "${{steps.get-parameters.outputs.sub_app}}", "images": "${{steps.get-images.outputs.images}}" }'

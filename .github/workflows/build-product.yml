@@ -5,8 +5,6 @@ on:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
-      DV_CUSTOMERS:
-        required: true
       DV_AWS_ECR_ROLE:
         required: false
       DV_AWS_REGION:
@@ -38,8 +36,7 @@ jobs:
       app: ${{ steps.get-parameters.outputs.app }}  
       api_repo: ${{ steps.get-parameters.outputs.api_repo }}  
       web_repo: ${{ steps.get-parameters.outputs.web_repo }}
-      stage: ${{ steps.get-parameters.outputs.stage }}
-      customer: ${{ steps.get-parameters.outputs.customer }}
+      develop: ${{ steps.get-parameters.outputs.develop }}
       sub_app: ${{ steps.get-parameters.outputs.sub_app }}
       aws: ${{ steps.get-parameters.outputs.aws }}
       image_tag1: ${{ steps.get-parameters.outputs.image_tag1 }}
@@ -59,9 +56,9 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
         id: get-parameters
         with:
-          dv_customers: ${{ secrets.DV_CUSTOMERS }}
           repository_name: ${{ github.event.repository.name }}
           branch_name: ${{ github.ref }}
+          has_workspace_branches: ${{ secrets.HAS_WORKSPACE_BRANCHES }}
           time_zone: ${{ env.TIME_ZONE }}
   build-node:
     needs: prepare-build 
@@ -224,7 +221,7 @@ jobs:
   deploy:
     needs: [prepare-build, build-node, build-python] 
     runs-on: ubuntu-20.04
-    if: ${{ always() && needs.prepare-build.outputs.stage == 'develop' && needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
+    if: ${{ always() && needs.prepare-build.outputs.develop == 'true' && needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
     steps:
       - name: fail if conditional job failed
         if: ${{ contains(needs.*.result, 'failure') }}

@@ -1,10 +1,6 @@
 name: returns inportant parameters for product
 
 inputs:
-  dv_customers:  
-    description: "customers of datavisyn; seperated with ','"
-    required: true
-    type: string
   repository_name:
     description: "name of the current repository"
     required: true
@@ -16,7 +12,12 @@ inputs:
   time_zone:  
     description: "time zone to use to generate the image tag"
     required: true
-    type: string    
+    type: string
+  has_workspace_branches:  
+    description: "true, if this is a repository that has workspace branches included, else false"
+    required: true
+    type: boolean
+    default: false    
 outputs:
   app: 
     description: "app name of the product"
@@ -25,17 +26,11 @@ outputs:
     description: "ecr repository for api"
     value: ${{ steps.get-parameters.outputs.api_repo }}
   web_repo: 
-    description: "ecr repository for api"
+    description: "ecr repository for web"
     value: ${{ steps.get-parameters.outputs.web_repo }}    
-  stage: 
-    description: "stage of the branch - depending on the branch name"
-    value: ${{ steps.get-parameters.outputs.stage }}
-  customer: 
-    description: "customer of the branch - depending on the branch name"
-    value: ${{ steps.get-parameters.outputs.customer }}
-  sub_app: 
-    description: "sub_app of the repository (f.e. literature) - depending on the branch name"
-    value: ${{ steps.get-parameters.outputs.sub_app }} 
+  develop: 
+    description: "true, if the branch is a develop branch, otherwise false"
+    value: ${{ steps.get-parameters.outputs.develop }}
   aws: 
     description: "true, if image should be generated and pushed to aws; else false"
     value: ${{ steps.get-parameters.outputs.aws }}
@@ -45,9 +40,6 @@ outputs:
   image_tag2: 
     description: "image tag, that has a very specific name (included the current date)"
     value: ${{ steps.get-parameters.outputs.image_tag2 }}
-  labels: 
-    description: "labels for the pr (seperated with ',')"
-    value: ${{ steps.get-parameters.outputs.labels }} 
   build_node: 
     description: "true, if node part should be built; else false"
     value: ${{ steps.get-parameters.outputs.build_node }} 
@@ -90,139 +82,53 @@ runs:
         branch_name=$branch_name_orig
         echo $branch_name
         aws=false
-        stage=''
-        version=''
-        rc_candidate=''
+        develop=false
         sub_app=''
-        if [[ $branch_name == *"_aws"* ]]; then
+        if $HAS_WORKSPACE_BRANCHES; then
+          aws=false
+          if [[ $branch_name == *"_aws"* ]]; then
+            aws=true
+            post_fix=_aws
+            branch_name=${branch_name%$post_fix}
+          fi
+          if [[ $branch_name == *"_ods"* ]]; then
+            aws=true
+            post_fix=_ods
+            branch_name=${branch_name%$post_fix}
+          fi
+        else
+          sub_app=${branch_name#*_}
           aws=true
-          post_fix=_aws
-          branch_name=${branch_name%$post_fix}
-        fi
-        if [[ $branch_name == *"_ods"* ]]; then
-          aws=true
-          post_fix=_ods
-          branch_name=${branch_name%$post_fix}
         fi
         # develop branch
-        if [[ $branch_name == develop* ]] ; then 
-          stage=develop
-          branch_name=${branch_name#develop_}
-          branch_name=${branch_name#develop}
+        if [[ $branch_name == develop ]] ; then 
+          develop=true
         fi
-        # master / main branch
-        if [[ $branch_name == master* ]] || [[ $branch_name == main* ]] ; then 
-          stage=production
-          branch_name=${branch_name#main_}
-          branch_name=${branch_name#main}
-          branch_name=${branch_name#master_}
-          branch_name=${branch_name#master}
-        fi
-        # release candidate
-        if [[ $branch_name == rc_* ]] ; then 
-          stage=production
-          branch_name=${branch_name%%-*}
-          branch_name=${branch_name#rc_}
-          rc_candidate=rc_${branch_name%%_*}
-          if [[ $branch_name == *"_"* ]] ; then
-            branch_name=${branch_name#*_}
-          else
-            branch_name=""
-          fi
-        fi
-        # version tag
-        if [[ $branch_name == v* ]] ; then 
-          stage=production
-          branch_name=${branch_name#v}
-          version=${branch_name%%_*}
-          branch_name=${branch_name#*_}
-          if [[ "$branch_name" == "$version" ]] ; then
-            branch_name=""
-          fi  
-        fi          
-        # check customer
-        customer=datavisyn
-        labels=()
-        dv_customers=$DV_CUSTOMERS
-        array=($(echo "${dv_customers}" | tr ',' "\n"))
-        for c in "${array[@]}"
-        do
-          if [[ $BRANCH_NAME =~ _${c}_ || $BRANCH_NAME =~ _${c}- ]]; then
-            branch_name=${branch_name//_$c/}
-            customer=$c
-            echo "customer: $customer"
-            if [[ "$branch_name" == "$customer" ]]; then
-              branch_name=""
-            fi
-            labels+=("'customer: $customer'")
-          fi
-        done
-        # check if there is a sub_app part
-        if [[ "$branch_name_orig" == "$branch_name" || "$branch_name_orig" == "${branch_name}_aws"  || "$branch_name_orig" == "${branch_name}_${customer}_aws" ]]; then
-          feature_branch=$branch_name
-        else
-          sub_app=$(echo $branch_name | sed s/_//)
-        fi
-        
         # get image tags
-        image_tag1="test-"
-        if [[ $stage == develop ]] ; then
-          image_tag1+=develop_
-        else
-          if [[ ! -z $rc_candidate ]] ; then
-            image_tag1+=${rc_candidate}_
-          elif [[ ! -z $version ]] ; then
-            image_tag1+=${version}_ 
-          elif [[ ! -z $feature_branch ]] ; then
-            image_tag1+=${feature_branch}_ 
-          else
-            image_tag1+=main_              
-          fi  
-        fi
-        if [[ ! -z $sub_app ]] ; then
-            image_tag1+=${sub_app}_
-            labels+=("'sub_app: ${sub_app}'")
-        fi
-        if [[ $customer != "datavisyn" ]] ; then
-            image_tag1+=${customer}_
-        fi
-        if [[ ! -z $rc_candidate ]] ; then
-          image_tag2=$BRANCH_NAME
-          image_tag2=${image_tag2##*/}
-          image_tag1=${image_tag2%%-*}
-        else
-          image_tag1=${image_tag1::-1}
-          image_tag2=$image_tag1-$(TZ=$TIME_ZONE date +%Y%m%d-%H%M%S)
-        fi
-        labels=$(IFS=',';echo "${labels[*]}";IFS=$' \t\n')
+        image_tag1=$branch_name
+        image_tag2=tagged-$image_tag1-$(TZ=$TIME_ZONE date +%Y%m%d-%H%M%S)
         # echo parameters
         echo "app=$app"
         echo "api_repo=$api_repo"
         echo "web_repo=$web_repo"
-        echo "stage=$stage"
-        echo "customer=$customer"
-        echo "sub_app=$sub_app"
+        echo "develop=$develop"
         echo "aws=$aws"
-        echo "image_tag1=$image_tag1"
-        echo "image_tag2=$image_tag2"
-        echo "labels=$labels"
         echo "build_python=$build_python"
         echo "build_node=$build_node"
+        echo "image_tag1=$image_tag1"
+        echo "image_tag2=$image_tag2"
         # echo to output
         echo "::set-output name=app::$app"
         echo "::set-output name=api_repo::$api_repo"
         echo "::set-output name=web_repo::$web_repo"
-        echo "::set-output name=stage::$stage"
-        echo "::set-output name=customer::$customer"
-        echo "::set-output name=sub_app::$sub_app"
+        echo "::set-output name=develop::$develop"
         echo "::set-output name=aws::$aws"
         echo "::set-output name=image_tag1::$image_tag1"
         echo "::set-output name=image_tag2::$image_tag2"
-        echo "::set-output name=labels::$labels"
         echo "::set-output name=build_node::$build_node"
         echo "::set-output name=build_python::$build_python"
       env:  
-        DV_CUSTOMERS: ${{ inputs.dv_customers }}
+        HAS_WORKSPACE_BRANCHES: ${{ has_workspace_branches }}
         REPOSITORY_NAME: ${{ inputs.repository_name }}
         BRANCH_NAME: ${{ inputs.branch_name }}
         TIME_ZONE: ${{ inputs.time_zone }}
