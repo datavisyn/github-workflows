@@ -84,7 +84,7 @@ runs:
         aws=false
         develop=false
         sub_app=''
-        if $HAS_WORKSPACE_BRANCHES; then
+        if [ $HAS_WORKSPACE_BRANCHES ] ; then
           aws=false
           if [[ $branch_name == *"_aws"* ]]; then
             aws=true
