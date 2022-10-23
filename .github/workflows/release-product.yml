@@ -20,7 +20,7 @@ concurrency:
 env: 
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
-
+  WORKFLOW_BRANCH: "new_deployment"
 
 jobs:
   ###############################################################################################################
@@ -59,7 +59,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
-          ref: node16
+          ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
         id: get-parameters
@@ -325,7 +325,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
-          ref: node16
+          ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
       - name: prepare develop
         uses: ./tmp/github-workflows/.github/actions/release-product-changes

@@ -25,6 +25,7 @@ env:
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: "16.16"
   PYTHON_VERSION: "3.10"
+  WORKFLOW_BRANCH: "new_deployment"
 
 permissions:
   id-token: write
@@ -51,7 +52,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
-          ref: node16
+          ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
         id: get-parameters
@@ -96,7 +97,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
-          ref: node16
+          ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/create-product-workspace
         with:
@@ -174,7 +175,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
-          ref: node16
+          ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/create-product-workspace
         with:
