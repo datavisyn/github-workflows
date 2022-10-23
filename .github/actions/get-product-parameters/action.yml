@@ -128,7 +128,7 @@ runs:
         echo "::set-output name=build_node::$build_node"
         echo "::set-output name=build_python::$build_python"
       env:  
-        HAS_WORKSPACE_BRANCHES: ${{ has_workspace_branches }}
+        HAS_WORKSPACE_BRANCHES: ${{ inputs.has_workspace_branches }}
         REPOSITORY_NAME: ${{ inputs.repository_name }}
         BRANCH_NAME: ${{ inputs.branch_name }}
         TIME_ZONE: ${{ inputs.time_zone }}
