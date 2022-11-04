@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ls -lah /github/workspace
+
 if [ -n "$HADOLINT_CONFIG" ]; then
   HADOLINT_CONFIG="-c ${HADOLINT_CONFIG}"
 fi
