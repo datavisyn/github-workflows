@@ -55,7 +55,6 @@ runs:
     - name: Get AWS ECR Scan results
       id: get-scan-results
       run: |
-        aws ecr start-image-scan --repository-name $ECR_REPOSITORY --image-id imageTag=$IMAGE_TAG
         aws ecr wait image-scan-complete --repository-name $ECR_REPOSITORY --image-id imageTag=$IMAGE_TAG
         if [ $(echo $?) -eq 0 ]; then
           scan_findings=$(aws ecr describe-image-scan-findings --repository-name $ECR_REPOSITORY --image-id imageTag=$IMAGE_TAG | jq '.imageScanFindings.findingSeverityCounts')
