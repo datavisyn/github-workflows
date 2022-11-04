@@ -1,0 +1,50 @@
+name: 'Hadolint Action'
+description: 'Action that runs Hadolint Dockerfile linting tool'
+author: 'datavisyn'
+inputs:
+  dockerfile:
+    required: false
+    description: 'The path to the Dockerfile to lint'
+    default: 'Dockerfile'
+  config:
+    required: false
+    description: 'Path to a config file'
+    default:
+  recursive:
+    required: false
+    description:
+      'Search for specified dockerfile recursively, from the project root'
+    default: 'false'
+  output-file:
+    required: false
+    description: 'The path where to save the linting results to'
+    default:
+  no-fail:
+    required: false
+    description: Never exit with a failure status code
+    default: 'false'
+  failure-threshold:
+    required: false
+    description: |
+      Fail the pipeline only if rules with severity above this threshold are
+      violated. One of [error | warning | info (default) | style | ignore]
+    default: 'info'
+  ignore:
+    required: false
+    description: 'A comma separated string of rules to ignore'
+    default:
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.dockerfile }}
+  env:
+    HADOLINT_NOFAIL: ${{ inputs.no-fail }}
+    HADOLINT_IGNORE: ${{ inputs.ignore }}
+    HADOLINT_CONFIG: ${{ inputs.config }}
+    HADOLINT_RECURSIVE: ${{ inputs.recursive }}
+    HADOLINT_OUTPUT: ${{ inputs.output-file }}
+branding:
+  icon: 'layers'
+  color: 'white'
