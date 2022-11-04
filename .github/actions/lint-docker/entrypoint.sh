@@ -26,7 +26,6 @@ if [ -n "$HADOLINT_OUTPUT" ]; then
 fi
 
 RESULTS="${RESULTS//$'\\n'/''}"
-echo "::set-output name=results::$RESULTS"
 
 { echo "HADOLINT_RESULTS<<EOF"; echo "$RESULTS"; echo "EOF"; } >> "$GITHUB_ENV"
 

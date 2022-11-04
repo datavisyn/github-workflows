@@ -1,9 +1,5 @@
 FROM ghcr.io/hadolint/hadolint:v2.10.0-debian
 
-WORKDIR /app
+COPY entrypoint.sh /usr/local/bin/hadolint.sh
 
-COPY entrypoint.sh /app/entrypoint.sh
-
-RUN ls -lah /app/ && chmod +x /app/entrypoint.sh
-
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/hadolint.sh"]
