@@ -25,9 +25,10 @@ if [ "$HADOLINT_RECURSIVE" = "true" ]; then
   filename="${!#}"
   # shellcheck disable=SC2124
   flags="${@:1:$#-1}"
+  # shellcheck disable=SC2086
   RESULTS=$(hadolint $HADOLINT_CONFIG $flags ./**/$filename)
 else
-  # shellcheck disable=SC2086
+  # shellcheck disable=SC2086,SC2068
   RESULTS=$(hadolint $HADOLINT_CONFIG $@)
 fi
 FAILED=$?
@@ -41,7 +42,7 @@ fi
 
 RESULTS="${RESULTS//$'\\n'/''}"
 
-echo "results=$RESULTS" >> $GITHUB_OUTPUT
+echo "results=$RESULTS" >> "$GITHUB_OUTPUT"
 
 { echo "HADOLINT_RESULTS<<EOF"; echo "$RESULTS"; echo "EOF"; } >> "$GITHUB_ENV"
 

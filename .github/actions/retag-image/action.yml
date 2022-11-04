@@ -1,27 +1,27 @@
 name: Login to AWS ECR and retag existing image
 
 inputs:
-  aws_role:  
+  aws_role:
     description: "aws role to push to the ecr registry"
     required: true
     type: string
-  aws_region:  
+  aws_region:
     description: "aws region to use"
     required: true
-    type: string    
-  ecr_repository:  
-    description: "ecr repository name to use"
+    type: string
+  ecr_repositories:
+    description: "ecr repositories (name only) - seperated with ,"
     required: true
     type: string
-  current_image_tag:  
+  current_image_tag:
     description: "current tag of the image"
     required: true
-    type: string    
-  additional_image_tag:  
+    type: string
+  additional_image_tag:
     description: "additional image tag"
     required: true
     type: string
-       
+
 runs:
   using: "composite"
   steps:
@@ -35,10 +35,13 @@ runs:
       uses: aws-actions/amazon-ecr-login@v1.5.3
     - name: retag image
       run: |
-        MANIFEST=$(aws ecr batch-get-image --repository-name $REPOSITORY_NAME --image-ids imageTag=$CURRENT_IMAGE_TAG --output json | jq --raw-output --join-output '.images[0].imageManifest')
-        aws ecr put-image --repository-name $REPOSITORY_NAME --image-tag $ADDITIONAL_IMAGE_TAG --image-manifest "$MANIFEST"
+        mapfile -t array < <(echo "${REPOSITORY_NAMES}" | tr ',' "\n")
+        for REPOSITORY_NAME in "${array[@]}"; do
+          MANIFEST=$(aws ecr batch-get-image --repository-name $REPOSITORY_NAME --image-ids imageTag=$CURRENT_IMAGE_TAG --output json | jq --raw-output --join-output '.images[0].imageManifest')
+          aws ecr put-image --repository-name $REPOSITORY_NAME --image-tag $ADDITIONAL_IMAGE_TAG --image-manifest "$MANIFEST"
+        done;
       env:
-        REPOSITORY_NAME: ${{ inputs.ecr_repository }}
+        REPOSITORY_NAMES: ${{ inputs.ecr_repositories }}
         CURRENT_IMAGE_TAG: ${{ inputs.current_image_tag }}
         ADDITIONAL_IMAGE_TAG: ${{ inputs.additional_image_tag }}
-      shell: bash  
+      shell: bash
