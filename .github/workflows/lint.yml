@@ -2,6 +2,9 @@ name: lint
 
 on: [push, workflow_dispatch]
 
+permissions:
+  statuses: write
+
 jobs:
   lint:
     runs-on: ubuntu-22.04
