@@ -2,6 +2,7 @@
 
 ls -lah /github/workspace
 ls -lah /github/workspace/.github/linters
+echo "$HOME"
 
 if [ -n "$HADOLINT_CONFIG" ]; then
   HADOLINT_CONFIG="-c ${HADOLINT_CONFIG}"
