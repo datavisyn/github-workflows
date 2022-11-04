@@ -7,7 +7,9 @@ runs:
       run: |
         echo $GITHUB_WORKSPACE
         echo $GITHUB_WORKFLOW
-        echo $
+        echo $RUNNER_WORKSPACE
+        echo $RUNNER_EVENT_PATH
+        printenv
         echo "::add-matcher::.github/actions/lint-github-actions/actionlint-matcher.json"
         bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/v1.6.22/scripts/download-actionlint.bash)
         ./actionlint -color
