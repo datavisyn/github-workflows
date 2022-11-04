@@ -5,6 +5,9 @@ ls -lah /github/workspace/.github/linters
 cat /github/workspace/hadolint.yaml
 
 echo "$HOME"
+echo "$HADOLINT_CONFIG"
+echo "$HADOLINT_RECURSIVE"
+echo "$@"
 
 if [ -n "$HADOLINT_CONFIG" ]; then
   HADOLINT_CONFIG="-c ${HADOLINT_CONFIG}"
@@ -16,7 +19,8 @@ if [ "$HADOLINT_RECURSIVE" = "true" ]; then
   filename="${!#}"
   # shellcheck disable=SC2124
   flags="${@:1:$#-1}"
-
+  echo $flags
+  echo $filename
   RESULTS=$(hadolint "$HADOLINT_CONFIG" "$flags" ./**/"$filename")
 else
   # shellcheck disable=SC2086
