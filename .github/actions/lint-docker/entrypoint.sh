@@ -2,6 +2,8 @@
 
 ls -lah /github/workspace
 ls -lah /github/workspace/.github/linters
+cat /github/workspace/hadolint.yaml
+
 echo "$HOME"
 
 if [ -n "$HADOLINT_CONFIG" ]; then
