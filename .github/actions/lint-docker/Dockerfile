@@ -1,7 +1,9 @@
 FROM ghcr.io/hadolint/hadolint:latest-alpine
 
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+WORKDIR /app
 
-RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY entrypoint.sh /app/entrypoint.sh
 
-ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
+RUN ls -lah /app/ && chmod +x /app/entrypoint.sh
+
+ENTRYPOINT [ "/app/entrypoint.sh" ]
