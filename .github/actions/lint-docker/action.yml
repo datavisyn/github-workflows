@@ -33,7 +33,9 @@ inputs:
     required: false
     description: 'A comma separated string of rules to ignore'
     default:
-
+outputs:
+  results:
+    description: 'Result of hadolint'
 runs:
   using: 'docker'
   image: 'Dockerfile'
