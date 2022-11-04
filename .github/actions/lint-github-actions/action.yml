@@ -10,9 +10,5 @@ runs:
         bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/v1.6.22/scripts/download-actionlint.bash)
         ./actionlint -color
       shell: bash
-    - name: Check bash files
-      run: |
-        find . -type f ! -path "./.git/*" -exec sh -c "head -n 1 {} | egrep -a 'bin/bash|bin/sh' >/dev/null" \; -print -exec shellcheck {} \;
-      shell: bash
     
 
