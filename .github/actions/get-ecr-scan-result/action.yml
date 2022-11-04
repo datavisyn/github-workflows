@@ -1,0 +1,99 @@
+name: Get AWS ECR scan results
+
+inputs:
+  aws_role:  
+    description: "aws role to push to the ecr registry"
+    required: true
+    type: string
+  aws_region:  
+    description: "aws region to use"
+    required: true
+    type: string     
+  ecr_registry:
+    description: "registry where to push the image"
+    required: true
+    type: string
+  ecr_repository:  
+    description: "ecr repository to use"
+    required: true
+    type: string
+  image_tag:  
+    description: "image tag"
+    required: true
+    type: string
+outputs:
+  critical: 
+    description: "critical security vulnerabilities"
+    value: ${{ steps.get-scan-results.outputs.critical }}
+  high: 
+    description: "high security vulnerabilities"
+    value: ${{ steps.get-scan-results.outputs.high }}
+  medium: 
+    description: "medium security vulnerabilities"
+    value: ${{ steps.get-scan-results.outputs.medium }}
+  low: 
+    description: "critical security vulnerabilities"
+    value: ${{ steps.get-scan-results.outputs.low }}
+  informational: 
+    description: "informational security vulnerabilities"
+    value: ${{ steps.get-scan-results.outputs.informational }}  
+  undefined: 
+    description: "undefined security vulnerabilities"
+    value: ${{ steps.get-scan-results.outputs.undefined }}
+       
+runs:
+  using: "composite"
+  steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ inputs.aws_role }}
+        aws-region: ${{ inputs.aws_region }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Get AWS ECR Scan results
+      id: get-scan-results
+      run: |
+        aws ecr start-image-scan --repository-name $ECR_REPOSITORY --image-id imageTag=$IMAGE_TAG
+        aws ecr wait image-scan-complete --repository-name $ECR_REPOSITORY --image-id imageTag=$IMAGE_TAG
+        if [ $(echo $?) -eq 0 ]; then
+          scan_findings=$(aws ecr describe-image-scan-findings --repository-name $ECR_REPOSITORY --image-id imageTag=$IMAGE_TAG | jq '.imageScanFindings.findingSeverityCounts')
+          critical=$(echo $scan_findings | jq '.CRITICAL')
+          high=$(echo $scan_findings | jq '.HIGH')
+          medium=$(echo $scan_findings | jq '.MEDIUM')
+          low=$(echo $scan_findings | jq '.LOW')
+          informational=$(echo $scan_findings | jq '.INFORMATIONAL')
+          undefined=$(echo $scan_findings | jq '.UNDEFINED')
+          # if [ $critical != null ] || [ $high != null ]; then
+          #   echo "Docker image contains vulnerabilities at critical or high level"
+          #   # aws ecr batch-delete-image --repository-name my-repo --image-ids imageTag=v0.1  #delete pushed image from container registry
+          #   exit 1  #exit execution due to docker image vulnerabilities
+          # fi
+          echo "critical=$critical"
+          echo "high=$high"
+          echo "medium=$medium"
+          echo "low=$low"
+          echo "informational=$informational"
+          echo "undefined=$undefined"
+          # echo to output
+          echo "critical=$critical" >> "$GITHUB_OUTPUT"
+          echo "high=$high" >> "$GITHUB_OUTPUT"
+          echo "medium=$medium" >> "$GITHUB_OUTPUT"
+          echo "low=$low" >> "$GITHUB_OUTPUT"
+          echo "informational=$informational" >> "$GITHUB_OUTPUT"
+          echo "undefined=$undefined" >> "$GITHUB_OUTPUT"
+        else
+          exit 1
+        fi
+      env:
+        ECR_REGISTRY: ${{ inputs.ecr_registry }}
+        ECR_REPOSITORY: ${{ inputs.ecr_repository }}
+        IMAGE_TAG: ${{ inputs.image_tag }}
+      shell: bash  
+    - name: Log out from Amazon ECR
+      run: docker logout $ECR_REGISTRY
+      env: 
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      shell: bash
+

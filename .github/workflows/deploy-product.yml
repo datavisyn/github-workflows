@@ -10,23 +10,28 @@ on:
       DV_QMS:
         required: true        
       DV_AWS_ECR_REGISTRY:
+        required: false 
+      DV_BOT_USER:
+        required: true
+      HAS_WORKSPACE_BRANCHES:
         required: false         
     inputs:
       stage:
         description: "stage that should be deployed (develop|qa|production)"
         required: true
-        type: choice
-        options: 
-        - develop
-        - qa
-        - production
-        default: develop
+        type: string
+        # type: choice
+        # options: 
+        # - develop
+        # - qa
+        # - production
+        # default: develop
       customer:
         description: "customer for that the app should be deployed"
         required: true
-        type: choice
-        options: ${{ secrets.POSSIBLE_CUSTOMERS }}
-        default: datavisyn   
+        type: string
+        # type: choice
+        # options: ${{ secrets.POSSIBLE_CUSTOMERS }}
 permissions:
   id-token: write
   contents: read
@@ -45,12 +50,12 @@ jobs:
     steps:
       - name: check actor
         run: |
-          dv_devops=$DV_DEVOPS
-          dv_qms=$DV_QMS
+          dv_devops=$_DV_DEVOPS
+          dv_qms=$_DV_QMS
           actor=$GITHUB_ACTOR
-          array1=($(echo "${dv_devops}" | tr ',' "\n"))
-          array2=($(echo "${dv_qms}" | tr ',' "\n"))
-          array1+=(${array2[@]})
+          mapfile -t array1 < <(echo "${dv_devops}" | tr ',' "\n")
+          mapfile -t array2 < <(echo "${dv_qms}" | tr ',' "\n")
+          array1+=("${array2[@]}")
           for e in "${array1[@]}"; do 
             if [[ "$e" == "$actor" ]] ; then
               exit 0
@@ -59,8 +64,8 @@ jobs:
           echo "you are not allowed to run this job!"
           exit 1
         env: 
-          DV_DEVOPS: ${{ secrets.DV_DEVOPS }}
-          DV_QMS: ${{ secrets.DV_QMS }}
+          _DV_DEVOPS: ${{ secrets.DV_DEVOPS }}
+          _DV_QMS: ${{ secrets.DV_QMS }}
           GITHUB_ACTOR: ${{ github.actor }}
       # checkout repo to get package.json    
       - uses: actions/checkout@v3
@@ -83,11 +88,11 @@ jobs:
           images=()
           backend_image=$ECR_REGISTRY/$BACKEND_REPO:$IMAGE_TAG
           frontend_image=$ECR_REGISTRY/$FRONTEND_REPO:$IMAGE_TAG
-          images+=($frontend_image)
-          images+=($backend_image)
-          images="$(IFS=',';echo "${images[*]}")"
-          echo "images: $images"
-          echo "::set-env name=images::$images"
+          images+=("$frontend_image")
+          images+=("$backend_image")
+          images_string="$(IFS=',';echo "${images[*]}")"
+          echo "images: $images_string"
+          echo "images=$images_string" >> "$GITHUB_OUTPUT"
         env:
           ECR_REGISTRY: ${{ secrets.DV_AWS_ECR_REGISTRY }}
           FRONTEND_REPO: ${{ steps.get-parameters.outputs.web_repo }}

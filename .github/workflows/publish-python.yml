@@ -32,9 +32,9 @@ jobs:
     steps: 
       - name: check actor
         run: |
-          dv_devops=$DV_DEVOPS
+          dv_devops=$_DV_DEVOPS
           actor=$GITHUB_ACTOR
-          array=($(echo "${dv_devops}" | tr ',' "\n"))
+          mapfile -t array < <(echo "${dv_devops}" | tr ',' "\n")
           for e in "${array[@]}"; do 
             if [[ "$e" == "$actor" ]] ; then
               exit 0
@@ -43,7 +43,7 @@ jobs:
           echo "you are not allowed to run this job!"
           exit 1
         env: 
-          DV_DEVOPS: ${{ secrets.DV_DEVOPS }}
+          _DV_DEVOPS: ${{ secrets.DV_DEVOPS }}
           GITHUB_ACTOR: ${{ github.actor }}
       - name: check branch
         if: ${{ github.ref != 'refs/heads/main' }}

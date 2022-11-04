@@ -32,9 +32,9 @@ jobs:
     steps:
       - name: check actor
         run: |
-          dv_devops=$DV_DEVOPS
+          dv_devops=$_DV_DEVOPS
           actor=$GITHUB_ACTOR
-          array=($(echo "${dv_devops}" | tr ',' "\n"))
+          mapfile -t array < <(echo "${dv_devops}" | tr ',' "\n")
           for e in "${array[@]}"; do 
             if [[ "$e" == "$actor" ]] ; then
               exit 0
@@ -43,12 +43,12 @@ jobs:
           echo "you are not allowed to run this job!"
           exit 1
         env: 
-          DV_DEVOPS: ${{ secrets.DV_DEVOPS }}
+          _DV_DEVOPS: ${{ secrets.DV_DEVOPS }}
           GITHUB_ACTOR: ${{ github.actor }}
       - name: check branch
         if: ${{ github.ref != 'refs/heads/develop' && !startsWith(github.ref, 'refs/heads/develop') }}
         run: |
-          echo 'only the develop branches can be released: $GITHUB_REF'
+          echo "only the develop branches can be released: $GITHUB_REF"
           exit 1 
         env:
           GITHUB_REF: ${{ github.ref }}
@@ -72,20 +72,20 @@ jobs:
         id: get-known-repositories
         run: |
           if [[ $REPO_IS_PRIVATE = true ]]; then
-            curl -H 'Authorization: token $GITHUB_TOKEN' \
-              -H 'Accept: application/vnd.github.v4.raw' \
+            curl -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.v4.raw" \
               -o known_repositories.json \
               -L https://raw.githubusercontent.com/datavisyn/github-maintenance/main/release/next_repositories_sources.json
           else
-            curl -H 'Authorization: token $GITHUB_TOKEN' \
-              -H 'Accept: application/vnd.github.v4.raw' \
+            curl -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.v4.raw" \
               -o known_repositories.json \
               -L https://raw.githubusercontent.com/datavisyn/github-maintenance/main/release/next_repositories_sources_public.json
           fi
-          known_repositories=$(echo $(jq -c '.' ./known_repositories.json) | jq -R '.')
+          known_repositories=$( jq -c '.' ./known_repositories.json | jq -R '.')
           echo "known_repositories=${known_repositories}"
           rm ./known_repositories.json
-          echo "::set-output name=known_repositories::$known_repositories"
+          echo "known_repositories=$known_repositories" >> "$GITHUB_OUTPUT"
         env:
           REPO_IS_PRIVATE: ${{github.event.repository.private}}
           GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
@@ -93,48 +93,51 @@ jobs:
         id: check-repository
         run: |
           repository=$(jq  -rc '.[] | select(.type == "web") | .repo' ./phovea_product.json)
+          # shellcheck disable=SC2001
           repository=$(echo "$repository" | sed -e 's|.*/||')
-          known_repositories=$KNOWN_REPOSITORIES
-          checked_repository="$(echo $known_repositories | jq -r '.' | jq --arg var $repository '.[$var]')"
-          release_version="$(echo $checked_repository | jq -r '.version')"
-          sub_app=$SUB_APP
-          if [[ ! -z $sub_app ]] ; then
+          known_repositories=$_KNOWN_REPOSITORIES
+          checked_repository="$(echo "$known_repositories" | jq -r '.' | jq --arg var "$repository" '.[$var]')"
+          release_version="$(echo "$checked_repository" | jq -r '.version')"
+          sub_app=$_SUB_APP
+          if [[ -n $sub_app ]] ; then
             release_version+="-${sub_app}"
           fi
-          customer=$CUSTOMER
+          customer=$_DV_CUSTOMER
           if [[ $customer != "datavisyn" ]] ; then
             release_version+="-${customer}"
           fi
-          generator_version="$(echo $known_repositories | jq -r '."generator-phovea" | .version')"
-          new_branch_name=$IMAGE_TAG2
+          generator_version="$(echo "$known_repositories" | jq -r '."generator-phovea" | .version')"
+          new_branch_name=$_IMAGE_TAG2
           new_branch_name=${new_branch_name/develop/"rc_$release_version"}
-          main_branch_name=$IMAGE_TAG1
+          main_branch_name=$_IMAGE_TAG1
           main_branch_name=${main_branch_name/develop/main}
           echo "repository=$checked_repository"
           echo "release_version=$release_version"
           echo "generator_version=$generator_version"
           echo "new_branch_name=$new_branch_name"
           echo "main_branch_name=$main_branch_name"
-          echo ::set-output name=repository::${checked_repository}
-          echo ::set-output name=release_version::${release_version}
-          echo ::set-output name=generator_version::${generator_version}
-          echo ::set-output name=new_branch_name::${new_branch_name}
-          echo ::set-output name=main_branch_name::${main_branch_name}
+          # echo to output
+          # shellcheck disable=SC2129
+          echo "repository=$known_repositories" >> "$GITHUB_OUTPUT"
+          echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
+          echo "generator_version=$generator_version" >> "$GITHUB_OUTPUT"
+          echo "new_branch_name=$new_branch_name" >> "$GITHUB_OUTPUT"
+          echo "main_branch_name=$main_branch_name" >> "$GITHUB_OUTPUT"
         env:
-          KNOWN_REPOSITORIES: ${{ steps.get-known-repositories.outputs.known_repositories }}
-          SUB_APP: ${{ steps.get-parameters.outputs.sub_app }}
-          CUSTOMER: ${{ steps.get-parameters.outputs.customer }}
-          IMAGE_TAG1: ${{steps.get-parameters.outputs.image_tag1 }}
-          IMAGE_TAG2: ${{steps.get-parameters.outputs.image_tag2 }}
+          _KNOWN_REPOSITORIES: ${{ steps.get-known-repositories.outputs.known_repositories }}
+          _SUB_APP: ${{ steps.get-parameters.outputs.sub_app }}
+          _DV_CUSTOMER: ${{ steps.get-parameters.outputs.customer }}
+          _IMAGE_TAG1: ${{steps.get-parameters.outputs.image_tag1 }}
+          _IMAGE_TAG2: ${{steps.get-parameters.outputs.image_tag2 }}
       - name: create/get release branch
         run: |
           echo "create/get release branch"
-          if git rev-parse --verify --quiet origin/$BRANCH_NAME; then
+          if git rev-parse --verify --quiet "origin/$BRANCH_NAME"; then
             echo "branch exists!"
-            git checkout $BRANCH_NAME 
+            git checkout "$BRANCH_NAME" 
           else
             echo "create branch"
-            git checkout -b $BRANCH_NAME
+            git checkout -b "$BRANCH_NAME"
           fi
         env:
           BRANCH_NAME: ${{ steps.check-repository.outputs.new_branch_name }}          
@@ -143,7 +146,7 @@ jobs:
         with:
           known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
           repository_version: ${{ steps.check-repository.outputs.release_version }}
-          generator_version: ${{ steps.check-repository.outputs.generator_version }
+          generator_version: ${{ steps.check-repository.outputs.generator_version }}
           ga_version:  ${{ env.GA_VERSION }}
           prepare_release: true
       - name: delete tmp files
@@ -159,7 +162,7 @@ jobs:
         run: |
           echo "push branch"
           git commit -am "[skip ci]Prepare release v$RELEASE_VERSION"
-          git push origin $BRANCH_NAME
+          git push origin "$BRANCH_NAME"
         env:
           RELEASE_VERSION: ${{ steps.check-repository.outputs.release_version }}
           BRANCH_NAME: ${{ steps.check-repository.outputs.new_branch_name }}
@@ -227,9 +230,9 @@ jobs:
     steps:
       - name: check actor
         run: |
-          dv_devops=$DV_DEVOPS
+          dv_devops=$DEVOPS
           actor=$GITHUB_ACTOR
-          array=($(echo "${dv_devops}" | tr ',' "\n"))
+          mapfile -t array < <(echo "${dv_devops}" | tr ',' "\n")
           for e in "${array[@]}"; do 
             if [[ "$e" == "$actor" ]] ; then
               exit 0
@@ -238,7 +241,7 @@ jobs:
           echo "you are not allowed to run this job!"
           exit 1
         env: 
-          DV_DEVOPS: ${{ secrets.DV_DEVOPS }}
+          DEVOPS: ${{ secrets.DV_DEVOPS }}
           GITHUB_ACTOR: ${{ github.actor }}
       - name: check branch
         if: ${{ github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/heads/main') }}
@@ -248,6 +251,27 @@ jobs:
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+      - name: read known repositories
+        id: get-known-repositories
+        run: |
+          if [[ $REPO_IS_PRIVATE = true ]]; then
+            curl -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.v4.raw" \
+              -o known_repositories.json \
+              -L https://raw.githubusercontent.com/datavisyn/github-maintenance/main/release/next_repositories_sources.json
+          else
+            curl -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.v4.raw" \
+              -o known_repositories.json \
+              -L https://raw.githubusercontent.com/datavisyn/github-maintenance/main/release/next_repositories_sources_public.json
+          fi
+          known_repositories=$(jq -c '.' ./known_repositories.json | jq -R '.')
+          echo "known_repositories=${known_repositories}"
+          rm ./known_repositories.json
+          echo "known_repositories=$known_repositories" >> "$GITHUB_OUTPUT"
+        env:
+          REPO_IS_PRIVATE: ${{github.event.repository.private}}
+          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}          
       - name: get release version
         id: get-release-version
         run: |
@@ -258,19 +282,20 @@ jobs:
           echo "release_version=$release_version"
           echo "main_branch_name=$main_branch_name"
           echo "develop_branch_name=$develop_branch_name"
-          echo "::set-output name=release_version::$release_version"
-          echo "::set-output name=main_branch_name::$main_branch_name"
-          echo "::set-output name=develop_branch_name::$develop_branch_name"
+          # shellcheck disable=SC2129
+          echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
+          echo "main_branch_name=$main_branch_name" >> "$GITHUB_OUTPUT"
+          echo "develop_branch_name=$develop_branch_name" >> "$GITHUB_OUTPUT"
         env:
           BRANCH_NAME: github.ref  
       - name: delete release branch
         run: |
           git fetch
           git status
-          if git rev-parse --verify --quiet origin/$GITHUB_REF; then
+          if git rev-parse --verify --quiet "origin/$GITHUB_REF"; then
             echo "delete release branch: $GITHUB_REF"
-            git branch -D $GITHUB_REF
-            git push origin --delete $GITHUB_REF
+            git branch -D "$GITHUB_REF"
+            git push origin --delete "$GITHUB_REF"
             git status
           fi
         env:
@@ -283,7 +308,7 @@ jobs:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
           tag_name: "v${{ steps.get-release-version.outputs.release_version }}"
-          target_commitish: ${{ github.href }}
+          target_commitish: ${{ github.ref }}
           name: "v${{ steps.get-release-version.outputs.release_version }}"
           body: "release of v${{ steps.get-release-version.outputs.release_version }}"
           draft: false 
@@ -306,9 +331,9 @@ jobs:
           git status
           echo "git fetch"
           git fetch
-          git checkout $MAIN_BRANCH
+          git checkout "$MAIN_BRANCH"
           git pull --rebase
-          git checkout $DEVELOP_BRANCH
+          git checkout "$DEVELOP_BRANCH"
           git pull --rebase
           git status
         env:
@@ -317,7 +342,7 @@ jobs:
       - name: merge $MAIN_BRANCH to $DEVELOP_BRANCH
         run: |
           echo "merge main to $DEVELOP_BRANCH"
-          git merge -X theirs $MAIN_BRANCH --allow-unrelated-histories
+          git merge -X theirs "$MAIN_BRANCH" --allow-unrelated-histories
         env:
           DEVELOP_BRANCH: ${{ steps.get-release-version.outputs.develop_branch_name }}
           MAIN_BRANCH:  ${{ steps.get-release-version.outputs.main_branch_name }}          
@@ -342,6 +367,6 @@ jobs:
           echo "push develop"
           git add .
           git commit --allow-empty -am "Prepare next development"
-          git push origin $DEVELOP_BRANCH
+          git push origin "$DEVELOP_BRANCH"
         env:
           DEVELOP_BRANCH: ${{ steps.get-release-version.outputs.develop_branch_name }}

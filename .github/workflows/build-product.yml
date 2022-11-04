@@ -14,7 +14,13 @@ on:
       NODE_VERSION:
         required: false
       PYTHON_VERSION:
-        required: false              
+        required: false
+      HAS_WORKSPACE_BRANCHES:
+        required: false
+      GITLAB_TOKEN:
+        required: false
+      GITLAB_HOST:
+        required: false             
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
@@ -82,15 +88,15 @@ jobs:
           npm -v
       - name: Git config
         run: |
-          git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
-          git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
-          if [[ ! -z $GITLAB_TOKEN && ! -z $GITLAB_HOST ]] ; then
+          git config --global url."https://$_GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
+          git config --add --global url."https://$_GITHUB_TOKEN@github.com/".insteadOf git@github.com:
+          if [[ -n $GITLAB_TOKEN && -n $GITLAB_HOST ]] ; then
             echo "set gitlab config"
             git config --global url."https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git@$GITLAB_HOST:"
             git config --global url."git+https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git+ssh://git@$GITLAB_HOST:"
           fi         
         env: 
-          GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          _GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
           GITLAB_HOST:  ${{ secrets.GITLAB_HOST }} 
       # checkout this workflow repository to get actions
@@ -156,14 +162,14 @@ jobs:
           pip --version
       - name: Git config
         run: |
-          git config --global url.https://$GITHUB_TOKEN@github.com/.insteadOf ssh://git@github.com/
-          if [[ ! -z $GITLAB_TOKEN && ! -z $GITLAB_HOST ]] ; then
+          git config --global url."https://$_GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
+          if [[ -n "$GITLAB_TOKEN" && -n "$GITLAB_HOST" ]] ; then
             echo "set gitlab config"
             git config --global url."https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git@$GITLAB_HOST:"
             git config --global url."git+https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git+ssh://git@$GITLAB_HOST:"
           fi  
         env: 
-          GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          _GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
           GITLAB_HOST:  ${{ secrets.GITLAB_HOST }} 
       # needs wheel for make
@@ -189,23 +195,25 @@ jobs:
           cd ./tmp/api
           mkdir -p ./build/source
           name=$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json)
+          # shellcheck disable=SC2001
           name=$(echo "$name" | sed -e 's|.*/||')
-          cd $name
-          echo $name
+          cd "$name"
+          echo "$name"
           make build
           cp -r ./build/lib/* ../build/source/
-          cp -r ./${name,,}.egg-info ../build/source/${name,,}.egg-info
+          cp -r "./${name,,}.egg-info" "../build/source/${name,,}.egg-info"
           cd ..
           readarray -t my_array < <(jq  -rc '.[] | select(.type == "api") | .additional[]' ../../phovea_product.json)
           for additional in "${my_array[@]}"; do
             echo "$additional"
-            name=$(echo $additional | jq  -rc '.name')
+            name=$(echo "$additional" | jq  -rc '.name')
+            # shellcheck disable=SC2001
             name=$(echo "$name" | sed -e 's|.*/||')
             echo "$name"
-            cd $name
+            cd "$name"
             make build
             cp -r ./build/lib/* ../build/source/
-            cp -r ./${name,,}.egg-info ../build/source/${name,,}.egg-info
+            cp -r "./${name,,}.egg-info" "../build/source/${name,,}.egg-info"
             cd ..
           done
       - uses: ./tmp/github-workflows/.github/actions/build-push-image
