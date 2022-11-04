@@ -9,7 +9,7 @@ inputs:
     description: "aws region to use"
     required: true
     type: string    
-  ecr_repository_name:  
+  ecr_repository:  
     description: "ecr repository name to use"
     required: true
     type: string
@@ -38,7 +38,7 @@ runs:
         MANIFEST=$(aws ecr batch-get-image --repository-name $REPOSITORY_NAME --image-ids imageTag=$CURRENT_IMAGE_TAG --output json | jq --raw-output --join-output '.images[0].imageManifest')
         aws ecr put-image --repository-name $REPOSITORY_NAME --image-tag $ADDITIONAL_IMAGE_TAG --image-manifest "$MANIFEST"
       env:
-        REPOSITORY_NAME: ${{ inputs.ecr_repository_name }}
+        REPOSITORY_NAME: ${{ inputs.ecr_repository }}
         CURRENT_IMAGE_TAG: ${{ inputs.current_image_tag }}
         ADDITIONAL_IMAGE_TAG: ${{ inputs.additional_image_tag }}
       shell: bash  
