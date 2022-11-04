@@ -1,8 +1,14 @@
 #!/bin/bash
 
-ls -lah /github/workspace
-ls -lah /github/workspace/.github/linters
-cat /github/workspace/hadolint.yaml
+# copy matcher json file to home
+cp /hadolint-matcher.json "$HOME/"
+# remove matcher during cleanup
+cleanup() {
+    echo "::remove-matcher owner=datavisyn/lint-docker::"
+}
+trap cleanup EXIT
+echo "::add-matcher::$HOME/hadolint-matcher.json"
+
 
 echo "$HOME"
 echo "$HADOLINT_CONFIG"
@@ -19,8 +25,6 @@ if [ "$HADOLINT_RECURSIVE" = "true" ]; then
   filename="${!#}"
   # shellcheck disable=SC2124
   flags="${@:1:$#-1}"
-  echo $flags
-  echo $filename
   RESULTS=$(hadolint $HADOLINT_CONFIG $flags ./**/$filename)
 else
   # shellcheck disable=SC2086
