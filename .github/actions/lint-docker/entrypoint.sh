@@ -21,10 +21,10 @@ if [ "$HADOLINT_RECURSIVE" = "true" ]; then
   flags="${@:1:$#-1}"
   echo $flags
   echo $filename
-  RESULTS=$(hadolint "$HADOLINT_CONFIG" "$flags" ./**/"$filename")
+  RESULTS=$(hadolint $HADOLINT_CONFIG $flags ./**/$filename)
 else
   # shellcheck disable=SC2086
-  RESULTS=$(hadolint "$HADOLINT_CONFIG" "$@")
+  RESULTS=$(hadolint $HADOLINT_CONFIG $@)
 fi
 FAILED=$?
 
@@ -36,6 +36,8 @@ if [ -n "$HADOLINT_OUTPUT" ]; then
 fi
 
 RESULTS="${RESULTS//$'\\n'/''}"
+
+echo "results=$RESULTS" >> $GITHUB_OUTPUT
 
 { echo "HADOLINT_RESULTS<<EOF"; echo "$RESULTS"; echo "EOF"; } >> "$GITHUB_ENV"
 
