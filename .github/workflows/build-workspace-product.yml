@@ -1,6 +1,6 @@
-name: Build Frontend and Backend Images for Product
+name: Build Frontend and Backend Images for Product via Workspace
 
-on: 
+on:
   workflow_call:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
@@ -10,7 +10,7 @@ on:
       DV_AWS_REGION:
         required: false
       DV_AWS_ECR_REGISTRY:
-        required: false  
+        required: false
       NODE_VERSION:
         required: false
       PYTHON_VERSION:
@@ -20,7 +20,7 @@ on:
       GITLAB_TOKEN:
         required: false
       GITLAB_HOST:
-        required: false             
+        required: false
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
@@ -35,13 +35,13 @@ env:
 
 permissions:
   id-token: write
-  contents: read 
+  contents: read
 
 jobs:
   prepare-build:
     outputs:
-      app: ${{ steps.get-parameters.outputs.app }}  
-      api_repo: ${{ steps.get-parameters.outputs.api_repo }}  
+      app: ${{ steps.get-parameters.outputs.app }}
+      api_repo: ${{ steps.get-parameters.outputs.api_repo }}
       web_repo: ${{ steps.get-parameters.outputs.web_repo }}
       develop: ${{ steps.get-parameters.outputs.develop }}
       sub_app: ${{ steps.get-parameters.outputs.sub_app }}
@@ -51,8 +51,8 @@ jobs:
       build_node: ${{ steps.get-parameters.outputs.build_node }}
       build_python: ${{ steps.get-parameters.outputs.build_python }}
     runs-on: ubuntu-20.04
-    steps: 
-      # checkout specific repository    
+    steps:
+      # checkout specific repository
       - uses: actions/checkout@v3
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
@@ -68,11 +68,11 @@ jobs:
           has_workspace_branches: ${{ secrets.HAS_WORKSPACE_BRANCHES }}
           time_zone: ${{ env.TIME_ZONE }}
   build-node:
-    needs: prepare-build 
+    needs: prepare-build
     runs-on: ubuntu-20.04
     if: ${{ needs.prepare-build.outputs.build_node && needs.prepare-build.outputs.build_node == 'true'}}
-    steps: 
-      # checkout specific product repository    
+    steps:
+      # checkout specific product repository
       - uses: actions/checkout@v3
         with:
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
@@ -94,11 +94,11 @@ jobs:
             echo "set gitlab config"
             git config --global url."https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git@$GITLAB_HOST:"
             git config --global url."git+https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git+ssh://git@$GITLAB_HOST:"
-          fi         
-        env: 
+          fi
+        env:
           _GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
-          GITLAB_HOST:  ${{ secrets.GITLAB_HOST }} 
+          GITLAB_HOST:  ${{ secrets.GITLAB_HOST }}
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
         with:
@@ -111,14 +111,14 @@ jobs:
           generator_version: ${{ env.GENERATOR_VERSION }}
           github_token:  ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           app_name:  ${{ needs.prepare-build.outputs.app }}
-          gitlab_token:  ${{ secrets.GITLAB_TOKEN }} 
+          gitlab_token:  ${{ secrets.GITLAB_TOKEN }}
       - name: install dependencies
         run: |
           cd ./tmp/web
           touch ./yarn.lock
           cat ./package.json
           cat .yo-rc-workspace.json
-          yarn install --no-immutable     
+          yarn install --no-immutable
       - name: show installed dependencies
         run: |
           cd ./tmp/web
@@ -131,24 +131,24 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/build-push-image
         if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
         with:
-          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }} 
-          aws_region: ${{ secrets.DV_AWS_REGION }} 
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ secrets.DV_AWS_REGION }}
           ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ needs.prepare-build.outputs.web_repo }}
           docker_file: ./deploy/web/Dockerfile
           current_directory: ./tmp/web
           image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
-          image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}          
+          image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
 
   build-python:
-    needs: prepare-build 
+    needs: prepare-build
     runs-on: ubuntu-20.04
     if: ${{ needs.prepare-build.outputs.build_python && needs.prepare-build.outputs.build_python == 'true'}}
-    steps: 
-      # checkout specific product repository    
+    steps:
+      # checkout specific product repository
       - uses: actions/checkout@v3
       # need node because of the generator
-      - name: Set up node version 
+      - name: Set up node version
         uses: actions/setup-node@v3
         with:
           node-version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
@@ -167,11 +167,11 @@ jobs:
             echo "set gitlab config"
             git config --global url."https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git@$GITLAB_HOST:"
             git config --global url."git+https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git+ssh://git@$GITLAB_HOST:"
-          fi  
-        env: 
+          fi
+        env:
           _GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
-          GITLAB_HOST:  ${{ secrets.GITLAB_HOST }} 
+          GITLAB_HOST:  ${{ secrets.GITLAB_HOST }}
       # needs wheel for make
       - name: install requirements
         run: |
@@ -188,20 +188,23 @@ jobs:
           phovea_type: api
           generator_version: ${{ env.GENERATOR_VERSION }}
           github_token:  ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-          app_name:  ${{ needs.prepare-build.outputs.app }} 
-          gitlab_token:  ${{ secrets.GITLAB_TOKEN }}  
+          app_name:  ${{ needs.prepare-build.outputs.app }}
+          gitlab_token:  ${{ secrets.GITLAB_TOKEN }}
       - name: Build
         run: |
           cd ./tmp/api
           mkdir -p ./build/source
+          mkdir -p ./dist_python/
           name=$(jq  -rc '.[] | select(.type == "api") | .repo' ../../phovea_product.json)
           # shellcheck disable=SC2001
           name=$(echo "$name" | sed -e 's|.*/||')
           cd "$name"
           echo "$name"
           make build
+          make install
           cp -r ./build/lib/* ../build/source/
           cp -r "./${name,,}.egg-info" "../build/source/${name,,}.egg-info"
+          cp -r ./dist_python/* ../dist_python/
           cd ..
           readarray -t my_array < <(jq  -rc '.[] | select(.type == "api") | .additional[]' ../../phovea_product.json)
           for additional in "${my_array[@]}"; do
@@ -212,14 +215,16 @@ jobs:
             echo "$name"
             cd "$name"
             make build
+            make install
             cp -r ./build/lib/* ../build/source/
             cp -r "./${name,,}.egg-info" "../build/source/${name,,}.egg-info"
+            cp -r ./dist_python/* ..//dist_python/
             cd ..
           done
       - uses: ./tmp/github-workflows/.github/actions/build-push-image
         if: ${{ needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
         with:
-          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }} 
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
           aws_region: ${{ secrets.DV_AWS_REGION }}
           ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ needs.prepare-build.outputs.api_repo }}
@@ -228,12 +233,12 @@ jobs:
           image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
           image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
   deploy:
-    needs: [prepare-build, build-node, build-python] 
+    needs: [prepare-build, build-node, build-python]
     runs-on: ubuntu-20.04
     if: ${{ always() && needs.prepare-build.outputs.develop == 'true' && needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
     steps:
       - name: fail if conditional job failed
         if: ${{ contains(needs.*.result, 'failure') }}
-        run: exit 1      
+        run: exit 1
       - name: Deploy
-        run: echo "Deploy" 
+        run: echo "Deploy"
