@@ -32,6 +32,9 @@ env:
   NODE_VERSION: "16.16"
   PYTHON_VERSION: "3.10"
   WORKFLOW_BRANCH: "new_deployment"
+  PYTHON_BASE_IMAGE: "3.10.8-slim-bullseye as python-base"
+  DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
+  DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
 
 permissions:
   id-token: write
@@ -139,6 +142,8 @@ jobs:
           current_directory: ./tmp/web
           image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
           image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
+          build_args: |
+            DATAVISYN_NGINX_BASE_IMAGE=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
 
   build-python:
     needs: prepare-build

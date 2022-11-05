@@ -1,39 +1,34 @@
 name: Login to AWS ECR and push image with given tags
 
 inputs:
-  aws_role:  
+  aws_role:
     description: "aws role to push to the ecr registry"
     required: true
-    type: string
-  aws_region:  
+  aws_region:
     description: "aws region to use"
     required: true
-    type: string     
   ecr_registry:
     description: "registry where to push the image"
     required: true
-    type: string
-  ecr_repository:  
+  ecr_repository:
     description: "ecr repository to use"
     required: true
-    type: string
-  docker_file:  
+  docker_file:
     description: "dockerfile to use"
     required: true
-    type: string
-  current_directory:  
+  current_directory:
     description: "current directory for building the Dockerfile"
     required: true
-    type: string    
-  image_tag1:  
+  image_tag1:
     description: "image tag 1"
     required: true
-    type: string
-  image_tag2:  
+  image_tag2:
     description: "image tag 2"
     required: false
-    type: string    
-       
+  build_args:
+    description: "List of build-time variables"
+    required: false
+
 runs:
   using: "composite"
   steps:
@@ -48,11 +43,17 @@ runs:
     - name: Build, tag, and push image to Amazon ECR
       run: |
         cd $CURRENT_DIRECTORY
+        build_args=''
+        if [[ -z $BUILD_ARGS ]] ; then
+          mapfile -t array < <(echo -e "$test")
+          build_args="${array[@]/#/--build-arg }"
+          echo "$build_args"
+        fi
         if [[ -z $IMAGE_TAG2 ]] ; then
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -f $DOCKER_FILE .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 $build_args -f $DOCKER_FILE .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
         else
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2 -f $DOCKER_FILE .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2 $build_args -f $DOCKER_FILE .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2
         fi
@@ -63,10 +64,11 @@ runs:
         IMAGE_TAG2: ${{ inputs.image_tag2 }}
         DOCKER_FILE: ${{ inputs.docker_file }}
         CURRENT_DIRECTORY: ${{ inputs.current_directory }}
-      shell: bash  
+        BUILD_ARGS: ${{ inputs.build_args }}
+      shell: bash
     - name: Log out from Amazon ECR
       run: docker logout $ECR_REGISTRY
-      env: 
+      env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
       shell: bash
 
