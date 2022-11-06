@@ -148,7 +148,7 @@ jobs:
             IMAGE_VERSION=${{ needs.prepare-build.outputs.image_tag2 }}
             IMAGE_BASE_NAME=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
             IMAGE_NAME=${{ needs.prepare-build.outputs.web_repo }}
-            IMAGE_DESCRIPTION=\"'web image for ${{ needs.prepare-build.outputs.app }}\"'
+            IMAGE_DESCRIPTION=web+image+for+${{ needs.prepare-build.outputs.app }}
             IMAGE_SOURCE=${{ github.event.repository.html_url }}/templates/web/deploy/web/Dockerfile
 
   build-python:
@@ -247,7 +247,7 @@ jobs:
             IMAGE_VERSION=${{ needs.prepare-build.outputs.image_tag2 }}
             IMAGE_BASE_NAME=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
             IMAGE_NAME=${{ needs.prepare-build.outputs.api_repo }}
-            IMAGE_DESCRIPTION=\"'backend image for ${{ needs.prepare-build.outputs.app }}'\"
+            IMAGE_DESCRIPTION=backend+image+for+${{ needs.prepare-build.outputs.app }}"
             IMAGE_SOURCE=${{ github.event.repository.html_url }}/templates/api/deploy/api/Dockerfile
   deploy:
     needs: [prepare-build, build-node, build-python]
