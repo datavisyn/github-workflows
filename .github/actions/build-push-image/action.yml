@@ -48,15 +48,10 @@ runs:
         echo $BUILD_ARGS
         build_args=''
         if [[ -n $BUILD_ARGS ]] ; then
-          set -f
-          eval "array=(${BUILD_ARGS})"
-          OLD_IFS="$IFS"
-          IFS=$'\n'
+          array=(${BUILD_ARGS})
           array=(${array[@]/''})
           build_args="${array[@]/#/--build-arg }"
           echo "$build_args"
-          IFS="$OLD_IFS"
-          set +f
         fi
         if [[ -z $IMAGE_TAG2 ]] ; then
           echo "docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 $build_args -f $DOCKER_FILE ."
