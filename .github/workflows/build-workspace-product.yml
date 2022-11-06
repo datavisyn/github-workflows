@@ -212,7 +212,6 @@ jobs:
           cd "$name"
           echo "$name"
           make build
-          make install
           cp -r ./build/lib/* ../build/source/
           cp -r "./${name,,}.egg-info" "../build/source/${name,,}.egg-info"
           cp -r ./dist_python/* ../dist_python/
@@ -226,7 +225,6 @@ jobs:
             echo "$name"
             cd "$name"
             make build
-            make install
             cp -r ./build/lib/* ../build/source/
             cp -r "./${name,,}.egg-info" "../build/source/${name,,}.egg-info"
             cp -r ./dist_python/* ..//dist_python/
