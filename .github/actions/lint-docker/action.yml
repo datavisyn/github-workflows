@@ -1,6 +1,7 @@
-name: 'Hadolint Action'
-description: 'Action that runs Hadolint Dockerfile linting tool'
-author: 'datavisyn'
+name: lint-docker
+description: lint dockerfile via hadolint
+author: datavisyn
+
 inputs:
   dockerfile:
     required: false

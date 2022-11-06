@@ -1,26 +1,25 @@
-name: changes of source repositories for the release
+name: release-source-changes
+description: release source repo
+author: datavisyn
 
 inputs:
   known_repositories:
     description: "known repositories as json"
     required: true
-    type: string
   repository_version:
     description: "version of the repository for the package.json"
     required: true
-    type: string
   ga_version:
     description: "github action version to use"
     required: true
-    type: string      
-  prepare_release:  
+  prepare_release:
     description: "true, if this is called to prepare the release; false if it runs to prepare the develop"
     default: true
     required: true
-    type: boolean
+
 runs:
   using: "composite"
-  steps:      
+  steps:
     - name: change release
       run: |
         # change git references with version references in package.json and requirements.txt
@@ -50,7 +49,7 @@ runs:
             if [[ $pip_version != null && $pip_develop != null ]] ; then
               sed -i "s|$pip_version|$pip_develop|gI" ./requirements.txt
             fi
-          fi  
+          fi
         done
         version=$(jq -r '.version' ./package.json)
         cat ./requirements.txt
@@ -61,7 +60,7 @@ runs:
         if $PREPARE_RELEASE; then
           find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@main/@$GA_VERSION/g" {} \;
         else
-          find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@$GA_VERSION/@main/g" {} \;  
+          find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@$GA_VERSION/@main/g" {} \;
         fi
       env:
         PREPARE_RELEASE: ${{ inputs.prepare_release }}

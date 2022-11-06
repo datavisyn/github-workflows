@@ -1,46 +1,44 @@
-name: Get AWS ECR scan results
+name: get-ecr-scan-result
+description: get scan result of an AWS ECR image
+author: datavisyn
 
 inputs:
-  aws_role:  
+  aws_role:
     description: "aws role to push to the ecr registry"
     required: true
-    type: string
-  aws_region:  
+  aws_region:
     description: "aws region to use"
     required: true
-    type: string     
   ecr_registry:
     description: "registry where to push the image"
     required: true
-    type: string
-  ecr_repository:  
+  ecr_repository:
     description: "ecr repository to use"
     required: true
-    type: string
-  image_tag:  
+  image_tag:
     description: "image tag"
     required: true
-    type: string
+
 outputs:
-  critical: 
+  critical:
     description: "critical security vulnerabilities"
     value: ${{ steps.get-scan-results.outputs.critical }}
-  high: 
+  high:
     description: "high security vulnerabilities"
     value: ${{ steps.get-scan-results.outputs.high }}
-  medium: 
+  medium:
     description: "medium security vulnerabilities"
     value: ${{ steps.get-scan-results.outputs.medium }}
-  low: 
+  low:
     description: "critical security vulnerabilities"
     value: ${{ steps.get-scan-results.outputs.low }}
-  informational: 
+  informational:
     description: "informational security vulnerabilities"
-    value: ${{ steps.get-scan-results.outputs.informational }}  
-  undefined: 
+    value: ${{ steps.get-scan-results.outputs.informational }}
+  undefined:
     description: "undefined security vulnerabilities"
     value: ${{ steps.get-scan-results.outputs.undefined }}
-       
+
 runs:
   using: "composite"
   steps:
@@ -89,10 +87,10 @@ runs:
         ECR_REGISTRY: ${{ inputs.ecr_registry }}
         ECR_REPOSITORY: ${{ inputs.ecr_repository }}
         IMAGE_TAG: ${{ inputs.image_tag }}
-      shell: bash  
+      shell: bash
     - name: Log out from Amazon ECR
       run: docker logout $ECR_REGISTRY
-      env: 
+      env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
       shell: bash
 

@@ -1,5 +1,7 @@
-name: Lint github actions
-                            
+name: lint-github-actions
+description: lint github action files via actionlint
+author: datavisyn
+
 runs:
   using: "composite"
   steps:
@@ -10,5 +12,5 @@ runs:
         bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/v1.6.22/scripts/download-actionlint.bash)
         ./actionlint -color
       shell: bash
-    
+
 

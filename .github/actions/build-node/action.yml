@@ -1,24 +1,23 @@
-name: Build node source
+name: build-node
+description: Build node sources via yarn
+author: datavisyn
 
 inputs:
   node_version:
     description: "node version to use"
     default: "16.16"
     required: true
-    type: string
-  github_ro_token:  
+  github_ro_token:
     description: "github read-only token"
     default: "admin"
     required: true
-    type: string
-  npm_registry:  
+  npm_registry:
     description: "npm registry"
     default: "https://registry.npmjs.org/"
     required: true
-    type: string    
 runs:
   using: "composite"
-  steps:      
+  steps:
     - name: Set up node version
       uses: actions/setup-node@v3
       with:
@@ -29,15 +28,15 @@ runs:
         corepack enable
         node -v
         npm -v
-      shell: bash  
+      shell: bash
     - name: Git config
       if: ${{ inputs.github_ro_token != '' }}
       run: |
         git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
         git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
-      env: 
+      env:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
-      shell: bash         
+      shell: bash
     - name: Install dependencies
       run: yarn install --no-immutable
       shell: bash

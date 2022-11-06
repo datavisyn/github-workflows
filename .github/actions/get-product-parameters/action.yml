@@ -1,23 +1,22 @@
-name: returns inportant parameters for product
+name: get-product-parameters
+description: get product parameters for building product
+author: datavisyn
 
 inputs:
   repository_name:
     description: "name of the current repository"
     required: true
-    type: string
   branch_name:
     description: "name of the current branch"
     required: true
-    type: string
   time_zone:
     description: "time zone to use to generate the image tag"
     required: true
-    type: string
   has_workspace_branches:
     description: "true, if this is a repository that has workspace branches included, else false"
     required: true
-    type: boolean
     default: false
+
 outputs:
   app:
     description: "app name of the product"

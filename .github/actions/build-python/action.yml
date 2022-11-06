@@ -1,19 +1,20 @@
-name: Build python source
+name: build-python
+description: Build python via make build
+author: datavisyn
 
 inputs:
   python_version:
     description: "python version to use"
     default: "3.10"
     required: true
-    type: string
-  github_ro_token:  
+  github_ro_token:
     description: "github read-only token"
     default: "admin"
     required: true
-    type: string
+
 runs:
   using: "composite"
-  steps:      
+  steps:
     - name: Set up python
       uses: actions/setup-python@v3
       with:
@@ -22,18 +23,18 @@ runs:
     - name: install additional requirements
       run: |
         pip install setuptools wheel
-      shell: bash          
+      shell: bash
     - name: Show python and pip version
       run: |
         python --version
         pip --version
-      shell: bash  
+      shell: bash
     - name: Git config
       if: ${{ inputs.github_ro_token != '' }}
       run: git config --global url."https://$GITHUB_TOKEN@github".insteadOf https://github
       shell: bash
-      env: 
-        GITHUB_TOKEN: ${{ inputs.github_ro_token }}           
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_ro_token }}
     - name: Install python dependencies
       run: make develop
       shell: bash
@@ -42,10 +43,10 @@ runs:
       shell: bash
     - name: Linting
       run: make lint check-format
-      shell: bash             
+      shell: bash
     - name: Run tests
       run: make test
       shell: bash
     - name: Build wheel
-      run: make build 
-      shell: bash 
+      run: make build
+      shell: bash

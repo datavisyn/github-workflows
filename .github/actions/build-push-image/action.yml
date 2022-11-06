@@ -1,4 +1,6 @@
-name: Login to AWS ECR and push image with given tags
+name: build-push-image
+description: Build image and push it to AWS ECR
+author: datavisyn
 
 inputs:
   aws_role:

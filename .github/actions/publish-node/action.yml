@@ -1,18 +1,20 @@
-name: Publish npm package
+name: publish-node
+description: publish node source via npm
+author: datavisyn
 
 inputs:
-  npm_token:  
+  npm_token:
     description: "npm token"
     default: "admin"
     required: true
-    type: string       
+
 runs:
   using: "composite"
-  steps:      
+  steps:
     - name: Publish to npm
       run: |
         echo "publish"
         npm publish
       shell: bash
-      env: 
+      env:
         NODE_AUTH_TOKEN: ${{ inputs.npm_token }}

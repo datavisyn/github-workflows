@@ -1,39 +1,37 @@
-name: changes of product repositories for the release
+name: release-product-changes
+description: release product
+author: datavisyn
 
 inputs:
   known_repositories:
     description: "known repositories as json"
     required: true
-    type: string
   repository_version:
     description: "version of the repository for the package.json"
     required: true
-    type: string
   generator_version:
     description: "version of the generator to use"
     required: true
-    type: string    
   ga_version:
     description: "github action version to use"
     required: true
-    type: string      
-  prepare_release:  
+  prepare_release:
     description: "true, if this is called to prepare the release; false if it runs to prepare the develop"
     default: true
     required: true
-    type: boolean
+
 runs:
   using: "composite"
   steps:
     - name: change release
-      run: | 
+      run: |
         # change generator version
         generator_npm_develop=git+ssh://git@github.com:phovea/generator-phovea#develop
         if $PREPARE_RELEASE; then
           sed -i "s|\"generator-phovea\": \"$generator_npm_develop\"|\"generator-phovea\": \"$GENERATOR_VERSION\"|gI" ./package.json
         else
-          sed -i "s|\"generator-phovea\": \"$GENERATOR_VERSION\"|\"generator-phovea\": \"$generator_npm_develop\"|gI" ./package.json 
-        fi         
+          sed -i "s|\"generator-phovea\": \"$GENERATOR_VERSION\"|\"generator-phovea\": \"$generator_npm_develop\"|gI" ./package.json
+        fi
         # change version in package.json
         version=$(jq -r '.version' ./package.json)
         sed -i "s|\"version\": \"$version\"|\"version\": \"$REPOSITORY_VERSION\"|gI" ./package.json
@@ -48,7 +46,7 @@ runs:
         version="develop"
         if $PREPARE_RELEASE; then
           version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
-        fi  
+        fi
         echo $version
         owner="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .owner')"
         content+="\"type\": \"web\", \"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\",   \"additional\": ["
@@ -73,7 +71,7 @@ runs:
         echo $name
         if $PREPARE_RELEASE; then
           version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
-        fi  
+        fi
         echo $version
         owner="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .owner')"
         content+="\"type\": \"api\", \"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\",   \"additional\": ["
@@ -91,7 +89,7 @@ runs:
           content+="{\"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\"},"
         done
         content=${content::-1}
-        content+="]}]"          
+        content+="]}]"
         echo -e $content > ./phovea_product2.json
         jq '.' ./phovea_product2.json > ./phovea_product.json
         rm ./phovea_product2.json
@@ -99,7 +97,7 @@ runs:
         if $PREPARE_RELEASE; then
           find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@main/@$GA_VERSION/g" {} \;
         else
-          find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@$GA_VERSION/@main/g" {} \;  
+          find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@$GA_VERSION/@main/g" {} \;
         fi
     env:
       PREPARE_RELEASE: ${{ inputs.prepare_release }}

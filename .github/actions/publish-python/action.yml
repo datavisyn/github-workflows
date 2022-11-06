@@ -1,24 +1,24 @@
-name: Publish python package
+name: publish-python
+description: publish python source via twine to pypi
+author: datavisyn
 
 inputs:
   pypi_registry:
     description: "registry where to publish python package"
     default: "https://upload.pypi.org/legacy/"
     required: true
-    type: string
   pypi_username:
     description: "username for python registry"
     default: "admin"
     required: true
-    type: string
   pypi_password:
     description: "passwort for python registry"
     default: "admin"
     required: true
-    type: string
+
 runs:
   using: "composite"
-  steps:      
+  steps:
     - name: Publish to pip registry
       run: |
         echo "publish"
@@ -29,7 +29,7 @@ runs:
         echo -e "password = $TWINE_PASSWORD" >> $HOME/.pypirc
         twine upload dist_python/*
       shell: bash
-      env: 
+      env:
         PYPI_REPOSITORY: ${{ inputs.pypi_registry }}
         TWINE_USERNAME: ${{ inputs.pypi_username }}
-        TWINE_PASSWORD: ${{ inputs.pypi_password }}      
+        TWINE_PASSWORD: ${{ inputs.pypi_password }}
