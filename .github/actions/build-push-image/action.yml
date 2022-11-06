@@ -45,10 +45,11 @@ runs:
     - name: Build, tag, and push image to Amazon ECR
       run: |
         cd $CURRENT_DIRECTORY
+        echo $BUILD_ARGS
         build_args=''
         if [[ -n $BUILD_ARGS ]] ; then
-          mapfile -t array < <(echo -e "$BUILD_ARGS")
-          array=(${array[@]/''})
+          #mapfile -t array < <(echo -e "$BUILD_ARGS")
+          array=(${BUILD_ARGS[@]/''})
           build_args="${array[@]/#/--build-arg }"
           echo "$build_args"
         fi
