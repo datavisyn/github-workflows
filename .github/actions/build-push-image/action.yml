@@ -44,7 +44,7 @@ runs:
       run: |
         cd $CURRENT_DIRECTORY
         build_args=''
-        if [[ -z $BUILD_ARGS ]] ; then
+        if [[ -n $BUILD_ARGS ]] ; then
           mapfile -t array < <(echo -e "$test")
           build_args="${array[@]/#/--build-arg }"
           echo "$build_args"
