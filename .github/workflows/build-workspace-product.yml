@@ -1,4 +1,4 @@
-name: Build Frontend and Backend Images for Product via Workspace
+name: build-workspace-product
 
 on:
   workflow_call:

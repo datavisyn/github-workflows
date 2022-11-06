@@ -1,6 +1,6 @@
-name: Release source repository
+name: release-source
 
-on: 
+on:
   workflow_call:
     secrets:
       DV_DEVOPS:
@@ -13,7 +13,7 @@ concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
   cancel-in-progress: true
 
-env: 
+env:
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
   WORKFLOW_BRANCH: "new_deployment"
@@ -34,7 +34,7 @@ jobs:
       # - name: Dump strategy context
       #   run: echo '${{ toJSON(strategy) }}'
       # - name: Dump matrix context
-      #   run: echo '${{ toJSON(matrix) }}'    
+      #   run: echo '${{ toJSON(matrix) }}'
       - name: check actor
         run: |
           dv_devops=$DEVOPS
@@ -52,7 +52,7 @@ jobs:
           done
           echo "you are not allowed to run this job!"
           exit 1
-        env: 
+        env:
           DEVOPS: ${{ secrets.DV_DEVOPS }}
           GITHUB_ACTOR: ${{ github.actor }}
       - name: check branch
@@ -60,7 +60,7 @@ jobs:
         run: |
           echo 'only the develop branch can be released.'
           exit 1
-      # checkout specific repository         
+      # checkout specific repository
       - uses: actions/checkout@v3
         with:
           token: ${{ github.token }}
@@ -86,7 +86,7 @@ jobs:
           echo "known_repositories=$known_repositories" >> "$GITHUB_OUTPUT"
         env:
           REPO_IS_PRIVATE: ${{github.event.repository.private}}
-          GITHUB_TOKEN: ${{ github.token }}              
+          GITHUB_TOKEN: ${{ github.token }}
       - name: get release version
         id: get-release-version
         run: |
@@ -124,13 +124,13 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
       - name: error handling if latest release was not callable
         if: ${{ steps.get-latest-release.outputs.status != 404 && steps.get-latest-release.outputs.status != 200 }}
-        run: exit 1 
+        run: exit 1
       - name: check release version
         if: ${{ steps.get-latest-release.outputs.status == 200 }}
         run: |
           if [ "$RELEASE_VERSION" == "$LATEST_RELEASE" ]; then
             echo "nothing todo!"
-            exit 1 
+            exit 1
             # check if exit 1 is really the best solution
           fi
           # TODO: semver - check if version is lower than given version
@@ -149,7 +149,7 @@ jobs:
           fi
         env:
           BRANCH_NAME: ${{ steps.get-release-version.outputs.new_branch_name }}
-      # checkout this workflow repository to get actions    
+      # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
@@ -161,7 +161,7 @@ jobs:
           known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
           repository_version: ${{ steps.get-release-version.outputs.release_version }}
           ga_version:  ${{ env.GA_VERSION }}
-          prepare_release: true          
+          prepare_release: true
       - name: delete tmp files
         run: |
           rm -rf ./tmp/github-workflows
@@ -176,7 +176,7 @@ jobs:
             if [[ ${logs,,} != merge* && ${logs,,} != "prepare next dev"* ]];
             then
               commit_titles="$commit_titles\n* $logs"
-            fi  
+            fi
             echo "test"
           done
           readme="$readme$commit_titles\n\n### Release dependencies first\n\nIn case of dependent visyn repositories follow dependency tree from the top.\n\n"
@@ -190,12 +190,12 @@ jobs:
       - name: setup git config
         run: |
           git config user.name "$GITHUB_ACTOR"
-          git config user.email "<>" 
+          git config user.email "<>"
         env:
-          GITHUB_ACTOR: ${{ github.actor }}        
+          GITHUB_ACTOR: ${{ github.actor }}
       - name: push branch
         run: |
-          echo "push branch" 
+          echo "push branch"
           git commit -am "[skip ci]Prepare release v$RELEASE_VERSION"
           git push origin "$BRANCH_NAME"
         env:
@@ -233,7 +233,7 @@ jobs:
           exit 1
         env:
           DATA: ${{ steps.create-pr.outputs.data }}
-          STATUS: ${{ steps.create-pr.outputs.status }}                                 
+          STATUS: ${{ steps.create-pr.outputs.status }}
       - name: merge pull request
         id: merge-pr
         uses: octokit/request-action@v2.x
@@ -253,11 +253,11 @@ jobs:
         run: |
           echo "something went wrong with the merge of the pr"
           echo "data: $DATA"
-          echo "status: $STATUS"          
+          echo "status: $STATUS"
           exit 1
         env:
           DATA: ${{ steps.merge-pr.outputs.data }}
-          STATUS: ${{ steps.merge-pr.outputs.status }}           
+          STATUS: ${{ steps.merge-pr.outputs.status }}
       - name: trigger publish
         uses: datavisyn/github-action-trigger-workflow@v1
         if: ${{ !steps.get-release-version.outputs.private || steps.get-release-version.outputs.private == 'false' }}
@@ -267,7 +267,7 @@ jobs:
           github_token: ${{ github.token }}
           workflow_file_name: "publish.yml"
           ref: "main"
-          github_user: ${{ env.GITHUB_USER }}                    
+          github_user: ${{ env.GITHUB_USER }}
       - name: delete release branch
         run: |
           echo "delete release branch"
@@ -279,7 +279,7 @@ jobs:
           git push origin --delete "$BRANCH_NAME"
           git status
         env:
-          BRANCH_NAME: ${{ steps.get-release-version.outputs.new_branch_name }} 
+          BRANCH_NAME: ${{ steps.get-release-version.outputs.new_branch_name }}
       - name: create release
         id: create-release
         uses: octokit/request-action@v2.x
@@ -291,7 +291,7 @@ jobs:
           target_commitish: main
           name: "v${{ steps.get-release-version.outputs.release_version }}"
           body: '"${{ steps.release-notes.outputs.commits }}"'
-          draft: false 
+          draft: false
           prerelease: false
           generate_release_notes: false
         env:
@@ -301,11 +301,11 @@ jobs:
         run: |
           echo "something went wrong with the creation of the release"
           echo "data: $DATA"
-          echo "status: $STATUS"       
+          echo "status: $STATUS"
           exit 1
         env:
           DATA: ${{ steps.create-release.outputs.data }}
-          STATUS: ${{ steps.create-release.outputs.status }}                     
+          STATUS: ${{ steps.create-release.outputs.status }}
       - name: git fetch
         run: |
           git status
@@ -320,7 +320,7 @@ jobs:
         run: |
           echo "merge main to develop"
           git merge -X theirs main --allow-unrelated-histories
-      # checkout this workflow repository to get actions    
+      # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
@@ -332,10 +332,10 @@ jobs:
           known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
           repository_version: ${{ steps.get-release-version.outputs.next_dev_version }}
           ga_version:  main
-          prepare_release: false          
+          prepare_release: false
       - name: delete tmp files
         run: |
-          rm -rf ./tmp/github-workflows          
+          rm -rf ./tmp/github-workflows
       - name: push develop
         run: |
           echo "push develop"

@@ -1,6 +1,6 @@
-name: Deploy product repository
+name: deploy-product
 
-on: 
+on:
   workflow_call:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
@@ -8,20 +8,20 @@ on:
       DV_DEVOPS:
         required: true
       DV_QMS:
-        required: true        
+        required: true
       DV_AWS_ECR_REGISTRY:
-        required: false 
+        required: false
       DV_BOT_USER:
         required: true
       HAS_WORKSPACE_BRANCHES:
-        required: false         
+        required: false
     inputs:
       stage:
         description: "stage that should be deployed (develop|qa|production)"
         required: true
         type: string
         # type: choice
-        # options: 
+        # options:
         # - develop
         # - qa
         # - production
@@ -40,7 +40,7 @@ concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
   cancel-in-progress: true
 
-env: 
+env:
   GA_VERSION: "main"
   WORKFLOW_BRANCH: "new_deployment"
 
@@ -56,18 +56,18 @@ jobs:
           mapfile -t array1 < <(echo "${dv_devops}" | tr ',' "\n")
           mapfile -t array2 < <(echo "${dv_qms}" | tr ',' "\n")
           array1+=("${array2[@]}")
-          for e in "${array1[@]}"; do 
+          for e in "${array1[@]}"; do
             if [[ "$e" == "$actor" ]] ; then
               exit 0
             fi
           done
           echo "you are not allowed to run this job!"
           exit 1
-        env: 
+        env:
           _DV_DEVOPS: ${{ secrets.DV_DEVOPS }}
           _DV_QMS: ${{ secrets.DV_QMS }}
           GITHUB_ACTOR: ${{ github.actor }}
-      # checkout repo to get package.json    
+      # checkout repo to get package.json
       - uses: actions/checkout@v3
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
@@ -99,9 +99,9 @@ jobs:
           BACKEND_REPO: ${{ steps.get-parameters.outputs.api_repo }}
           IMAGE_TAG: ${{ steps.get-parameters.outputs.image_tag1 }}
       - name: trigger deployment
-        uses: datavisyn/github-action-trigger-workflow@v1   
+        uses: datavisyn/github-action-trigger-workflow@v1
         with:
-          owner: "datavisyn" 
+          owner: "datavisyn"
           repo:  "infrastructure-k8s"
           github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
           workflow_file_name: "deploy-app.yml"

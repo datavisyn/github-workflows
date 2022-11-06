@@ -1,6 +1,6 @@
-name: Build python and node repositories
+name: build-node-python
 
-on: 
+on:
   workflow_call:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
@@ -10,7 +10,7 @@ on:
       PYTHON_VERSION:
         required: false
 
-env: 
+env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
   NODE_VERSION: "16.16"
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
@@ -30,7 +30,7 @@ jobs:
   build-node:
     permissions:
       id-token: write
-      contents: write  
+      contents: write
     runs-on: ubuntu-20.04
     steps:
       # checkout specific source repository
@@ -47,12 +47,12 @@ jobs:
         with:
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
-          github_ro_token:  ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}           
+          github_ro_token:  ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
 
   build-python:
     runs-on: ubuntu-20.04
-    steps: 
-      # checkout specific source repository     
+    steps:
+      # checkout specific source repository
       - uses: actions/checkout@v3
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
@@ -63,5 +63,5 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/build-python
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
-          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }} 
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
 

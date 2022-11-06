@@ -1,6 +1,6 @@
-name: Build python repositories
+name: build-python
 
-on: 
+on:
   workflow_call:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
@@ -8,24 +8,24 @@ on:
       PYTHON_VERSION:
         required: false
 
-env: 
+env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "test"
-  PYTHON_VERSION: "3.10" 
+  PYTHON_VERSION: "3.10"
 
 permissions:
   contents: read
-  id-token: write  
+  id-token: write
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
-  cancel-in-progress: true  
+  cancel-in-progress: true
 
 jobs:
   build-python:
     runs-on: ubuntu-20.04
     steps:
-      # checkout specific source repository  
+      # checkout specific source repository
       - uses: actions/checkout@v3
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v3

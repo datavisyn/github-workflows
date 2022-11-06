@@ -1,13 +1,13 @@
-name: Build node repositories
+name: build-node
 
-on: 
+on:
   workflow_call:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
       NODE_VERSION:
         required: false
-env: 
+env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
   NODE_VERSION: "16.16"
   WORKFLOW_BRANCH: "new_deployment"
@@ -24,10 +24,10 @@ jobs:
   build-node:
     permissions:
       id-token: write
-      contents: write  
+      contents: write
     runs-on: ubuntu-20.04
     steps:
-      # checkout specific source repository    
+      # checkout specific source repository
       - uses: actions/checkout@v3
         with:
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token }} # has to set because otherwise it will not work
@@ -41,4 +41,4 @@ jobs:
         with:
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
-          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }} 
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}

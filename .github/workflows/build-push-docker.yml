@@ -1,6 +1,6 @@
-name: Build and push docker
+name: build-push-docker
 
-on: 
+on:
   workflow_call:
     secrets:
       DV_AWS_ECR_ROLE:
@@ -8,19 +8,19 @@ on:
       DV_AWS_REGION:
         required: true
       DV_AWS_ECR_REGISTRY:
-        required: true     
-      DV_ECR_REPOSITORY:  
+        required: true
+      DV_ECR_REPOSITORY:
         required: false
-    inputs:    
-      docker_file:  
+    inputs:
+      docker_file:
         description: "dockerfile to use"
         required: true
         type: string
-      current_directory:  
+      current_directory:
         description: "current directory for building the Dockerfile"
         required: true
-        type: string    
-      image_tag:  
+        type: string
+      image_tag:
         description: "image tag"
         required: true
         type: string
@@ -54,8 +54,8 @@ jobs:
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/build-push-image
         with:
-          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }} 
-          aws_region: ${{ secrets.DV_AWS_REGION }} 
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ secrets.DV_AWS_REGION }}
           ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ inputs.ecr_repository || secrets.DV_ECR_REPOSITORY }}
           docker_file: ${{ inputs.docker_file }}

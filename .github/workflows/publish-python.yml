@@ -1,20 +1,20 @@
-name: Publish python repositories
+name: publish-python
 
-on: 
+on:
   workflow_call:
     secrets:
       DV_DEVOPS:
         required: true
       PYPI_USERNAME:
-        required: true 
+        required: true
       PYPI_PASSWORD:
-        required: true        
+        required: true
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
       PYTHON_VERSION:
-        required: false        
+        required: false
 
-env: 
+env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYTHON_VERSION: "3.10"
   WORKFLOW_BRANCH: "new_deployment"
@@ -29,28 +29,28 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-20.04
-    steps: 
+    steps:
       - name: check actor
         run: |
           dv_devops=$_DV_DEVOPS
           actor=$GITHUB_ACTOR
           mapfile -t array < <(echo "${dv_devops}" | tr ',' "\n")
-          for e in "${array[@]}"; do 
+          for e in "${array[@]}"; do
             if [[ "$e" == "$actor" ]] ; then
               exit 0
             fi
           done
           echo "you are not allowed to run this job!"
           exit 1
-        env: 
+        env:
           _DV_DEVOPS: ${{ secrets.DV_DEVOPS }}
           GITHUB_ACTOR: ${{ github.actor }}
       - name: check branch
         if: ${{ github.ref != 'refs/heads/main' }}
         run: |
           echo "only the main branch can be published."
-          exit 1          
-      # checkout specific source repository            
+          exit 1
+      # checkout specific source repository
       - uses: actions/checkout@v3
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
@@ -61,9 +61,9 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/build-python
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
-          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }} 
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       - uses: ./tmp/github-workflows/.github/actions/publish-python
         with:
           pypi_registry: ${{ env.PYPI_REGISTRY }}
           pypi_username: ${{ secrets.PYPI_USERNAME }}
-          pypi_password: ${{ secrets.PYPI_PASSWORD }} 
+          pypi_password: ${{ secrets.PYPI_PASSWORD }}

@@ -1,18 +1,18 @@
-name: Publish node repositories
+name: publish-node
 
-on: 
+on:
   workflow_call:
     secrets:
       DV_DEVOPS:
         required: true
       NPM_TOKEN:
-        required: true 
+        required: true
       DATAVISYN_BOT_REPO_TOKEN:
-        required: false 
+        required: false
       NODE_VERSION:
         required: false
 
-env: 
+env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
   NODE_VERSION: "16.16"
   WORKFLOW_BRANCH: "new_deployment"
@@ -28,7 +28,7 @@ jobs:
   publish:
     permissions:
       id-token: write
-      contents: read  
+      contents: read
     runs-on: ubuntu-20.04
     steps:
       - name: check actor
@@ -36,14 +36,14 @@ jobs:
           dv_devops=$_DV_DEVOPS
           actor=$GITHUB_ACTOR
           mapfile -t array < <(echo "${dv_devops}" | tr ',' "\n")
-          for e in "${array[@]}"; do 
+          for e in "${array[@]}"; do
             if [[ "$e" == "$actor" ]] ; then
               exit 0
             fi
           done
           echo "you are not allowed to run this job!"
           exit 1
-        env: 
+        env:
           _DV_DEVOPS: ${{ secrets.DV_DEVOPS }}
           GITHUB_ACTOR: ${{ github.actor }}
       - name: check branch
@@ -51,7 +51,7 @@ jobs:
         run: |
           echo "only the main branch can be published."
           exit 1
-      # checkout specific source repository                   
+      # checkout specific source repository
       - uses: actions/checkout@v3
         with:
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token }} # has to set because otherwise it will not work
@@ -65,7 +65,7 @@ jobs:
         with:
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
-          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }} 
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       - uses: ./tmp/github-workflows/.github/actions/publish-node
         with:
           npm_token:  ${{ secrets.NPM_TOKEN }}

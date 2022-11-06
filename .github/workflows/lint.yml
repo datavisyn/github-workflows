@@ -5,6 +5,10 @@ on: [push, workflow_dispatch]
 permissions:
   statuses: write
 
+concurrency:
+  group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
+  cancel-in-progress: true
+
 jobs:
   lint:
     runs-on: ubuntu-22.04
@@ -14,7 +18,7 @@ jobs:
         with:
           # Full git history needed to get a proper
           # list of changed files within `super-linter`
-          fetch-depth: 0      
+          fetch-depth: 0
       ################################
       # Run Linter against code base #
       ################################

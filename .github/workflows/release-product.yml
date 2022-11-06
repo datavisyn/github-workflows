@@ -1,6 +1,6 @@
-name: Release product repository
+name: release-product
 
-on: 
+on:
   workflow_call:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
@@ -9,7 +9,7 @@ on:
         required: true
       DV_CUSTOMERS:
         required: true
-     
+
 permissions:
   contents: write
 
@@ -17,7 +17,7 @@ concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
   cancel-in-progress: true
 
-env: 
+env:
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
   WORKFLOW_BRANCH: "new_deployment"
@@ -35,21 +35,21 @@ jobs:
           dv_devops=$_DV_DEVOPS
           actor=$GITHUB_ACTOR
           mapfile -t array < <(echo "${dv_devops}" | tr ',' "\n")
-          for e in "${array[@]}"; do 
+          for e in "${array[@]}"; do
             if [[ "$e" == "$actor" ]] ; then
               exit 0
             fi
           done
           echo "you are not allowed to run this job!"
           exit 1
-        env: 
+        env:
           _DV_DEVOPS: ${{ secrets.DV_DEVOPS }}
           GITHUB_ACTOR: ${{ github.actor }}
       - name: check branch
         if: ${{ github.ref != 'refs/heads/develop' && !startsWith(github.ref, 'refs/heads/develop') }}
         run: |
           echo "only the develop branches can be released: $GITHUB_REF"
-          exit 1 
+          exit 1
         env:
           GITHUB_REF: ${{ github.ref }}
       - uses: actions/checkout@v3
@@ -134,13 +134,13 @@ jobs:
           echo "create/get release branch"
           if git rev-parse --verify --quiet "origin/$BRANCH_NAME"; then
             echo "branch exists!"
-            git checkout "$BRANCH_NAME" 
+            git checkout "$BRANCH_NAME"
           else
             echo "create branch"
             git checkout -b "$BRANCH_NAME"
           fi
         env:
-          BRANCH_NAME: ${{ steps.check-repository.outputs.new_branch_name }}          
+          BRANCH_NAME: ${{ steps.check-repository.outputs.new_branch_name }}
       - name: prepare release
         uses: ./tmp/github-workflows/.github/actions/release-product-changes
         with:
@@ -151,13 +151,13 @@ jobs:
           prepare_release: true
       - name: delete tmp files
         run: |
-          rm -rf ./tmp          
+          rm -rf ./tmp
       - name: setup git config
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "<>"
         env:
-          GITHUB_ACTOR: ${{ github.actor }}          
+          GITHUB_ACTOR: ${{ github.actor }}
       - name: push branch
         run: |
           echo "push branch"
@@ -223,7 +223,7 @@ jobs:
           DATA: ${{ steps.add-labels.outputs.data }}
   ###############################################################################################################
   ## CREATE RELEASE: after PR is merged
-  ###############################################################################################################                                                       
+  ###############################################################################################################
   create-release:
     if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && startsWith(github.head_ref, 'rc_') }}
     runs-on: ubuntu-20.04
@@ -233,21 +233,21 @@ jobs:
           dv_devops=$DEVOPS
           actor=$GITHUB_ACTOR
           mapfile -t array < <(echo "${dv_devops}" | tr ',' "\n")
-          for e in "${array[@]}"; do 
+          for e in "${array[@]}"; do
             if [[ "$e" == "$actor" ]] ; then
               exit 0
             fi
           done
           echo "you are not allowed to run this job!"
           exit 1
-        env: 
+        env:
           DEVOPS: ${{ secrets.DV_DEVOPS }}
           GITHUB_ACTOR: ${{ github.actor }}
       - name: check branch
         if: ${{ github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/heads/main') }}
         run: |
           echo 'only the main branches can be released.'
-          exit 1  
+          exit 1
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
@@ -271,7 +271,7 @@ jobs:
           echo "known_repositories=$known_repositories" >> "$GITHUB_OUTPUT"
         env:
           REPO_IS_PRIVATE: ${{github.event.repository.private}}
-          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}          
+          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
       - name: get release version
         id: get-release-version
         run: |
@@ -287,7 +287,7 @@ jobs:
           echo "main_branch_name=$main_branch_name" >> "$GITHUB_OUTPUT"
           echo "develop_branch_name=$develop_branch_name" >> "$GITHUB_OUTPUT"
         env:
-          BRANCH_NAME: github.ref  
+          BRANCH_NAME: github.ref
       - name: delete release branch
         run: |
           git fetch
@@ -311,7 +311,7 @@ jobs:
           target_commitish: ${{ github.ref }}
           name: "v${{ steps.get-release-version.outputs.release_version }}"
           body: "release of v${{ steps.get-release-version.outputs.release_version }}"
-          draft: false 
+          draft: false
           prerelease: false
           generate_release_notes: false
         env:
@@ -321,11 +321,11 @@ jobs:
         run: |
           echo "something went wrong with the creation of the release"
           echo "data: $DATA"
-          echo "status: $STATUS"       
-          exit 1                   
+          echo "status: $STATUS"
+          exit 1
         env:
           STATUS: ${{ steps.create-release.outputs.status }}
-          DATA: ${{ steps.create-release.outputs.data }} 
+          DATA: ${{ steps.create-release.outputs.data }}
       - name: git fetch
         run: |
           git status
@@ -345,8 +345,8 @@ jobs:
           git merge -X theirs "$MAIN_BRANCH" --allow-unrelated-histories
         env:
           DEVELOP_BRANCH: ${{ steps.get-release-version.outputs.develop_branch_name }}
-          MAIN_BRANCH:  ${{ steps.get-release-version.outputs.main_branch_name }}          
-      # checkout this workflow repository to get actions    
+          MAIN_BRANCH:  ${{ steps.get-release-version.outputs.main_branch_name }}
+      # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
@@ -358,10 +358,10 @@ jobs:
           known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
           repository_version: ${{ steps.get-release-version.outputs.release_version }}"-SNAPSHOT"
           ga_version:  main
-          prepare_release: false          
+          prepare_release: false
       - name: delete tmp files
         run: |
-          rm -rf ./tmp/github-workflows          
+          rm -rf ./tmp/github-workflows
       - name: push develop
         run: |
           echo "push develop"
