@@ -59,9 +59,11 @@ runs:
           set +f
         fi
         if [[ -z $IMAGE_TAG2 ]] ; then
+          echo "docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 $build_args -f $DOCKER_FILE ."
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 $build_args -f $DOCKER_FILE .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
         else
+          echo "docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 $build_args -f $DOCKER_FILE ."
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2 $build_args -f $DOCKER_FILE .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2
