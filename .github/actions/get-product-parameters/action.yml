@@ -5,47 +5,50 @@ inputs:
     description: "name of the current repository"
     required: true
     type: string
-  branch_name:  
+  branch_name:
     description: "name of the current branch"
     required: true
     type: string
-  time_zone:  
+  time_zone:
     description: "time zone to use to generate the image tag"
     required: true
     type: string
-  has_workspace_branches:  
+  has_workspace_branches:
     description: "true, if this is a repository that has workspace branches included, else false"
     required: true
     type: boolean
-    default: false    
+    default: false
 outputs:
-  app: 
+  app:
     description: "app name of the product"
     value: ${{ steps.get-parameters.outputs.app }}
-  api_repo: 
+  api_repo:
     description: "ecr repository for api"
     value: ${{ steps.get-parameters.outputs.api_repo }}
-  web_repo: 
+  web_repo:
     description: "ecr repository for web"
-    value: ${{ steps.get-parameters.outputs.web_repo }}    
-  develop: 
+    value: ${{ steps.get-parameters.outputs.web_repo }}
+  develop:
     description: "true, if the branch is a develop branch, otherwise false"
     value: ${{ steps.get-parameters.outputs.develop }}
-  aws: 
+  aws:
     description: "true, if image should be generated and pushed to aws; else false"
     value: ${{ steps.get-parameters.outputs.aws }}
-  image_tag1: 
+  image_tag1:
     description: "image tag, that has the general name"
     value: ${{ steps.get-parameters.outputs.image_tag1 }}
-  image_tag2: 
+  image_tag2:
     description: "image tag, that has a very specific name (included the current date)"
     value: ${{ steps.get-parameters.outputs.image_tag2 }}
-  build_node: 
+  build_time:
+    description: "build time of the current run (in RFC 3339 see <https://www.rfc-editor.org/rfc/rfc3339#section-5.6>)"
+    value: ${{ steps.get-parameters.outputs.build_time }}
+  build_node:
     description: "true, if node part should be built; else false"
-    value: ${{ steps.get-parameters.outputs.build_node }} 
-  build_python: 
+    value: ${{ steps.get-parameters.outputs.build_node }}
+  build_python:
     description: "true, if python part should be built; else false"
-    value: ${{ steps.get-parameters.outputs.build_python }}                               
+    value: ${{ steps.get-parameters.outputs.build_python }}
 runs:
   using: "composite"
   steps:
@@ -66,7 +69,7 @@ runs:
         check_type=$(jq  -rc '.[] | select(.type == "web")' ./phovea_product.json)
         if [[ -z $check_type ]] ; then
           build_node=false
-        fi  
+        fi
         check_type=$(jq  -rc '.[] | select(.type == "api")' ./phovea_product.json)
         if [[ -z $check_type ]] ; then
           build_python=false
@@ -101,12 +104,13 @@ runs:
           aws=true
         fi
         # develop branch
-        if [[ $branch_name == develop ]] ; then 
+        if [[ $branch_name == develop ]] ; then
           develop=true
         fi
         # get image tags
-        image_tag1=$branch_name
-        image_tag2=tagged-$image_tag1-$(TZ=$TIME_ZONE date +%Y%m%d-%H%M%S)
+        build_time=$(TZ=$TIME_ZONE date +%Y-%m-%dT%H%M%SZ)
+        image_tag2=$branch_name
+        image_tag1=tagged-$image_tag2-$build_time
         # echo parameters
         echo "app=$app"
         echo "api_repo=$api_repo"
@@ -115,6 +119,7 @@ runs:
         echo "aws=$aws"
         echo "build_python=$build_python"
         echo "build_node=$build_node"
+        echo "build_time=$build_time"
         echo "image_tag1=$image_tag1"
         echo "image_tag2=$image_tag2"
         # echo to output
@@ -123,15 +128,16 @@ runs:
         echo "web_repo=$web_repo" >> "$GITHUB_OUTPUT"
         echo "develop=$develop" >> "$GITHUB_OUTPUT"
         echo "aws=$aws" >> "$GITHUB_OUTPUT"
+        echo "build_time=$build_time" >> "$GITHUB_OUTPUT"
         echo "image_tag1=$image_tag1" >> "$GITHUB_OUTPUT"
         echo "image_tag2=$image_tag2" >> "$GITHUB_OUTPUT"
         echo "build_node=$build_node" >> "$GITHUB_OUTPUT"
         echo "build_python=$build_python" >> "$GITHUB_OUTPUT"
-      env:  
+      env:
         HAS_WORKSPACE_BRANCHES: ${{ inputs.has_workspace_branches }}
         REPOSITORY_NAME: ${{ inputs.repository_name }}
         BRANCH_NAME: ${{ inputs.branch_name }}
         TIME_ZONE: ${{ inputs.time_zone }}
       shell: bash
-      
+
 

@@ -51,6 +51,7 @@ jobs:
       aws: ${{ steps.get-parameters.outputs.aws }}
       image_tag1: ${{ steps.get-parameters.outputs.image_tag1 }}
       image_tag2: ${{ steps.get-parameters.outputs.image_tag2 }}
+      build_time: ${{ steps.get-parameters.outputs.build_time }}
       build_node: ${{ steps.get-parameters.outputs.build_node }}
       build_python: ${{ steps.get-parameters.outputs.build_python }}
     runs-on: ubuntu-20.04
@@ -141,9 +142,14 @@ jobs:
           docker_file: ./deploy/web/Dockerfile
           current_directory: ./tmp/web
           image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
-          image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
           build_args: |
             DATAVISYN_NGINX_BASE_IMAGE=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
+            IMAGE_BUILD_TIME=${{ needs.prepare-build.outputs.build_time }}
+            IMAGE_VERSION=${{ needs.prepare-build.outputs.image_tag2 }}
+            IMAGE_BASE_NAME=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
+            IMAGE_NAME=${{ needs.prepare-build.outputs.web_repo }}
+            IMAGE_DESCRIPTION="web image for ${{ needs.prepare-build.outputs.app }}
+            IMAGE_SOURCE=${{ github.event.repository.html_url }}/templates/web/deploy/web/Dockerfile
 
   build-python:
     needs: prepare-build
@@ -236,7 +242,15 @@ jobs:
           docker_file: ./deploy/api/Dockerfile
           current_directory: ./tmp/api
           image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
-          image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
+          build_args: |
+            PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}
+            DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
+            IMAGE_BUILD_TIME=${{ needs.prepare-build.outputs.build_time }}
+            IMAGE_VERSION=${{ needs.prepare-build.outputs.image_tag2 }}
+            IMAGE_BASE_NAME=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
+            IMAGE_NAME=${{ needs.prepare-build.outputs.api_repo }}
+            IMAGE_DESCRIPTION="backend image for ${{ needs.prepare-build.outputs.app }}
+            IMAGE_SOURCE=${{ github.event.repository.html_url }}/templates/api/deploy/api/Dockerfile
   deploy:
     needs: [prepare-build, build-node, build-python]
     runs-on: ubuntu-20.04
