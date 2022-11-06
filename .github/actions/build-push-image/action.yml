@@ -46,6 +46,7 @@ runs:
         build_args=''
         if [[ -n $BUILD_ARGS ]] ; then
           mapfile -t array < <(echo -e "$BUILD_ARGS")
+          array=array_filter($array, 'strlen');
           build_args="${array[@]/#/--build-arg }"
           echo "$build_args"
         fi
