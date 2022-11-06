@@ -150,6 +150,7 @@ jobs:
             IMAGE_NAME=${{ needs.prepare-build.outputs.web_repo }}
             IMAGE_DESCRIPTION=web+image+for+${{ needs.prepare-build.outputs.app }}
             IMAGE_SOURCE=${{ github.event.repository.html_url }}/templates/web/deploy/web/Dockerfile
+            GIT_ACCESS_TOKEN=${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
 
   build-python:
     needs: prepare-build
@@ -249,6 +250,7 @@ jobs:
             IMAGE_NAME=${{ needs.prepare-build.outputs.api_repo }}
             IMAGE_DESCRIPTION=backend+image+for+${{ needs.prepare-build.outputs.app }}
             IMAGE_SOURCE=${{ github.event.repository.html_url }}/templates/api/deploy/api/Dockerfile
+            GIT_ACCESS_TOKEN=${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
   deploy:
     needs: [prepare-build, build-node, build-python]
     runs-on: ubuntu-20.04
