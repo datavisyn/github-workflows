@@ -141,8 +141,7 @@ jobs:
           ecr_repository: ${{ needs.prepare-build.outputs.web_repo }}
           docker_file: ./deploy/web/Dockerfile
           current_directory: ./tmp/web
-          image_tag: |
-            ${{ needs.prepare-build.outputs.image_tag1 }}
+          image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
           build_args: |
             DATAVISYN_NGINX_BASE_IMAGE=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
             IMAGE_BUILD_TIME=${{ needs.prepare-build.outputs.build_time }}
@@ -240,8 +239,7 @@ jobs:
           ecr_repository: ${{ needs.prepare-build.outputs.api_repo }}
           docker_file: ./deploy/api/Dockerfile
           current_directory: ./tmp/api
-          image_tag: |
-            ${{ needs.prepare-build.outputs.image_tag1 }}
+          image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
           build_args: |
             PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}
             DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}

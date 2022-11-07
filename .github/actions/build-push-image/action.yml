@@ -59,7 +59,7 @@ runs:
         file: ${{ inputs.docker_file }}
         push: true
         tags: |
-          ${{ steps.get-image-tags.outputs.image_tag }}
+          ${{ steps.get-image-tag.outputs.image_tag }}
         build-args: ${{ inputs.build_args }}
         labels: ${{ inputs.labels }}
       # run: |
