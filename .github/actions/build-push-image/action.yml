@@ -30,7 +30,9 @@ inputs:
   build_args:
     description: "List of build-time variables"
     required: false
-
+  labels:
+    description: "List of labels for an image"
+    required: false
 runs:
   using: "composite"
   steps:
@@ -42,36 +44,62 @@ runs:
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1.5.3
-    - name: Build, tag, and push image to Amazon ECR
+    - name: get image tags
+      id: get-image-tags
       run: |
-        cd $CURRENT_DIRECTORY
-        echo $BUILD_ARGS
-        build_args=''
-        if [[ -n $BUILD_ARGS ]] ; then
-          array=(${BUILD_ARGS})
-          array=(${array[@]/''})
-          build_args="${array[@]/#/--build-arg }"
-          echo "$build_args"
-        fi
-        if [[ -z $IMAGE_TAG2 ]] ; then
-          echo "docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 $build_args -f $DOCKER_FILE ."
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 $build_args -f $DOCKER_FILE .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
+        image_tag1=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
+        if [[ -n $IMAGE_TAG2 ]] ; then
+          image_tag2=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2
+          image_tags="[$image_tag1, $image_tag2]"
         else
-          echo "docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 $build_args -f $DOCKER_FILE ."
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2 $build_args -f $DOCKER_FILE .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2
+          image_tags="[$image_tag1]"
         fi
+        echo "image_tags=$image_tags"
+        echo "image_tags=$image_tags" >> "$GITHUB_OUTPUT"
       env:
         ECR_REGISTRY: ${{ inputs.ecr_registry }}
         ECR_REPOSITORY: ${{ inputs.ecr_repository }}
         IMAGE_TAG1: ${{ inputs.image_tag1 }}
         IMAGE_TAG2: ${{ inputs.image_tag2 }}
-        DOCKER_FILE: ${{ inputs.docker_file }}
-        CURRENT_DIRECTORY: ${{ inputs.current_directory }}
-        BUILD_ARGS: ${{ inputs.build_args }}
       shell: bash
+    - name: Build and push image to Amazon ECR
+      uses: docker/build-push-action@v3
+      with:
+        context: .
+        file: ${{ inputs.docker_file }}
+        push: true
+        tags: ${{ steps.get-image-tags.image_tags }}
+        build-args: ${{ inputs.build_args }}
+        labels: ${{ inputs.labels }}
+      # run: |
+      #   cd $CURRENT_DIRECTORY
+      #   echo $BUILD_ARGS
+      #   build_args=''
+      #   if [[ -n $BUILD_ARGS ]] ; then
+      #     array=(${BUILD_ARGS})
+      #     array=(${array[@]/''})
+      #     build_args="${array[@]/#/--build-arg }"
+      #     echo "$build_args"
+      #   fi
+      #   if [[ -z $IMAGE_TAG2 ]] ; then
+      #     echo "docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 $build_args -f $DOCKER_FILE ."
+      #     docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 $build_args -f $DOCKER_FILE .
+      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
+      #   else
+      #     echo "docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 $build_args -f $DOCKER_FILE ."
+      #     docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2 $build_args -f $DOCKER_FILE .
+      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
+      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2
+      #   fi
+      # env:
+      #   ECR_REGISTRY: ${{ inputs.ecr_registry }}
+      #   ECR_REPOSITORY: ${{ inputs.ecr_repository }}
+      #   IMAGE_TAG1: ${{ inputs.image_tag1 }}
+      #   IMAGE_TAG2: ${{ inputs.image_tag2 }}
+      #   DOCKER_FILE: ${{ inputs.docker_file }}
+      #   CURRENT_DIRECTORY: ${{ inputs.current_directory }}
+      #   BUILD_ARGS: ${{ inputs.build_args }}
+      # shell: bash
     - name: Log out from Amazon ECR
       run: docker logout $ECR_REGISTRY
       env:
