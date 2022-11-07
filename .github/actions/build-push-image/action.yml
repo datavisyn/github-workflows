@@ -50,12 +50,13 @@ runs:
         image_tag1=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
         if [[ -n $IMAGE_TAG2 ]] ; then
           image_tag2=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2
-          image_tags="[$image_tag1, $image_tag2]"
+          image_tags=($image_tag1, $image_tag2)
         else
-          image_tags="[$image_tag1]"
+          image_tags=($image_tag1)
         fi
-        echo "image_tags=$image_tags"
-        echo "image_tags=$image_tags" >> "$GITHUB_OUTPUT"
+        images=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${image_tags[@]}")
+        echo "image_tags=$images"
+        echo "image_tags=$images" >> "$GITHUB_OUTPUT"
       env:
         ECR_REGISTRY: ${{ inputs.ecr_registry }}
         ECR_REPOSITORY: ${{ inputs.ecr_repository }}
