@@ -64,6 +64,20 @@ jobs:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
+      - name: lint dockerfiles
+        id: lint-docker
+        uses: ./tmp/github-workflows/.github/actions/lint-docker
+        with:
+          config: .github/linters/.hadolint.yaml
+          recursive: true
+      - name: show dockerfile lint error
+        if: ( steps.lint-docker.outcome == 'failure' )
+        run: |
+          echo ${{ steps.lint-docker.outcome }}
+          echo -e "#### Docker Lint Result: ${{ steps.lint-docker.outputs.results }}"
+      - name: lint github action files
+        id: lint-ga
+        uses: ./tmp/github-workflows/.github/actions/lint-github-actions
       - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
         id: get-parameters
         with:
@@ -155,6 +169,21 @@ jobs:
             org.opencontainers.image.version=${{ needs.prepare-build.outputs.image_tag2 }}
             org.opencontainers.image.created=${{ needs.prepare-build.outputs.build_time }}
             org.opencontainers.image.revision=${{ github.sha }}
+      - name: scan node image
+        id: get-ecr-scan-result
+        uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
+        with:
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ secrets.DV_AWS_REGION }}
+          ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
+          ecr_repository: ${{ needs.prepare-build.outputs.web_repo }}
+          image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
+      - name: check scan results
+        run: |
+          if [ "${{ steps.get-ecr-scan-result.outputs.critical }}" != "null" ] || [ "${{ steps.get-ecr-scan-result.outputs.high }}" != "null" ]; then
+            echo "Docker image contains vulnerabilities at critical or high level"
+            exit 1  #exit execution due to docker image vulnerabilities
+          fi
   build-python:
     needs: prepare-build
     runs-on: ubuntu-20.04
@@ -259,13 +288,38 @@ jobs:
             org.opencontainers.image.version=${{ needs.prepare-build.outputs.image_tag2 }}
             org.opencontainers.image.created=${{ needs.prepare-build.outputs.build_time }}
             org.opencontainers.image.revision=${{ github.sha }}
+      - name: scan node image
+        id: get-ecr-scan-result
+        uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
+        with:
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ secrets.DV_AWS_REGION }}
+          ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
+          ecr_repository: ${{ needs.prepare-build.outputs.api_repo }}
+          image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
+      - name: check scan results
+        run: |
+          if [ "${{ steps.get-ecr-scan-result.outputs.critical }}" != "null" ] || [ "${{ steps.get-ecr-scan-result.outputs.high }}" != "null" ]; then
+            echo "Docker image contains vulnerabilities at critical or high level"
+            exit 1  #exit execution due to docker image vulnerabilities
+          fi
   deploy:
     needs: [prepare-build, build-node, build-python]
     runs-on: ubuntu-20.04
-    if: ${{ always() && needs.prepare-build.outputs.develop == 'true' && needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
     steps:
-      - name: fail if conditional job failed
-        if: ${{ contains(needs.*.result, 'failure') }}
-        run: exit 1
+      - uses: actions/checkout@v3
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+      - name: retag images
+        uses: ./tmp/github-workflows/.github/actions/retag-image
+        with:
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ secrets.DV_AWS_REGION }}
+          ecr_repositories: ${{ needs.prepare-build.outputs.api_repo }},${{ needs.prepare-build.outputs.web_repo }}
+          current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
+          additional_image_tag: ${{ needs.prepare-build.outputs.image_tag2 }}
       - name: Deploy
+        if: ${{ needs.prepare-build.outputs.develop == 'true' && needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
         run: echo "Deploy"
