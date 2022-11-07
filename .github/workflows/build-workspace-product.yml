@@ -139,7 +139,7 @@ jobs:
           aws_region: ${{ secrets.DV_AWS_REGION }}
           ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ needs.prepare-build.outputs.web_repo }}
-          docker_file: ./deploy/web/Dockerfile
+          docker_file: ./tmp/web/deploy/web/Dockerfile
           current_directory: ./tmp/web
           image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
           build_args: |
@@ -241,7 +241,7 @@ jobs:
           aws_region: ${{ secrets.DV_AWS_REGION }}
           ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ needs.prepare-build.outputs.api_repo }}
-          docker_file: ./deploy/api/Dockerfile
+          docker_file: ./tmp/api/deploy/api/Dockerfile
           current_directory: ./tmp/api
           image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
           build_args: |
