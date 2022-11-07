@@ -5,6 +5,8 @@ on:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: true
+      DV_CUSTOMERS:
+        required: true
       DV_DEVOPS:
         required: true
       DV_QMS:
@@ -13,8 +15,6 @@ on:
         required: false
       DV_BOT_USER:
         required: true
-      HAS_WORKSPACE_BRANCHES:
-        required: false
     inputs:
       stage:
         description: "stage that should be deployed (develop|qa|production)"
@@ -78,9 +78,9 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
         id: get-parameters
         with:
+          dv_customers: ${{ secrets.DV_CUSTOMERS }}
           repository_name: ${{ github.event.repository.name }}
           branch_name: ${{ github.base_ref }}
-          has_workspace_branches: ${{ secrets.HAS_WORKSPACE_BRANCHES }}
           time_zone: ${{ env.TIME_ZONE }}
       - name: Get images
         id: get-images

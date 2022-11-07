@@ -3,6 +3,10 @@ description: get product parameters for building product
 author: datavisyn
 
 inputs:
+  dv_customers:
+    description: "customers of datavisyn; seperated with ','"
+    required: true
+    type: string
   repository_name:
     description: "name of the current repository"
     required: true
@@ -12,10 +16,6 @@ inputs:
   time_zone:
     description: "time zone to use to generate the image tag"
     required: true
-  has_workspace_branches:
-    description: "true, if this is a repository that has workspace branches included, else false"
-    required: true
-    default: false
 
 outputs:
   app:
@@ -33,6 +33,12 @@ outputs:
   aws:
     description: "true, if image should be generated and pushed to aws; else false"
     value: ${{ steps.get-parameters.outputs.aws }}
+  customer:
+    description: "customer of the branch - depending on the branch name"
+    value: ${{ steps.get-parameters.outputs.customer }}
+  sub_app:
+    description: "sub_app of the repository (f.e. literature) - depending on the branch name"
+    value: ${{ steps.get-parameters.outputs.sub_app }}
   image_tag1:
     description: "image tag, that has the general name"
     value: ${{ steps.get-parameters.outputs.image_tag1 }}
@@ -86,24 +92,25 @@ runs:
         aws=false
         develop=false
         sub_app=''
-        if [ $HAS_WORKSPACE_BRANCHES ] ; then
-          aws=false
-          if [[ $branch_name == *"_aws"* ]]; then
-            aws=true
-            post_fix=_aws
-            branch_name=${branch_name%$post_fix}
+        # check customer
+        customer=''
+        dv_customers=$DV_CUSTOMERS
+        array=($(echo "${dv_customers}" | tr ',' "\n"))
+        for c in "${array[@]}"
+        do
+          if [[ $BRANCH_NAME =~ _${c}_ || $BRANCH_NAME =~ _${c}- ]]; then
+            branch_name=${branch_name//_$c/}
+            customer=$c
+            echo "customer: $customer"
+            if [[ "$branch_name" == "$customer" ]]; then
+              branch_name=""
+            fi
           fi
-          if [[ $branch_name == *"_ods"* ]]; then
-            aws=true
-            post_fix=_ods
-            branch_name=${branch_name%$post_fix}
-          fi
-        else
-          sub_app=${branch_name#*_}
-          aws=true
-        fi
+        done
+        sub_app=${branch_name#*_}
+        aws=true
         # develop branch
-        if [[ $branch_name == develop ]] ; then
+        if [[ $branch_name == develop* ]] ; then
           develop=true
         fi
         # get image tags
@@ -116,6 +123,8 @@ runs:
         echo "web_repo=$web_repo"
         echo "develop=$develop"
         echo "aws=$aws"
+        echo "customer=$customer"
+        echo "sub_app=$sub_app"
         echo "build_python=$build_python"
         echo "build_node=$build_node"
         echo "build_time=$build_time"
@@ -127,13 +136,15 @@ runs:
         echo "web_repo=$web_repo" >> "$GITHUB_OUTPUT"
         echo "develop=$develop" >> "$GITHUB_OUTPUT"
         echo "aws=$aws" >> "$GITHUB_OUTPUT"
+        echo "customer=$customer" >> "$GITHUB_OUTPUT"
+        echo "sub_app=$sub_app" >> "$GITHUB_OUTPUT"
         echo "build_time=$build_time" >> "$GITHUB_OUTPUT"
         echo "image_tag1=$image_tag1" >> "$GITHUB_OUTPUT"
         echo "image_tag2=$image_tag2" >> "$GITHUB_OUTPUT"
         echo "build_node=$build_node" >> "$GITHUB_OUTPUT"
         echo "build_python=$build_python" >> "$GITHUB_OUTPUT"
       env:
-        HAS_WORKSPACE_BRANCHES: ${{ inputs.has_workspace_branches }}
+        DV_CUSTOMERS: ${{ inputs.dv_customers }}
         REPOSITORY_NAME: ${{ inputs.repository_name }}
         BRANCH_NAME: ${{ inputs.branch_name }}
         TIME_ZONE: ${{ inputs.time_zone }}
