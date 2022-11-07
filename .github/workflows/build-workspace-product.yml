@@ -144,13 +144,17 @@ jobs:
           image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
           build_args: |
             DATAVISYN_NGINX_BASE_IMAGE=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
-            IMAGE_BUILD_TIME=${{ needs.prepare-build.outputs.build_time }}
-            IMAGE_VERSION=${{ needs.prepare-build.outputs.image_tag2 }}
-            IMAGE_NAME=${{ needs.prepare-build.outputs.web_repo }}
-            IMAGE_DESCRIPTION=web+image+for+${{ needs.prepare-build.outputs.app }}
-            IMAGE_SOURCE=${{ github.event.repository.html_url }}/templates/web/deploy/web/Dockerfile
-            GIT_ACCESS_TOKEN=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-
+          labels: |
+            name=${{ needs.prepare-build.outputs.web_repo }}
+            version=${{ needs.prepare-build.outputs.image_tag2 }}
+            org.opencontainers.image.description=web+image+for+${{ needs.prepare-build.outputs.app }}
+            org.opencontainers.image.base.name=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
+            org.opencontainers.image.source=${{ github.event.repository.html_url }}/templates/web/deploy/web/Dockerfile
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}/templates/web/deploy/web/Dockerfile
+            org.opencontainers.image.title=${{ needs.prepare-build.outputs.web_repo }}
+            org.opencontainers.image.version=${{ needs.prepare-build.outputs.image_tag2 }}
+            org.opencontainers.image.created=${{ needs.prepare-build.outputs.build_time }}
+            org.opencontainers.image.revision=${{ github.sha }}
   build-python:
     needs: prepare-build
     runs-on: ubuntu-20.04
@@ -243,12 +247,18 @@ jobs:
           build_args: |
             PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}
             DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
-            IMAGE_BUILD_TIME=${{ needs.prepare-build.outputs.build_time }}
-            IMAGE_VERSION=${{ needs.prepare-build.outputs.image_tag2 }}
-            IMAGE_NAME=${{ needs.prepare-build.outputs.api_repo }}
-            IMAGE_DESCRIPTION=backend+image+for+${{ needs.prepare-build.outputs.app }}
-            IMAGE_SOURCE=${{ github.event.repository.html_url }}/templates/api/deploy/api/Dockerfile
             GIT_ACCESS_TOKEN=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+          labels: |
+            name=${{ needs.prepare-build.outputs.api_repo }}
+            version=${{ needs.prepare-build.outputs.image_tag2 }}
+            org.opencontainers.image.description=backend image for ${{ needs.prepare-build.outputs.app }}
+            org.opencontainers.image.base.name=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
+            org.opencontainers.image.source=${{ github.event.repository.html_url }}/templates/api/deploy/api/Dockerfile
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}/templates/api/deploy/api/Dockerfile
+            org.opencontainers.image.title=${{ needs.prepare-build.outputs.api_repo }}
+            org.opencontainers.image.version=${{ needs.prepare-build.outputs.image_tag2 }}
+            org.opencontainers.image.created=${{ needs.prepare-build.outputs.build_time }}
+            org.opencontainers.image.revision=${{ github.sha }}
   deploy:
     needs: [prepare-build, build-node, build-python]
     runs-on: ubuntu-20.04
