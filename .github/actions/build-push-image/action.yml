@@ -21,12 +21,9 @@ inputs:
   current_directory:
     description: "current directory for building the Dockerfile"
     required: true
-  image_tag1:
-    description: "image tag 1"
+  image_tag:
+    description: "image tag"
     required: true
-  image_tag2:
-    description: "image tag 2"
-    required: false
   build_args:
     description: "List of build-time variables"
     required: false
@@ -44,24 +41,16 @@ runs:
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1.5.3
-    - name: get image tags
-      id: get-image-tags
+    - name: get image tag
+      id: get-image-tag
       run: |
-        image_tag1=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG1
-        if [[ -n $IMAGE_TAG2 ]] ; then
-          image_tag2=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG2
-          image_tags=($image_tag1, $image_tag2)
-        else
-          image_tags=($image_tag1)
-        fi
-        images=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${image_tags[@]}")
-        echo "image_tags=$images"
-        echo "image_tags=$images" >> "$GITHUB_OUTPUT"
+        image_tag=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "image_tag=$image_tag"
+        echo "image_tag=$image_tag" >> "$GITHUB_OUTPUT"
       env:
         ECR_REGISTRY: ${{ inputs.ecr_registry }}
         ECR_REPOSITORY: ${{ inputs.ecr_repository }}
-        IMAGE_TAG1: ${{ inputs.image_tag1 }}
-        IMAGE_TAG2: ${{ inputs.image_tag2 }}
+        IMAGE_TAG: ${{ inputs.image_tag }}
       shell: bash
     - name: Build and push image to Amazon ECR
       uses: docker/build-push-action@v3
@@ -69,7 +58,8 @@ runs:
         context: .
         file: ${{ inputs.docker_file }}
         push: true
-        tags: ${{ steps.get-image-tags.outputs.image_tags }}
+        tags: |
+          ${{ steps.get-image-tags.outputs.image_tag }}
         build-args: ${{ inputs.build_args }}
         labels: ${{ inputs.labels }}
       # run: |

@@ -60,4 +60,4 @@ jobs:
           ecr_repository: ${{ inputs.ecr_repository || secrets.DV_ECR_REPOSITORY }}
           docker_file: ${{ inputs.docker_file }}
           current_directory: ${{ inputs.current_directory }}
-          image_tag1: ${{ inputs.image_tag }}
+          image_tag: ${{ inputs.image_tag }}
