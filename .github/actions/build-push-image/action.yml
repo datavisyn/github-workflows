@@ -55,7 +55,7 @@ runs:
     - name: Build and push image to Amazon ECR
       uses: docker/build-push-action@v3
       with:
-        context: .
+        context: ${{ inputs.current_directory }}
         file: ${{ inputs.docker_file }}
         push: true
         tags: |
