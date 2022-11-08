@@ -115,7 +115,7 @@ runs:
         fi
         # get image tags
         build_time=$(TZ=$TIME_ZONE date +%Y-%m-%dT%H%M%SZ)
-        image_tag2=$branch_name
+        image_tag2=$branch_name_org
         image_tag1=tagged-$image_tag2-$build_time
         # echo parameters
         echo "app=$app"
