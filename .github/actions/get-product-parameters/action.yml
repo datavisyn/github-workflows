@@ -107,6 +107,9 @@ runs:
             fi
           fi
         done
+        if [[ -z $customer ]] ; then
+          customer='datavisyn'
+        fi
         sub_app=${branch_name#*_}
         aws=true
         # develop branch

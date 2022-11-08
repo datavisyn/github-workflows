@@ -5,6 +5,8 @@ on:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
+      DV_BOT_USER:
+        required: false
       DV_CUSTOMERS:
         required: true
       DV_AWS_ECR_ROLE:
@@ -49,6 +51,7 @@ jobs:
       develop: ${{ steps.get-parameters.outputs.develop }}
       sub_app: ${{ steps.get-parameters.outputs.sub_app }}
       aws: ${{ steps.get-parameters.outputs.aws }}
+      customer: ${{ steps.get-parameters.outputs.customer }}
       image_tag1: ${{ steps.get-parameters.outputs.image_tag1 }}
       image_tag2: ${{ steps.get-parameters.outputs.image_tag2 }}
       build_time: ${{ steps.get-parameters.outputs.build_time }}
@@ -320,6 +323,15 @@ jobs:
           ecr_repositories: ${{ needs.prepare-build.outputs.api_repo }},${{ needs.prepare-build.outputs.web_repo }}
           current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
           additional_image_tag: ${{ needs.prepare-build.outputs.image_tag2 }}
-      - name: Deploy
+      - name: trigger deployment
         if: ${{ needs.prepare-build.outputs.develop == 'true' && needs.prepare-build.outputs.aws && needs.prepare-build.outputs.aws == 'true' }}
-        run: echo "Deploy"
+        uses: datavisyn/github-action-trigger-workflow@v1
+        with:
+          owner: "datavisyn"
+          repo:  "infrastructure-k8s"
+          github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+          workflow_file_name: "deploy-app.yml"
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          github_user: ${{ secrets.DV_BOT_USER }}
+          client_payload: '{ "app": "${{ needs.prepare-build.outputs.app }}", "customer": "${{ needs.prepare-build.outputs.customer }}", "stage": "develop", "sub_app": "${{ needs.prepare-build.outputs.sub_app }}", "branch": "${{ needs.prepare-build.outputs.image_tag2 }}", , "ecr_repository_parts": "web,api" }'
+
