@@ -158,6 +158,8 @@ jobs:
         run: |
           cd "./tmp/$COMPONENT/$APP"
           ls -lah
+          python -m pip install --upgrade pip
+          pip install setuptools wheel
           make install
           make build
         env:
