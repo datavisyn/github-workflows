@@ -102,7 +102,7 @@ jobs:
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
     secrets: inherit
-  deploy:
+  post-build:
     needs: [prepare-build, build]
     runs-on: ubuntu-20.04
     steps:
