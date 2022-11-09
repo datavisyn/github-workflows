@@ -146,12 +146,8 @@ jobs:
           fi
         env:
           COMPONENT: ${{ inputs.component }}
-          REPO: ${{ steps.get-parameters.outputs.repo }}
-          BRANCH: ${{ steps.get-parameters.outputs.branch }}
+          COMPONENT_DIRECTORY: ${{ steps.get-parameters.outputs.directory }}
           APP: ${{ steps.get-parameters.outputs.app }}
-          GH_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-          GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
-          GITLAB_HOST:  ${{ secrets.GITLAB_HOST }}
 
 
       - name: Build web
@@ -189,7 +185,7 @@ jobs:
           aws_region: ${{ secrets.DV_AWS_REGION }}
           ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ steps.get-parameters.outputs.ecr_repo }}
-          docker_file: ${{ steps.get-parameters.outputs.directory }}/Dockerfile
+          docker_file: ./tmp/${{ inputs.component }}/${{ steps.get-parameters.outputs.app }}/docker/Dockerfile
           current_directory: ./tmp/${{ inputs.component }}/${{ steps.get-parameters.outputs.app }}
           image_tag: ${{ inputs.image_tag1 }}
           build_args: |
