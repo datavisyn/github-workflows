@@ -48,6 +48,9 @@ outputs:
   ecr_repos:
     description: "AWS ECR repositories"
     value: ${{ steps.get-parameters.outputs.ecr_repos }}
+  ecr_repository_keys:
+    description: "repository keys that are used for deployment"
+    value: ${{ steps.get-parameters.outputs.ecr_repository_keys }}
 runs:
   using: "composite"
   steps:
@@ -63,8 +66,10 @@ runs:
         components=$(jq  -rc '.components | keys' ./visyn_product.json)
         ecr_repos=$(jq -r  '.components |.[] | .ecr_repo'  ./visyn_product.json)
         ecr_repos=$(echo $ecr_repos | tr " " ",")
+        ecr_repository_keys=$(jq  -rc '.components | keys | .[]' ./visyn_product.json)
+        ecr_repository_keys=$(echo $ecr_repository_keys | tr " " ",")
         # set default customer
-        if [[ -z $customer ]] ; then
+        if [[ -z $customer || $customer == "null" ]] ; then
           customer='datavisyn'
         fi
         if [[ -z $trigger_automatic_deployment && $BRANCH_NAME == develop* ]] ; then
@@ -85,6 +90,7 @@ runs:
         echo "image_tag2=$image_tag2"
         echo "components=$components"
         echo "ecr_repos=$ecr_repos"
+        echo "ecr_repository_keys=$ecr_repository_keys"
         # echo to output
         echo "app=$app" >> "$GITHUB_OUTPUT"
         echo "repo=$repo" >> "$GITHUB_OUTPUT"
@@ -97,6 +103,7 @@ runs:
         echo "image_tag2=$image_tag2" >> "$GITHUB_OUTPUT"
         echo "components=$components" >> "$GITHUB_OUTPUT"
         echo "ecr_repos=$ecr_repos" >> "$GITHUB_OUTPUT"
+        echo "ecr_repository_keys=$ecr_repository_keys" >> "$GITHUB_OUTPUT"
       env:
         DV_CUSTOMERS: ${{ inputs.dv_customers }}
         BRANCH_NAME: ${{ inputs.branch_name }}
