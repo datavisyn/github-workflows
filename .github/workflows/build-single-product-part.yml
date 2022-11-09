@@ -1,0 +1,203 @@
+name: build-single-product-part
+
+on:
+  workflow_call:
+    secrets:
+      DATAVISYN_BOT_REPO_TOKEN:
+        required: false
+      DV_BOT_USER:
+        required: false
+      DV_CUSTOMERS:
+        required: true
+      DV_AWS_ECR_ROLE:
+        required: false
+      DV_AWS_REGION:
+        required: false
+      DV_AWS_ECR_REGISTRY:
+        required: false
+      NODE_VERSION:
+        required: false
+      PYTHON_VERSION:
+        required: false
+      GITLAB_TOKEN:
+        required: false
+      GITLAB_HOST:
+        required: false
+    inputs:
+        component:
+          description: "component that should be built"
+          required: true
+          type: string
+        image_tag1:
+          description: "image tag 1 to push the image"
+          required: true
+          type: string
+        image_tag2:
+          description: "image tag 2 for labeling"
+          required: true
+          type: string
+        build_time:
+          description: "actually build time (in RFC 3339)"
+          required: true
+          type: string
+env:
+  GENERATOR_VERSION: "develop"
+  TIME_ZONE: "Europe/Vienna"
+  NODE_VERSION: "16.16"
+  PYTHON_VERSION: "3.10"
+  WORKFLOW_BRANCH: "new_deployment"
+  PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
+  DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
+  DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-components:
+    runs-on: ubuntu-20.04
+    steps:
+      # checkout specific repository
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+      # checkout this workflow repository to get actions
+      - uses: actions/checkout@v3
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+      - name: get parameters
+        id: get-parameters
+        run: |
+          type=$(jq --arg var "${component}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.type' ./visyn_product.json)
+          directory=$(jq --arg var "${component}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.directory' ./visyn_product.json)
+          ecr_repo=$(jq --arg var "${component}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.ecr_repo' ./visyn_product.json)
+          app=$(jq  -rc '.app' ./visyn_product.json)
+          repo=$(jq  -rc '.repo' ./visyn_product.json)
+          branch=$(jq  -rc '.branch' ./visyn_product.json)
+          echo "type=$type"
+          echo "directory=$directory"
+          echo "ecr_repo=$ecr_repo"
+          echo "app=$app"
+          echo "repo=$repo"
+          echo "branch=$branch"
+          # echo to output
+          # shellcheck disable=SC2129
+          echo "type=$type" >> "$GITHUB_OUTPUT"
+          echo "directory=$directory" >> "$GITHUB_OUTPUT"
+          echo "ecr_repo=$ecr_repo" >> "$GITHUB_OUTPUT"
+          echo "app=$app" >> "$GITHUB_OUTPUT"
+          echo "repo=$repo" >> "$GITHUB_OUTPUT"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+      - name: setup node
+        if: ${{ steps.get-parameters.outputs.type == 'web' }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
+          registry-url: ${{ env.NPM_REGISTRY }}
+      - name: setup python
+        if: ${{ steps.get-parameters.outputs.type == 'api' }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
+      - name: Git config
+        run: |
+          git config --global url."https://$_GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
+          git config --add --global url."https://$_GITHUB_TOKEN@github.com/".insteadOf git@github.com:
+          if [[ -n $GITLAB_TOKEN && -n $GITLAB_HOST ]] ; then
+            echo "set gitlab config"
+            git config --global url."https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git@$GITLAB_HOST:"
+            git config --global url."git+https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git+ssh://git@$GITLAB_HOST:"
+          fi
+        env:
+          _GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_HOST:  ${{ secrets.GITLAB_HOST }}
+      - name: Git clone app
+        run: |
+          mkdir "./tmp/$COMPONENT"
+          cd "./tmp/$COMPONENT"
+          repository="$REPO"
+          if [[ $repository == *"gitlab"* && -n $GITLAB_TOKEN ]] ; then
+            repository=${repository/"https://"/"https://$GITLAB_TOKEN@"}
+          else
+            repository=https://$GH_TOKEN@github.com/${repository}.git
+          fi
+          echo "$repository"
+          git clone -b "$BRANCH" --depth 1 "$repository" "$APP"
+        env:
+          COMPONENT: ${{ inputs.component }}
+          REPO: ${{ steps.get-parameters.outputs.repo }}
+          BRANCH: ${{ steps.get-parameters.outputs.branch }}
+          APP: ${{ steps.get-parameters.outputs.app }}
+          GH_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_HOST:  ${{ secrets.GITLAB_HOST }}
+      - name: Build web
+        if: ${{ steps.get-parameters.outputs.type == 'web' }}
+        run: |
+          if [[ -f "$COMPONENT_DIRECTORY/.env" ]]; then
+            cp "$COMPONENT_DIRECTORY/.env" "./tmp/$COMPONENT/$APP"
+          fi
+          cd "./tmp/$COMPONENT/$APP"
+          ls -lah
+          yarn install
+          yarn run webpack:prod
+        env:
+          COMPONENT: ${{ inputs.component }}
+          APP: ${{ steps.get-parameters.outputs.app }}
+          COMPONENT_DIRECTORY: ${{ steps.get-parameters.outputs.directory }}
+      - name: Build api
+        if: ${{ steps.get-parameters.outputs.type == 'api' }}
+        run: |
+          cd "./tmp/$COMPONENT/$APP"
+          ls -lah
+          make install
+          make build
+        env:
+          COMPONENT: ${{ inputs.component }}
+          APP: ${{ steps.get-parameters.outputs.app }}
+          COMPONENT_DIRECTORY: ${{ steps.get-parameters.outputs.directory }}
+      # checkout this workflow repository to get actions
+      - uses: ./tmp/github-workflows/.github/actions/build-push-image
+        with:
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ secrets.DV_AWS_REGION }}
+          ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
+          ecr_repository: ${{ steps.get-parameters.outputs.ecr_repo }}
+          docker_file: ${{ steps.get-parameters.outputs.directory }}/Dockerfile
+          current_directory: ./tmp/${{ inputs.component }}
+          image_tag: ${{ inputs.image_tag1 }}
+          build_args: |
+            PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}
+            DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
+            GIT_ACCESS_TOKEN=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+            DATAVISYN_NGINX_BASE_IMAGE=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
+          labels: |
+            name=${{ steps.get-parameters.outputs.ecr_repo }}
+            version=${{ inputs.image_tag2 }}
+            org.opencontainers.image.description=${{ inputs.component }} image for ${{ steps.get-parameters.outputs.app }}
+            org.opencontainers.image.base.name=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
+            org.opencontainers.image.source=${{ github.event.repository.html_url }}/${{ steps.get-parameters.outputs.directory }}/Dockerfile
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}/${{ steps.get-parameters.outputs.directory }}/Dockerfile
+            org.opencontainers.image.title=${{ steps.get-parameters.outputs.ecr_repo }}
+            org.opencontainers.image.version=${{ inputs.image_tag2 }}
+            org.opencontainers.image.created=${{ inputs.build_time }}
+            org.opencontainers.image.revision=${{ github.sha }}
+      - name: scan node image
+        id: get-ecr-scan-result
+        uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
+        with:
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ secrets.DV_AWS_REGION }}
+          ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
+          ecr_repository: ${{ steps.get-parameters.outputs.ecr_repo }}
+          image_tag: ${{ inputs.image_tag1 }}
+      - name: check scan results
+        run: |
+          if [ "${{ steps.get-ecr-scan-result.outputs.critical }}" != "null" ] || [ "${{ steps.get-ecr-scan-result.outputs.high }}" != "null" ]; then
+            echo "Docker image contains vulnerabilities at critical or high level"
+            exit 1  #exit execution due to docker image vulnerabilities
+          fi

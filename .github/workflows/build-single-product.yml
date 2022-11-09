@@ -1,0 +1,133 @@
+name: build-single-product
+
+on:
+  workflow_call:
+    secrets:
+      DATAVISYN_BOT_REPO_TOKEN:
+        required: false
+      DV_BOT_USER:
+        required: false
+      DV_CUSTOMERS:
+        required: true
+      DV_AWS_ECR_ROLE:
+        required: false
+      DV_AWS_REGION:
+        required: false
+      DV_AWS_ECR_REGISTRY:
+        required: false
+      NODE_VERSION:
+        required: false
+      PYTHON_VERSION:
+        required: false
+      GITLAB_TOKEN:
+        required: false
+      GITLAB_HOST:
+        required: false
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
+  cancel-in-progress: true
+
+env:
+  GENERATOR_VERSION: "develop"
+  TIME_ZONE: "Europe/Vienna"
+  NODE_VERSION: "16.16"
+  PYTHON_VERSION: "3.10"
+  WORKFLOW_BRANCH: "new_deployment"
+  PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
+  DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
+  DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  prepare-build:
+    outputs:
+      app: ${{ steps.get-parameters.outputs.app }}
+      develop: ${{ steps.get-parameters.outputs.develop }}
+      sub_app: ${{ steps.get-parameters.outputs.sub_app }}
+      trigger_automatic_deployment: ${{ steps.get-parameters.outputs.trigger_automatic_deployment }}
+      customer: ${{ steps.get-parameters.outputs.customer }}
+      image_tag1: ${{ steps.get-parameters.outputs.image_tag1 }}
+      image_tag2: ${{ steps.get-parameters.outputs.image_tag2 }}
+      build_time: ${{ steps.get-parameters.outputs.build_time }}
+      repo: ${{ steps.get-parameters.outputs.repo }}
+      branch: ${{ steps.get-parameters.outputs.branch }}
+      components: ${{ steps.get-parameters.outputs.components }}
+      ecr_repos: ${{ steps.get-parameters.outputs.ecr_repos }}
+    runs-on: ubuntu-20.04
+    steps:
+      # checkout specific repository
+      - uses: actions/checkout@v3
+      # checkout this workflow repository to get actions
+      - uses: actions/checkout@v3
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+      - name: lint dockerfiles
+        id: lint-docker
+        uses: ./tmp/github-workflows/.github/actions/lint-docker
+        with:
+          config: .github/linters/.hadolint.yaml
+          recursive: true
+      - name: show dockerfile lint error
+        if: ( steps.lint-docker.outcome == 'failure' )
+        run: |
+          echo ${{ steps.lint-docker.outcome }}
+          echo -e "#### Docker Lint Result: ${{ steps.lint-docker.outputs.results }}"
+      - name: lint github action files
+        id: lint-ga
+        uses: ./tmp/github-workflows/.github/actions/lint-github-actions
+      - uses: ./tmp/github-workflows/.github/actions/get-single-product-parameters
+        id: get-parameters
+        with:
+          dv_customers: ${{ secrets.DV_CUSTOMERS }}
+          repository_name: ${{ github.event.repository.name }}
+          branch_name: ${{ github.ref }}
+          time_zone: ${{ env.TIME_ZONE }}
+  build:
+    needs: prepare-build
+    if: ${{ needs.prepare-build.outputs.components != '[]' && needs.prepare-build.outputs.components != ''}}
+    strategy:
+      fail-fast: true
+      matrix:
+        component: ${{fromJson(needs.prepare-build.outputs.components)}}
+    uses: datavisyn/github-workflows/.github/workflows/build-single-product-part.yml@new_deployment
+    with:
+      component: ${{ matrix.component }}
+      image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
+      image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
+      build_time: ${{ needs.prepare-build.outputs.build_time }}
+    secrets: inherit
+  deploy:
+    needs: [prepare-build, build]
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+      - name: retag images
+        uses: ./tmp/github-workflows/.github/actions/retag-image
+        with:
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ secrets.DV_AWS_REGION }}
+          ecr_repositories: ${{ needs.prepare-build.outputs.ecr_repos }}
+          current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
+          additional_image_tag: ${{ needs.prepare-build.outputs.image_tag2 }}
+      - name: trigger deployment
+        if: ${{ needs.prepare-build.outputs.trigger_automatic_deployment == 'true' }}
+        uses: datavisyn/github-action-trigger-workflow@v1
+        with:
+          owner: "datavisyn"
+          repo:  "infrastructure-k8s"
+          github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+          workflow_file_name: "deploy-app.yml"
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          github_user: ${{ secrets.DV_BOT_USER }}
+          client_payload: '{ "app": "${{ needs.prepare-build.outputs.app }}", "customer": "${{ needs.prepare-build.outputs.customer }}", "stage": "develop", "sub_app": "${{ needs.prepare-build.outputs.sub_app }}", "branch": "${{ needs.prepare-build.outputs.image_tag2 }}", "ecr_repository_parts": needs.prepare-build.outputs.ecr_repository_parts }'
+
