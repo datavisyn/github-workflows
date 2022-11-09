@@ -106,7 +106,8 @@ jobs:
           python-version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
       - name: Git config
         run: |
-          git config --global url."https://$_GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
+          git config --global url."https://${_GITHUB_TOKEN}@github".insteadOf "https://github"
+          git config --add --global url."https://$_GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
           git config --add --global url."https://$_GITHUB_TOKEN@github.com/".insteadOf git@github.com:
           if [[ -n $GITLAB_TOKEN && -n $GITLAB_HOST ]] ; then
             echo "set gitlab config"
