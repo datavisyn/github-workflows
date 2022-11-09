@@ -145,7 +145,8 @@ jobs:
           fi
           cd "./tmp/$COMPONENT/$APP"
           ls -lah
-          yarn install
+          touch ./yarn.lock
+          yarn install --no-immutable
           yarn run webpack:prod
         env:
           COMPONENT: ${{ inputs.component }}
