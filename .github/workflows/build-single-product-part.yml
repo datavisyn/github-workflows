@@ -138,6 +138,22 @@ jobs:
           GH_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
           GITLAB_HOST:  ${{ secrets.GITLAB_HOST }}
+      - name: Copy docker sources
+        run: |
+          if [[ -d "$COMPONENT_DIRECTORY/docker" ]]; then
+            cp -r "$COMPONENT_DIRECTORY/docker" "./tmp/$COMPONENT/$APP/docker"
+            ls -lah "./tmp/$COMPONENT/$APP/docker"
+          fi
+        env:
+          COMPONENT: ${{ inputs.component }}
+          REPO: ${{ steps.get-parameters.outputs.repo }}
+          BRANCH: ${{ steps.get-parameters.outputs.branch }}
+          APP: ${{ steps.get-parameters.outputs.app }}
+          GH_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_HOST:  ${{ secrets.GITLAB_HOST }}
+
+
       - name: Build web
         if: ${{ steps.get-parameters.outputs.type == 'web' }}
         run: |
