@@ -34,8 +34,8 @@ runs:
       run: |
         mapfile -t array < <(echo "${REPOSITORY_NAMES}" | tr ',' "\n")
         for REPOSITORY_NAME in "${array[@]}"; do
-          IMAGE_META="$(aws ecr describe-images --repository-name $REPOSITORY_NAME --image-ids imageTag=$CURRENT_IMAGE_TAG --output json | jq --arg var ${ADDITIONAL_IMAGE_TAG} '.imageDetails[0].imageTags | index( $var )')"
-          if [[ -z $IMAGE_META ]]; then
+          IMAGE_META=$(aws ecr describe-images --repository-name "$REPOSITORY_NAME" --image-ids imageTag="$CURRENT_IMAGE_TAG" --output json | jq --arg var "${ADDITIONAL_IMAGE_TAG}" '.imageDetails[0].imageTags | index( $var )')
+          if [[ -z "${IMAGE_META}" || ${IMAGE_META} == "null" ]]; then
             MANIFEST=$(aws ecr batch-get-image --repository-name $REPOSITORY_NAME --image-ids imageTag=$CURRENT_IMAGE_TAG --output json | jq --raw-output --join-output '.images[0].imageManifest')
             aws ecr put-image --repository-name $REPOSITORY_NAME --image-tag $ADDITIONAL_IMAGE_TAG --image-manifest "$MANIFEST"
           else

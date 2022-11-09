@@ -1,4 +1,5 @@
 name: build-single-product-part
+run-name: build for component ${{ inputs.component }}
 
 on:
   workflow_call:
