@@ -1,5 +1,6 @@
 name: build-single-product-part
-run-name: build for component ${{ inputs.component }}
+# will hopefully possible very soon with the new linter
+# run-name: build for component ${{ inputs.component }}
 
 on:
   workflow_call:
