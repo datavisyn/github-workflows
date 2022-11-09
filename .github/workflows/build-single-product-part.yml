@@ -190,7 +190,7 @@ jobs:
           ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ steps.get-parameters.outputs.ecr_repo }}
           docker_file: ${{ steps.get-parameters.outputs.directory }}/Dockerfile
-          current_directory: ./tmp/${{ inputs.component }}
+          current_directory: ./tmp/${{ inputs.component }}/${{ steps.get-parameters.outputs.app }}
           image_tag: ${{ inputs.image_tag1 }}
           build_args: |
             PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}
@@ -208,7 +208,7 @@ jobs:
             org.opencontainers.image.version=${{ inputs.image_tag2 }}
             org.opencontainers.image.created=${{ inputs.build_time }}
             org.opencontainers.image.revision=${{ github.sha }}
-      - name: scan node image
+      - name: scan image
         id: get-ecr-scan-result
         uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
         with:
