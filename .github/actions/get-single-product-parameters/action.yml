@@ -59,13 +59,16 @@ runs:
         branch=$(jq  -rc '.branch' ./visyn_product.json)
         customer=$(jq  -rc '.customer' ./visyn_product.json)
         sub_app=$(jq  -rc '.sub_app' ./visyn_product.json)
-        trigger_automatic_deployment=$(jq  -rc '.sub_app' ./visyn_product.json)
+        trigger_automatic_deployment=$(jq  -rc '.trigger_automatic_deployment' ./visyn_product.json)
         components=$(jq  -rc '.components | keys' ./visyn_product.json)
         ecr_repos=$(jq -r  '.components |.[] | .ecr_repo'  ./visyn_product.json)
         ecr_repos=$(echo $ecr_repos | tr " " ",")
         # set default customer
         if [[ -z $customer ]] ; then
           customer='datavisyn'
+        fi
+        if [[ -z $trigger_automatic_deployment && $BRANCH_NAME == develop* ]] ; then
+          trigger_automatic_deployment=true
         fi
         # get image tags
         build_time=$(TZ=$TIME_ZONE date +%Y-%m-%dT%H%M%SZ)
