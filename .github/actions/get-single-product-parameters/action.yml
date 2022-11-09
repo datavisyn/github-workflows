@@ -26,7 +26,7 @@ outputs:
     value: ${{ steps.get-parameters.outputs.branch }}
   trigger_automatic_deployment:
     description: "true, if the branch should be deployed automatically, otherwise false"
-    value: ${{ steps.get-parameters.outputs.develop }}
+    value: ${{ steps.get-parameters.outputs.trigger_automatic_deployment }}
   customer:
     description: "customer of the branch - depending on the branch name"
     value: ${{ steps.get-parameters.outputs.customer }}
