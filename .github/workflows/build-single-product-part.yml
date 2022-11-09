@@ -71,9 +71,9 @@ jobs:
       - name: get parameters
         id: get-parameters
         run: |
-          type=$(jq --arg var "${component}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.type' ./visyn_product.json)
-          directory=$(jq --arg var "${component}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.directory' ./visyn_product.json)
-          ecr_repo=$(jq --arg var "${component}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.ecr_repo' ./visyn_product.json)
+          type=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.type' ./visyn_product.json)
+          directory=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.directory' ./visyn_product.json)
+          ecr_repo=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.ecr_repo' ./visyn_product.json)
           app=$(jq  -rc '.app' ./visyn_product.json)
           repo=$(jq  -rc '.repo' ./visyn_product.json)
           branch=$(jq  -rc '.branch' ./visyn_product.json)
@@ -91,6 +91,8 @@ jobs:
           echo "app=$app" >> "$GITHUB_OUTPUT"
           echo "repo=$repo" >> "$GITHUB_OUTPUT"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
+        env:
+          COMPONENT: ${{ inputs.component }}
       - name: setup node
         if: ${{ steps.get-parameters.outputs.type == 'web' }}
         uses: actions/setup-node@v3

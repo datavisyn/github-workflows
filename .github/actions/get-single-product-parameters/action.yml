@@ -63,6 +63,10 @@ runs:
         components=$(jq  -rc '.components | keys' ./visyn_product.json)
         ecr_repos=$(jq -r  '.components |.[] | .ecr_repo'  ./visyn_product.json)
         ecr_repos=$(echo $ecr_repos | tr " " ",")
+        # set default customer
+        if [[ -z $customer ]] ; then
+          customer='datavisyn'
+        fi
         # get image tags
         build_time=$(TZ=$TIME_ZONE date +%Y-%m-%dT%H%M%SZ)
         image_tag2=$BRANCH_NAME

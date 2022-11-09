@@ -86,7 +86,7 @@ jobs:
         with:
           dv_customers: ${{ secrets.DV_CUSTOMERS }}
           repository_name: ${{ github.event.repository.name }}
-          branch_name: ${{ github.ref }}
+          branch_name: ${{ github.ref_name }}
           time_zone: ${{ env.TIME_ZONE }}
   build:
     needs: prepare-build
