@@ -95,6 +95,7 @@ runs:
         echo "components=$components"
         echo "ecr_repos=$ecr_repos"
         echo "ecr_repository_keys=$ecr_repository_keys"
+        echo "create_workspace=$create_workspace"
         # echo to output
         echo "app=$app" >> "$GITHUB_OUTPUT"
         echo "repo=$repo" >> "$GITHUB_OUTPUT"
@@ -108,6 +109,7 @@ runs:
         echo "components=$components" >> "$GITHUB_OUTPUT"
         echo "ecr_repos=$ecr_repos" >> "$GITHUB_OUTPUT"
         echo "ecr_repository_keys=$ecr_repository_keys" >> "$GITHUB_OUTPUT"
+        echo "create_workspace=$create_workspace" >> "$GITHUB_OUTPUT"
       env:
         DV_CUSTOMERS: ${{ inputs.dv_customers }}
         BRANCH_NAME: ${{ inputs.branch_name }}
