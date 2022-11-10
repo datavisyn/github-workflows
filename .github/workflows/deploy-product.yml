@@ -20,18 +20,11 @@ on:
         description: "stage that should be deployed (develop|qa|production)"
         required: true
         type: string
-        # type: choice
-        # options:
-        # - develop
-        # - qa
-        # - production
-        # default: develop
       customer:
         description: "customer for that the app should be deployed"
         required: true
         type: string
-        # type: choice
-        # options: ${{ secrets.POSSIBLE_CUSTOMERS }}
+
 permissions:
   id-token: write
   contents: read
@@ -75,29 +68,13 @@ jobs:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
-      - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
+      - uses: ./tmp/github-workflows/.github/actions/get-single-product-parameters
         id: get-parameters
         with:
           dv_customers: ${{ secrets.DV_CUSTOMERS }}
           repository_name: ${{ github.event.repository.name }}
-          branch_name: ${{ github.base_ref }}
+          branch_name: ${{ github.ref_name }}
           time_zone: ${{ env.TIME_ZONE }}
-      - name: Get images
-        id: get-images
-        run: |
-          images=()
-          backend_image=$ECR_REGISTRY/$BACKEND_REPO:$IMAGE_TAG
-          frontend_image=$ECR_REGISTRY/$FRONTEND_REPO:$IMAGE_TAG
-          images+=("$frontend_image")
-          images+=("$backend_image")
-          images_string="$(IFS=',';echo "${images[*]}")"
-          echo "images: $images_string"
-          echo "images=$images_string" >> "$GITHUB_OUTPUT"
-        env:
-          ECR_REGISTRY: ${{ secrets.DV_AWS_ECR_REGISTRY }}
-          FRONTEND_REPO: ${{ steps.get-parameters.outputs.web_repo }}
-          BACKEND_REPO: ${{ steps.get-parameters.outputs.api_repo }}
-          IMAGE_TAG: ${{ steps.get-parameters.outputs.image_tag1 }}
       - name: trigger deployment
         uses: datavisyn/github-action-trigger-workflow@v1
         with:
@@ -105,6 +82,6 @@ jobs:
           repo:  "infrastructure-k8s"
           github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
           workflow_file_name: "deploy-app.yml"
-          ref: "main"
+          ref: ${{ env.WORKFLOW_BRANCH }}
           github_user: ${{ secrets.DV_BOT_USER }}
-          client_payload: '{ "app": "${{steps.get-parameters.outputs.app}}", "customer": "${{inputs.customer}}", "stage": "${{inputs.stage}}", "sub_app": "${{steps.get-parameters.outputs.sub_app}}", "images": "${{steps.get-images.outputs.images}}" }'
+          client_payload: '{ "app": "${{ steps.get-parameters.outputs.app }}", "customer": "${{ inputs.customer }}", "stage": "${{ inputs.stage }}", "sub_app": "${{ steps.get-parameters.outputs.sub_app }}", "branch": "${{ steps.get-parameters.outputs.image_tag2 }}" }'

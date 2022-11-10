@@ -130,5 +130,5 @@ jobs:
           workflow_file_name: "deploy-app.yml"
           ref: ${{ env.WORKFLOW_BRANCH }}
           github_user: ${{ secrets.DV_BOT_USER }}
-          client_payload: '{ "app": "${{ needs.prepare-build.outputs.app }}", "customer": "${{ needs.prepare-build.outputs.customer }}", "stage": "develop", "sub_app": "${{ needs.prepare-build.outputs.sub_app }}", "branch": "${{ needs.prepare-build.outputs.image_tag2 }}", "ecr_repository_keys": "${{ needs.prepare-build.outputs.ecr_repository_keys }}"}'
+          client_payload: '{ "app": "${{ needs.prepare-build.outputs.app }}", "customer": "${{ needs.prepare-build.outputs.customer }}", "stage": "develop", "sub_app": "${{ needs.prepare-build.outputs.sub_app }}", "branch": "${{ needs.prepare-build.outputs.image_tag2 }}" }'
 
