@@ -204,7 +204,7 @@ jobs:
           cd "$APP"
           make build
           cp -r ./build/lib/* ../build/source/
-          cp -r "./${name,,}.egg-info" "../build/source/${name,,}.egg-info"
+          cp -r "./${APP,,}.egg-info" "../build/source/${APP,,}.egg-info"
           cp -r ./dist_python/* ../dist_python/
           cd ..
           readarray -t my_array < <(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.additionals[]?' ../../visyn_product.json)
