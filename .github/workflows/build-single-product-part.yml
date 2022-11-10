@@ -157,7 +157,7 @@ jobs:
       - name: Copy docker sources
         run: |
           if [[ -d "$COMPONENT_DIRECTORY/docker" ]]; then
-            echo " ************** copy docker directory ***************************** "
+            echo "copy docker directory"
             cp -r "$COMPONENT_DIRECTORY/docker" "./tmp/$COMPONENT/$APP/docker"
             ls -lah "./tmp/$COMPONENT/$APP/docker"
           fi
