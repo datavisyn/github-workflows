@@ -79,12 +79,18 @@ jobs:
           app=$(jq  -rc '.app' ./visyn_product.json)
           repo=$(jq  -rc '.repo' ./visyn_product.json)
           branch=$(jq  -rc '.branch' ./visyn_product.json)
+          if [[ ${type} == web ]]; then
+            image_base_label=$DATAVISYN_NGINX_BASE_IMAGE
+          elif [[ ${type} == api ]]; then
+            image_base_label=$DATAVISYN_PYTHON_BASE_IMAGE
+          fi
           echo "type=$type"
           echo "directory=$directory"
           echo "ecr_repo=$ecr_repo"
           echo "app=$app"
           echo "repo=$repo"
           echo "branch=$branch"
+          echo "image_base_label=$image_base_label"
           # echo to output
           # shellcheck disable=SC2129
           echo "type=$type" >> "$GITHUB_OUTPUT"
@@ -93,8 +99,11 @@ jobs:
           echo "app=$app" >> "$GITHUB_OUTPUT"
           echo "repo=$repo" >> "$GITHUB_OUTPUT"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "image_base_label=$image_base_label" >> "$GITHUB_OUTPUT"
         env:
           COMPONENT: ${{ inputs.component }}
+          DATAVISYN_NGINX_BASE_IMAGE: ${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
+          DATAVISYN_PYTHON_BASE_IMAGE: ${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
       - name: setup node
         if: ${{ steps.get-parameters.outputs.type == 'web' }}
         uses: actions/setup-node@v3
@@ -199,7 +208,7 @@ jobs:
             name=${{ steps.get-parameters.outputs.ecr_repo }}
             version=${{ inputs.image_tag2 }}
             org.opencontainers.image.description=${{ inputs.component }} image for ${{ steps.get-parameters.outputs.app }}
-            org.opencontainers.image.base.name=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
+            org.opencontainers.image.base.name=${{ steps.get-parameters.outputs.image_base_label }}
             org.opencontainers.image.source=${{ github.event.repository.html_url }}/${{ steps.get-parameters.outputs.directory }}/Dockerfile
             org.opencontainers.image.url=${{ github.event.repository.html_url }}/${{ steps.get-parameters.outputs.directory }}/Dockerfile
             org.opencontainers.image.title=${{ steps.get-parameters.outputs.ecr_repo }}
