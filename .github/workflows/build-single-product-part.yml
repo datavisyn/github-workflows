@@ -84,6 +84,8 @@ jobs:
           elif [[ ${type} == api ]]; then
             image_base_label=$DATAVISYN_PYTHON_BASE_IMAGE
           fi
+          image_url="$REPOSITORY_HTML/$directory/Dockerfile"
+          image_url="${image_url/\/\.\//\/}"
           echo "type=$type"
           echo "directory=$directory"
           echo "ecr_repo=$ecr_repo"
@@ -91,6 +93,7 @@ jobs:
           echo "repo=$repo"
           echo "branch=$branch"
           echo "image_base_label=$image_base_label"
+          echo "image_url=$image_url"
           # echo to output
           # shellcheck disable=SC2129
           echo "type=$type" >> "$GITHUB_OUTPUT"
@@ -100,10 +103,12 @@ jobs:
           echo "repo=$repo" >> "$GITHUB_OUTPUT"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
           echo "image_base_label=$image_base_label" >> "$GITHUB_OUTPUT"
+          echo "image_url=$image_url" >> "$GITHUB_OUTPUT"
         env:
           COMPONENT: ${{ inputs.component }}
           DATAVISYN_NGINX_BASE_IMAGE: ${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
           DATAVISYN_PYTHON_BASE_IMAGE: ${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
+          REPOSITORY_HTML: ${{ github.event.repository.html_url }}
       - name: setup node
         if: ${{ steps.get-parameters.outputs.type == 'web' }}
         uses: actions/setup-node@v3
@@ -209,8 +214,8 @@ jobs:
             version=${{ inputs.image_tag2 }}
             org.opencontainers.image.description=${{ inputs.component }} image for ${{ steps.get-parameters.outputs.app }}
             org.opencontainers.image.base.name=${{ steps.get-parameters.outputs.image_base_label }}
-            org.opencontainers.image.source=${{ github.event.repository.html_url }}/${{ steps.get-parameters.outputs.directory }}/Dockerfile
-            org.opencontainers.image.url=${{ github.event.repository.html_url }}/${{ steps.get-parameters.outputs.directory }}/Dockerfile
+            org.opencontainers.image.source=${{ steps.get-parameters.outputs.image_url }}
+            org.opencontainers.image.url=${{ steps.get-parameters.outputs.image_url }}
             org.opencontainers.image.title=${{ steps.get-parameters.outputs.ecr_repo }}
             org.opencontainers.image.version=${{ inputs.image_tag2 }}
             org.opencontainers.image.created=${{ inputs.build_time }}
