@@ -146,6 +146,7 @@ jobs:
           GENERATOR_VERSION: ${{ env.GENERATOR_VERSION }}
       - name: create workspace
         run: |
+          echo " ************** create workspace ***************************** "
           mkdir "./tmp/$COMPONENT"
           cd "./tmp/$COMPONENT"
           repository="$REPO"
@@ -182,6 +183,7 @@ jobs:
       - name: Copy docker sources
         run: |
           if [[ -d "$COMPONENT_DIRECTORY/docker" ]]; then
+            echo " ************** copy docker directory ***************************** "
             cp -r "$COMPONENT_DIRECTORY/docker" "./tmp/$COMPONENT/docker"
             ls -lah "./tmp/$COMPONENT/docker"
           fi
@@ -192,10 +194,13 @@ jobs:
       - name: Build web
         if: ${{ steps.get-parameters.outputs.type == 'web' }}
         run: |
+          echo " ************** build web ***************************** "
           if [[ -f "$COMPONENT_DIRECTORY/.env" ]]; then
+            echo "copy .env file"
             cp "$COMPONENT_DIRECTORY/.env" "./tmp/$COMPONENT"
           fi
           if [[ -f "$COMPONENT_DIRECTORY/workspace.scss" ]]; then
+            echo "copy workspace.scss"
             cp "$COMPONENT_DIRECTORY/workspace.scss" "./tmp/$COMPONENT"
           fi
           cd "./tmp/$COMPONENT"
@@ -210,6 +215,7 @@ jobs:
       - name: Build api
         if: ${{ steps.get-parameters.outputs.type == 'api' }}
         run: |
+          echo " ************** build api ***************************** "
           cd "./tmp/$COMPONENT"
           ls -lah
           python -m pip install --upgrade pip
