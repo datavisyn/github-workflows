@@ -1,4 +1,4 @@
-name: build-single-product-part
+name: build-workspace-product-part
 # will hopefully possible very soon with the new linter
 # run-name: build for component ${{ inputs.component }}
 
@@ -134,7 +134,7 @@ jobs:
           _GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
           GITLAB_HOST:  ${{ secrets.GITLAB_HOST }}
-      - name: Git clone app
+      - name: create workspace
         run: |
           mkdir "./tmp/$COMPONENT"
           cd "./tmp/$COMPONENT"
@@ -145,11 +145,24 @@ jobs:
             repository=https://$GH_TOKEN@github.com/${repository}.git
           fi
           echo "$repository"
-          git clone -b "$BRANCH" --depth 1 "$repository" "$APP"
+          git clone -b "$BRANCH_NAME" --depth 1 "$repository" "$APP"
+          readarray -t my_array < <(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.additionals[]?' ../../visyn_product.json)
+          for additional in "${my_array[@]}"; do
+            echo "$additional"
+            name=$(echo "$additional" | jq  -rc '.name')
+            repository=$(echo "$additional" | jq  -rc '.repo')
+            if [[ $repository == *"gitlab"* && -n $GITLAB_TOKEN ]] ; then
+              repository=${repository/"https://"/"https://$GITLAB_TOKEN@"}
+            else
+              repository=https://$GH_TOKEN@github.com/${repository}.git
+            fi
+            branch=$(echo "$additional" | jq  -rc '.branch')
+            git clone -b "$branch" --depth 1 "$repository" "$name"
+          done
         env:
           COMPONENT: ${{ inputs.component }}
           REPO: ${{ steps.get-parameters.outputs.repo }}
-          BRANCH: ${{ steps.get-parameters.outputs.branch }}
+          BRANCH_NAME: ${{ steps.get-parameters.outputs.branch }}
           APP: ${{ steps.get-parameters.outputs.app }}
           GH_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
@@ -157,8 +170,8 @@ jobs:
       - name: Copy docker sources
         run: |
           if [[ -d "$COMPONENT_DIRECTORY/docker" ]]; then
-            cp -r "$COMPONENT_DIRECTORY/docker" "./tmp/$COMPONENT/$APP/docker"
-            ls -lah "./tmp/$COMPONENT/$APP/docker"
+            cp -r "$COMPONENT_DIRECTORY/docker" "./tmp/$COMPONENT/docker"
+            ls -lah "./tmp/$COMPONENT/docker"
           fi
         env:
           COMPONENT: ${{ inputs.component }}
@@ -168,27 +181,44 @@ jobs:
         if: ${{ steps.get-parameters.outputs.type == 'web' }}
         run: |
           if [[ -f "$COMPONENT_DIRECTORY/.env" ]]; then
-            cp "$COMPONENT_DIRECTORY/.env" "./tmp/$COMPONENT/$APP"
+            cp "$COMPONENT_DIRECTORY/.env" "./tmp/$COMPONENT"
           fi
-          cd "./tmp/$COMPONENT/$APP"
+          cd "./tmp/$COMPONENT"
           ls -lah
           touch ./yarn.lock
           yarn install --no-immutable
           yarn info --name-only
-          yarn run webpack:prod
+          npm run dist
         env:
           COMPONENT: ${{ inputs.component }}
-          APP: ${{ steps.get-parameters.outputs.app }}
           COMPONENT_DIRECTORY: ${{ steps.get-parameters.outputs.directory }}
       - name: Build api
         if: ${{ steps.get-parameters.outputs.type == 'api' }}
         run: |
-          cd "./tmp/$COMPONENT/$APP"
+          cd "./tmp/$COMPONENT"
           ls -lah
           python -m pip install --upgrade pip
           pip install setuptools wheel
-          make install
+          mkdir -p ./build/source
+          mkdir -p ./dist_python/
+          cd "$APP"
           make build
+          cp -r ./build/lib/* ../build/source/
+          cp -r "./${name,,}.egg-info" "../build/source/${name,,}.egg-info"
+          cp -r ./dist_python/* ../dist_python/
+          cd ..
+          readarray -t my_array < <(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.additionals[]?' ../../visyn_product.json)
+          for additional in "${my_array[@]}"; do
+            name=$(echo "$additional" | jq  -rc '.name')
+            # shellcheck disable=SC2001
+            name=$(echo "$name" | sed -e 's|.*/||')
+            cd "$name"
+            make build
+            cp -r ./build/lib/* ../build/source/
+            cp -r "./${name,,}.egg-info" "../build/source/${name,,}.egg-info"
+            cp -r ./dist_python/* ../dist_python/
+            cd ..
+          done
         env:
           COMPONENT: ${{ inputs.component }}
           APP: ${{ steps.get-parameters.outputs.app }}
@@ -200,8 +230,8 @@ jobs:
           aws_region: ${{ secrets.DV_AWS_REGION }}
           ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ steps.get-parameters.outputs.ecr_repo }}
-          docker_file: ./tmp/${{ inputs.component }}/${{ steps.get-parameters.outputs.app }}/docker/Dockerfile
-          current_directory: ./tmp/${{ inputs.component }}/${{ steps.get-parameters.outputs.app }}
+          docker_file: ./tmp/${{ inputs.component }}/docker/Dockerfile
+          current_directory: ./tmp/${{ inputs.component }}
           image_tag: ${{ inputs.image_tag1 }}
           build_args: |
             PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}

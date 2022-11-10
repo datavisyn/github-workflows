@@ -263,7 +263,7 @@ jobs:
             make build
             cp -r ./build/lib/* ../build/source/
             cp -r "./${name,,}.egg-info" "../build/source/${name,,}.egg-info"
-            cp -r ./dist_python/* ..//dist_python/
+            cp -r ./dist_python/* ../dist_python/
             cd ..
           done
       - uses: ./tmp/github-workflows/.github/actions/build-push-image

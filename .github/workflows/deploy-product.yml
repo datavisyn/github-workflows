@@ -72,7 +72,6 @@ jobs:
         id: get-parameters
         with:
           dv_customers: ${{ secrets.DV_CUSTOMERS }}
-          repository_name: ${{ github.event.repository.name }}
           branch_name: ${{ github.ref_name }}
           time_zone: ${{ env.TIME_ZONE }}
       - name: trigger deployment

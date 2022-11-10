@@ -58,6 +58,7 @@ jobs:
       components: ${{ steps.get-parameters.outputs.components }}
       ecr_repos: ${{ steps.get-parameters.outputs.ecr_repos }}
       ecr_repository_keys: ${{ steps.get-parameters.outputs.ecr_repository_keys }}
+      create_workspace: ${{ steps.get-parameters.outputs.create_workspace }}
     runs-on: ubuntu-20.04
     steps:
       # checkout specific repository
@@ -86,12 +87,11 @@ jobs:
         id: get-parameters
         with:
           dv_customers: ${{ secrets.DV_CUSTOMERS }}
-          repository_name: ${{ github.event.repository.name }}
           branch_name: ${{ github.ref_name }}
           time_zone: ${{ env.TIME_ZONE }}
-  build:
+  build-single:
     needs: prepare-build
-    if: ${{ needs.prepare-build.outputs.components != '[]' && needs.prepare-build.outputs.components != ''}}
+    if: ${{ needs.prepare-build.outputs.create_workspace != 'true' && needs.prepare-build.outputs.components != '[]' && needs.prepare-build.outputs.components != ''}}
     strategy:
       fail-fast: true
       matrix:
@@ -103,8 +103,23 @@ jobs:
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
     secrets: inherit
+  build-workspace:
+    needs: prepare-build
+    if: ${{ needs.prepare-build.outputs.create_workspace == 'true' && needs.prepare-build.outputs.components != '[]' && needs.prepare-build.outputs.components != ''}}
+    strategy:
+      fail-fast: true
+      matrix:
+        component: ${{fromJson(needs.prepare-build.outputs.components)}}
+    uses: datavisyn/github-workflows/.github/workflows/build-workspace-product-part.yml@new_deployment
+    with:
+      component: ${{ matrix.component }}
+      image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
+      image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
+      build_time: ${{ needs.prepare-build.outputs.build_time }}
+    secrets: inherit
   post-build:
-    needs: [prepare-build, build]
+    needs: [prepare-build, build-single, build-workspace]
+    if: ${{ always() && (needs.build-single.result == 'success' || needs.build-single.result == 'skipped') && (needs.build-workspace.result == 'success' || needs.build-workspace.result == 'skipped') }}
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3

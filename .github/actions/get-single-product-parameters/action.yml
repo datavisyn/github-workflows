@@ -51,6 +51,9 @@ outputs:
   ecr_repository_keys:
     description: "repository keys that are used for deployment"
     value: ${{ steps.get-parameters.outputs.ecr_repository_keys }}
+  create_workspace:
+    description: "true if workspace should be created else false"
+    value: ${{ steps.get-parameters.outputs.create_workspace }}
 runs:
   using: "composite"
   steps:
@@ -63,6 +66,7 @@ runs:
         customer=$(jq  -rc '.customer' ./visyn_product.json)
         sub_app=$(jq  -rc '.sub_app' ./visyn_product.json)
         trigger_automatic_deployment=$(jq  -rc '.trigger_automatic_deployment' ./visyn_product.json)
+        create_workspace=$(jq  -rc '.create_workspace' ./visyn_product.json)
         components=$(jq  -rc '.components | keys' ./visyn_product.json)
         ecr_repos=$(jq -r  '.components |.[] | .ecr_repo'  ./visyn_product.json)
         ecr_repos=$(echo $ecr_repos | tr " " ",")
