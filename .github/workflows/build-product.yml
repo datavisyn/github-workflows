@@ -93,7 +93,7 @@ jobs:
     needs: prepare-build
     if: ${{ needs.prepare-build.outputs.create_workspace != 'true' && needs.prepare-build.outputs.components != '[]' && needs.prepare-build.outputs.components != ''}}
     strategy:
-      fail-fast: true
+#      fail-fast: true
       matrix:
         component: ${{fromJson(needs.prepare-build.outputs.components)}}
     uses: datavisyn/github-workflows/.github/workflows/build-single-product-part.yml@new_deployment
@@ -107,7 +107,7 @@ jobs:
     needs: prepare-build
     if: ${{ needs.prepare-build.outputs.create_workspace == 'true' && needs.prepare-build.outputs.components != '[]' && needs.prepare-build.outputs.components != ''}}
     strategy:
-      fail-fast: true
+#      fail-fast: true
       matrix:
         component: ${{fromJson(needs.prepare-build.outputs.components)}}
     uses: datavisyn/github-workflows/.github/workflows/build-workspace-product-part.yml@new_deployment

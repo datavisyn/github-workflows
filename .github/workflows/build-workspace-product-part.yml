@@ -229,6 +229,7 @@ jobs:
           cd ..
           readarray -t my_array < <(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.additionals[]?' ../../visyn_product.json)
           for additional in "${my_array[@]}"; do
+            echo "$additional"
             name=$(echo "$additional" | jq  -rc '.name')
             # shellcheck disable=SC2001
             name=$(echo "$name" | sed -e 's|.*/||')
