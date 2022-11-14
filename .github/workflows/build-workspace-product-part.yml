@@ -43,7 +43,7 @@ on:
           required: true
           type: string
 env:
-  GENERATOR_VERSION: "develop"
+  VISYN_SCRIPTS_VERSION: "mp/workspace_update_args"
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: "16.16"
   PYTHON_VERSION: "3.10"
@@ -136,14 +136,13 @@ jobs:
           GITLAB_HOST:  ${{ secrets.GITLAB_HOST }}
       - name: Install generator
         run: |
-          npm install -g yo@4.3.0
-          if [[ "$GENERATOR_VERSION" == v[0-9]* ]] ; then
-            npm install -g "generator-phovea@$GENERATOR_VERSION"
+          if [[ "$VISYN_SCRIPTS_VERSION" == v[0-9]* ]] ; then
+            npm install -g "visyn_scripts@$VISYN_SCRIPTS_VERSION"
           else
-            npm install -g "https://github.com/phovea/generator-phovea.git#$GENERATOR_VERSION"
+            npm install -g "https://github.com/datavisyn/visyn_scripts.git#$VISYN_SCRIPTS_VERSION"
           fi
         env:
-          GENERATOR_VERSION: ${{ env.GENERATOR_VERSION }}
+          VISYN_SCRIPTS_VERSION: ${{ env.VISYN_SCRIPTS_VERSION }}
       - name: create workspace
         run: |
           mkdir "./tmp/$COMPONENT"
@@ -170,7 +169,7 @@ jobs:
             git clone -b "$branch" --depth 1 "$repository" "$name"
           done
           rm -f ./../../.yo-rc.json
-          yo phovea:workspace --defaultApp="$APP" --noAdditionals=true  --addWorkspaceRepos=false
+          visyn_scripts workspace-update --defaultApp="$APP" --noAdditionals=true  --addWorkspaceRepos=false
         env:
           COMPONENT: ${{ inputs.component }}
           REPO: ${{ steps.get-parameters.outputs.repo }}

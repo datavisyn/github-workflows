@@ -43,7 +43,6 @@ on:
           required: true
           type: string
 env:
-  GENERATOR_VERSION: "develop"
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: "16.16"
   PYTHON_VERSION: "3.10"
