@@ -43,7 +43,7 @@ on:
           required: true
           type: string
 env:
-  VISYN_SCRIPTS_VERSION: "mp/workspace_update_args"
+  VISYN_SCRIPTS_VERSION: "develop"
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: "16.16"
   PYTHON_VERSION: "3.10"
