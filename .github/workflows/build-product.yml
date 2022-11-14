@@ -92,7 +92,7 @@ jobs:
     needs: prepare-build
     if: ${{ needs.prepare-build.outputs.create_workspace != 'true' && needs.prepare-build.outputs.components != '[]' && needs.prepare-build.outputs.components != ''}}
     strategy:
-#      fail-fast: true
+      fail-fast: true
       matrix:
         component: ${{fromJson(needs.prepare-build.outputs.components)}}
     uses: datavisyn/github-workflows/.github/workflows/build-single-product-part.yml@new_deployment
@@ -106,7 +106,7 @@ jobs:
     needs: prepare-build
     if: ${{ needs.prepare-build.outputs.create_workspace == 'true' && needs.prepare-build.outputs.components != '[]' && needs.prepare-build.outputs.components != ''}}
     strategy:
-#      fail-fast: true
+      fail-fast: true
       matrix:
         component: ${{fromJson(needs.prepare-build.outputs.components)}}
     uses: datavisyn/github-workflows/.github/workflows/build-workspace-product-part.yml@new_deployment
@@ -116,6 +116,14 @@ jobs:
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
     secrets: inherit
+  # because of the fail-fast we have to check the output
+  error-build:
+    needs: [prepare-build, build-single, build-workspace]
+    if: ${{ always() && (needs.build-single.result == 'failure' || needs.build-workspace.result == 'failure') }}
+    runs-on: ubuntu-20.04
+    steps:
+      - name: throw error
+        run: exit 1
   post-build:
     needs: [prepare-build, build-single, build-workspace]
     if: ${{ always() && (needs.build-single.result == 'success' || needs.build-single.result == 'skipped') && (needs.build-workspace.result == 'success' || needs.build-workspace.result == 'skipped') }}
