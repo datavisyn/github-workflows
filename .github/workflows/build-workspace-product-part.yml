@@ -181,7 +181,7 @@ jobs:
       - name: Copy docker sources
         run: |
           ls -lah .
-          ls -lah $COMPONENT_DIRECTORY
+          ls -lah "$COMPONENT_DIRECTORY"
           if [[ -d "$COMPONENT_DIRECTORY/docker" ]]; then
             echo "copy docker directory"
             cp -r "$COMPONENT_DIRECTORY/docker" "./tmp/$COMPONENT/docker"

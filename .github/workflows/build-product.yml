@@ -118,7 +118,7 @@ jobs:
     secrets: inherit
   post-build:
     needs: [prepare-build, build-single, build-workspace]
-    if: ${{ always() && (needs.build-single.result == 'success' || needs.build-single.result == 'skipped') && (needs.build-workspace.result == 'success' || needs.build-workspace.result == 'skipped') }}
+    if: ${{ always() && (needs.build-single.result == 'success' || needs.build-single.result == 'skipped') && (needs.build-workspace.result == 'success' || needs.build-workspace.result == 'skipped') && !(needs.build-workspace.result == 'skipped' && needs.build-single.result == 'skipped')}}
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
