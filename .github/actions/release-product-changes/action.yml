@@ -31,7 +31,7 @@ runs:
         echo -e "$(jq --arg version "$REPOSITORY_VERSION" '.branch = $version' ./visyn_product.json)" > ./visyn_product.json
         known_repositories=$KNOWN_REPOSITORIES
         version=develop
-        readarray -t components < <(jq  -rc '.components | keys' ./visyn_product.json)
+        readarray -t components < <(jq  -rc '.components | keys[]' ./visyn_product.json)
         for component in "${components[@]}"; do
           echo "component: $component"
           readarray -t additionals < <(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.additionals[]?' ./visyn_product.json)
