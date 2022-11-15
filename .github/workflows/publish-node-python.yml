@@ -77,6 +77,8 @@ jobs:
         run: |
           echo "only the main branch can be published."
           exit 1
+      # checkout specific source repository
+      - uses: actions/checkout@v3
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
         with:
@@ -88,8 +90,6 @@ jobs:
           dv_devops: ${{ secrets.DV_DEVOPS }}
           actor: ${{ github.actor }}
           qms_are_allowed: "false"
-      # checkout specific source repository
-      - uses: actions/checkout@v3
       - uses: ./tmp/github-workflows/.github/actions/build-python
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
