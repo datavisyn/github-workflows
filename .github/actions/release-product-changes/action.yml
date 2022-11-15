@@ -34,21 +34,27 @@ runs:
         readarray -t components < <(jq  -rc '.components | keys[]' ./visyn_product.json)
         for component in "${components[@]}"; do
           echo "component: $component"
-          readarray -t additionals < <(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.additionals[]?' ./visyn_product.json)
+          readarray -t additionals < <(jq --arg var "${component}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.additionals[]?' ./visyn_product.json)
           content="["
           for additional in "${additionals[@]}"; do
             name=$(echo "$additional" | jq  -rc '.name')
             repository=$(echo "$additional" | jq  -rc '.repo')
             branch=$(echo "$additional" | jq  -rc '.branch')
+            echo $name
+            echo $repository
             if $PREPARE_RELEASE; then
               version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
             fi
+            echo $version
             content+="{\"name\": \"$name\", \"repo\": \"$repository\", \"branch\": \"v$version\"},"
+            echo $content
           done
           content=${content::-1}
           content+="]"
           echo $content
-          echo -e "$(jq --arg var "${COMPONENT}" --argjson additionals "$content" '.components | to_entries | .[] | select(.key==$var)| .value.additionals = $additionals' ./visyn_product.json)" > ./visyn_product.json
+          if [[${#myvar} > 1 ]] ; then
+            echo -e "$(jq --arg var "${COMPONENT}" --argjson additionals "$content" '.components | to_entries | .[] | select(.key==$var)| .value.additionals = $additionals' ./visyn_product.json)" > ./visyn_product.json
+          fi
         done
         #change version of github action references
         if $PREPARE_RELEASE; then
