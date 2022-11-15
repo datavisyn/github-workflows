@@ -58,9 +58,9 @@ runs:
         else
           find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@$GA_VERSION/@main/g" {} \;
         fi
-    env:
-      PREPARE_RELEASE: ${{ inputs.prepare_release }}
-      REPOSITORY_VERSION: ${{ inputs.repository_version }}
-      KNOWN_REPOSITORIES: ${{ inputs.known_repositories }}
-      GA_VERSION: ${{ inputs.ga_version }}
-    shell: bash
+      env:
+        PREPARE_RELEASE: ${{ inputs.prepare_release }}
+        REPOSITORY_VERSION: ${{ inputs.repository_version }}
+        KNOWN_REPOSITORIES: ${{ inputs.known_repositories }}
+        GA_VERSION: ${{ inputs.ga_version }}
+      shell: bash
