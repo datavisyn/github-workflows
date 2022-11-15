@@ -37,8 +37,6 @@ runs:
           readarray -t additionals < <(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.additionals[]?' ./visyn_product.json)
           content="["
           for additional in "${additionals[@]}"; do
-            echo "$additional"
-          done
             name=$(echo "$additional" | jq  -rc '.name')
             repository=$(echo "$additional" | jq  -rc '.repo')
             branch=$(echo "$additional" | jq  -rc '.branch')
