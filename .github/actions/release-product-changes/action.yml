@@ -45,10 +45,10 @@ runs:
             echo $repository
             echo $PREPARE_RELEASE
             if [[ $PREPARE_RELEASE == "true" ]]; then
-              version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
+              version="v$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
             fi
             echo $version
-            content+="{\"name\": \"$name\", \"repo\": \"$repository\", \"branch\": \"v$version\"},"
+            content+="{\"name\": \"$name\", \"repo\": \"$repository\", \"branch\": \"$version\"},"
             echo "$content"
           done
           content=${content::-1}
