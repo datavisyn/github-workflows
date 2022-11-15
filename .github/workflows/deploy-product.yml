@@ -41,34 +41,21 @@ jobs:
   deploy:
     runs-on: ubuntu-20.04
     steps:
-      - name: check actor
-        run: |
-          dv_devops=$_DV_DEVOPS
-          dv_qms=$_DV_QMS
-          actor=$GITHUB_ACTOR
-          mapfile -t array1 < <(echo "${dv_devops}" | tr ',' "\n")
-          mapfile -t array2 < <(echo "${dv_qms}" | tr ',' "\n")
-          array1+=("${array2[@]}")
-          for e in "${array1[@]}"; do
-            if [[ "$e" == "$actor" ]] ; then
-              exit 0
-            fi
-          done
-          echo "you are not allowed to run this job!"
-          exit 1
-        env:
-          _DV_DEVOPS: ${{ secrets.DV_DEVOPS }}
-          _DV_QMS: ${{ secrets.DV_QMS }}
-          GITHUB_ACTOR: ${{ github.actor }}
-      # checkout repo to get package.json
-      - uses: actions/checkout@v3
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
-      - uses: ./tmp/github-workflows/.github/actions/get-single-product-parameters
+      - uses: ./tmp/github-workflows/.github/actions/check-actor
+        with:
+          dv_devops: ${{ secrets.DV_DEVOPS }}
+          dv_qms: ${{ secrets.DV_QMS }}
+          actor: ${{ github.actor }}
+          qms_are_allowed: "true"
+      # checkout repo to get package.json
+      - uses: actions/checkout@v3
+      - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
         id: get-parameters
         with:
           dv_customers: ${{ secrets.DV_CUSTOMERS }}

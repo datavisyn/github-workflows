@@ -1,0 +1,48 @@
+name: check-actor
+description: checks if actor is allowed to call the workflow
+author: datavisyn
+
+inputs:
+  dv_devops:
+    description: "devops of datavisyn (seperated with ,)"
+    required: true
+  dv_qms:
+    description: "qms of datavisyn (seperated with ,)"
+    required: false
+  actor:
+    description: "actor that starts the workflow"
+    required: true
+  qms_are_allowed:
+    description: "true, if qms are allowed; else false"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check actor
+      run: |
+        devops=$DV_DEVOPS
+        qms=$_DV_QMS
+        actor=$GITHUB_ACTOR
+        mapfile -t array1 < <(echo "${devops}" | tr ',' "\n")
+        if [[ -n $qms ]]  && [[ $QMS_ALLOWED == "true" ]]  ; then
+          mapfile -t array2 < <(echo "${qms}" | tr ',' "\n")
+          array1+=("${array2[@]}")
+        fi
+        for e in "${array1[@]}"; do
+          if [[ "$e" == "$actor" ]] ; then
+            exit 0
+          fi
+        done
+        echo "you are not allowed to run this job!"
+        exit 1
+      env:
+        DV_DEVOPS: ${{ inputs.dv_devops }}
+        DV_QMS: ${{ inputs.dv_qms }}
+        GITHUB_ACTOR: ${{ inputs.actor }}
+        QMS_ALLOWED: ${{ qms_are_allowed }}
+      shell: bash
+
+
+
+

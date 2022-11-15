@@ -82,7 +82,7 @@ jobs:
       - name: lint github action files
         id: lint-ga
         uses: ./tmp/github-workflows/.github/actions/lint-github-actions
-      - uses: ./tmp/github-workflows/.github/actions/get-single-product-parameters
+      - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
         id: get-parameters
         with:
           dv_customers: ${{ secrets.DV_CUSTOMERS }}

@@ -9,9 +9,6 @@ inputs:
   repository_version:
     description: "version of the repository for the package.json"
     required: true
-  generator_version:
-    description: "version of the generator to use"
-    required: true
   ga_version:
     description: "github action version to use"
     required: true
@@ -25,74 +22,36 @@ runs:
   steps:
     - name: change release
       run: |
-        # change generator version
-        generator_npm_develop=git+ssh://git@github.com:phovea/generator-phovea#develop
-        if $PREPARE_RELEASE; then
-          sed -i "s|\"generator-phovea\": \"$generator_npm_develop\"|\"generator-phovea\": \"$GENERATOR_VERSION\"|gI" ./package.json
-        else
-          sed -i "s|\"generator-phovea\": \"$GENERATOR_VERSION\"|\"generator-phovea\": \"$generator_npm_develop\"|gI" ./package.json
-        fi
         # change version in package.json
         version=$(jq -r '.version' ./package.json)
         sed -i "s|\"version\": \"$version\"|\"version\": \"$REPOSITORY_VERSION\"|gI" ./package.json
         cat ./package.json
-        # change phovea_product
-        # frontend
+        # change visyn_product
+        # change app version
+        echo -e "$(jq --arg version "$REPOSITORY_VERSION" '.branch = $version' ./visyn_product.json)" > ./visyn_product.json
         known_repositories=$KNOWN_REPOSITORIES
-        content="[{"
-        name=$(jq  -rc '.[] | select(.type == "web") | .repo' ./phovea_product.json)
-        name=$(echo "$name" | sed -e 's|.*/||')
-        echo $name
-        version="develop"
-        if $PREPARE_RELEASE; then
-          version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
-        fi
-        echo $version
-        owner="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .owner')"
-        content+="\"type\": \"web\", \"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\",   \"additional\": ["
-        readarray -t my_array < <(jq  -rc '.[] | select(.type == "web") | .additional[] ' ./phovea_product.json)
-        for additional in "${my_array[@]}"; do
-          name=$(echo $additional | jq  -rc '.name')
-          name=$(echo "$name" | sed -e 's|.*/||')
-          echo $name
-          if $PREPARE_RELEASE; then
-            version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
-          fi
-          echo $version
-          owner="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .owner')"
-          content+="{\"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\"},"
+        version=develop
+        readarray -t components < <(jq  -rc '.components | keys' ./visyn_product.json)
+        for component in "${components[@]}"; do
+          echo "component: $component"
+          readarray -t additionals < <(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.additionals[]?' ./visyn_product.json)
+          content="["
+          for additional in "${additionals[@]}"; do
+            echo "$additional"
+          done
+            name=$(echo "$additional" | jq  -rc '.name')
+            repository=$(echo "$additional" | jq  -rc '.repo')
+            branch=$(echo "$additional" | jq  -rc '.branch')
+            if $PREPARE_RELEASE; then
+              version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
+            fi
+            content+="{\"name\": \"$name\", \"repo\": \"$repository\", \"branch\": \"v$version\"},"
+          done
+          content=${content::-1}
+          content+="]"
+          echo $content
+          echo -e "$(jq --arg var "${COMPONENT}" --argjson additionals "$content" '.components | to_entries | .[] | select(.key==$var)| .value.additionals = $additionals' ./visyn_product.json)" > ./visyn_product.json
         done
-        content=${content::-1}
-        content+="]},"
-        # backend
-        content+="{"
-        name=$(jq  -rc '.[] | select(.type == "api") | .repo' ./phovea_product.json)
-        name=$(echo "$name" | sed -e 's|.*/||')
-        echo $name
-        if $PREPARE_RELEASE; then
-          version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
-        fi
-        echo $version
-        owner="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .owner')"
-        content+="\"type\": \"api\", \"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\",   \"additional\": ["
-        readarray -t my_array < <(jq  -rc '.[] | select(.type == "api") | .additional[]' ./phovea_product.json)
-        for additional in "${my_array[@]}"; do
-          echo "$additional"
-          name=$(echo $additional | jq  -rc '.name')
-          name=$(echo "$name" | sed -e 's|.*/||')
-          echo $name
-          if $PREPARE_RELEASE; then
-            version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
-          fi
-          echo $version
-          owner="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .owner')"
-          content+="{\"name\": \"$name\", \"repo\": \"$owner/$name\", \"branch\": \"v$version\"},"
-        done
-        content=${content::-1}
-        content+="]}]"
-        echo -e $content > ./phovea_product2.json
-        jq '.' ./phovea_product2.json > ./phovea_product.json
-        rm ./phovea_product2.json
         #change version of github action references
         if $PREPARE_RELEASE; then
           find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@main/@$GA_VERSION/g" {} \;
@@ -101,7 +60,6 @@ runs:
         fi
     env:
       PREPARE_RELEASE: ${{ inputs.prepare_release }}
-      GENERATOR_VERSION: ${{ inputs.generator_version }}
       REPOSITORY_VERSION: ${{ inputs.repository_version }}
       KNOWN_REPOSITORIES: ${{ inputs.known_repositories }}
       GA_VERSION: ${{ inputs.ga_version }}

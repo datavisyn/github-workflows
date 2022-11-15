@@ -7,9 +7,6 @@ inputs:
     description: "customers of datavisyn; seperated with ','"
     required: true
     type: string
-  repository_name:
-    description: "name of the current repository"
-    required: true
   branch_name:
     description: "name of the current branch"
     required: true
@@ -21,18 +18,15 @@ outputs:
   app:
     description: "app name of the product"
     value: ${{ steps.get-parameters.outputs.app }}
-  api_repo:
-    description: "ecr repository for api"
-    value: ${{ steps.get-parameters.outputs.api_repo }}
-  web_repo:
-    description: "ecr repository for web"
-    value: ${{ steps.get-parameters.outputs.web_repo }}
-  develop:
-    description: "true, if the branch is a develop branch, otherwise false"
-    value: ${{ steps.get-parameters.outputs.develop }}
-  aws:
-    description: "true, if image should be generated and pushed to aws; else false"
-    value: ${{ steps.get-parameters.outputs.aws }}
+  repo:
+    description: "repo name of the app"
+    value: ${{ steps.get-parameters.outputs.repo }}
+  branch:
+    description: "branch name of the app"
+    value: ${{ steps.get-parameters.outputs.branch }}
+  trigger_automatic_deployment:
+    description: "true, if the branch should be deployed automatically, otherwise false"
+    value: ${{ steps.get-parameters.outputs.trigger_automatic_deployment }}
   customer:
     description: "customer of the branch - depending on the branch name"
     value: ${{ steps.get-parameters.outputs.customer }}
@@ -48,109 +42,76 @@ outputs:
   build_time:
     description: "build time of the current run (in RFC 3339 see <https://www.rfc-editor.org/rfc/rfc3339#section-5.6>)"
     value: ${{ steps.get-parameters.outputs.build_time }}
-  build_node:
-    description: "true, if node part should be built; else false"
-    value: ${{ steps.get-parameters.outputs.build_node }}
-  build_python:
-    description: "true, if python part should be built; else false"
-    value: ${{ steps.get-parameters.outputs.build_python }}
+  components:
+    description: "components of the existing product"
+    value: ${{ steps.get-parameters.outputs.components }}
+  ecr_repos:
+    description: "AWS ECR repositories"
+    value: ${{ steps.get-parameters.outputs.ecr_repos }}
+  ecr_repository_keys:
+    description: "repository keys that are used for deployment"
+    value: ${{ steps.get-parameters.outputs.ecr_repository_keys }}
+  create_workspace:
+    description: "true if workspace should be created else false"
+    value: ${{ steps.get-parameters.outputs.create_workspace }}
 runs:
   using: "composite"
   steps:
     - name: get parameters
       id: get-parameters
       run: |
-        product_name=$REPOSITORY_NAME
-        post_fix=_product
-        product_name=${product_name%$post_fix}
-        app=$(jq  -rc '.[] | select(.type == "web") | .name' ./phovea_product.json)
-        if [[ $app == null ]] ; then
-          app=$(jq  -rc '.[] | select(.type == "web") | .repo' ./phovea_product.json)
-          app=${app##*/}
-        fi
-        # build api/web
-        build_node=true
-        build_python=true
-        check_type=$(jq  -rc '.[] | select(.type == "web")' ./phovea_product.json)
-        if [[ -z $check_type ]] ; then
-          build_node=false
-        fi
-        check_type=$(jq  -rc '.[] | select(.type == "api")' ./phovea_product.json)
-        if [[ -z $check_type ]] ; then
-          build_python=false
-        fi
-        # product tolowercase
-        api_repo="${product_name,,}/server"
-        web_repo="${product_name,,}/web"
-        # get everything from branch name
-        # branchname should look <develop|master|main>_<sub_app>_<customer>_<aws>
-        # for release candidates the branch name should look like: rc_<version>_<sub_app>_<customer>_<aws>-<date>
-        branch_name=$BRANCH_NAME
-        branch_name_orig=${branch_name##*/}
-        branch_name=$branch_name_orig
-        echo $branch_name
-        aws=false
-        develop=false
-        sub_app=''
-        # check customer
-        customer=''
-        dv_customers=$DV_CUSTOMERS
-        array=($(echo "${dv_customers}" | tr ',' "\n"))
-        for c in "${array[@]}"
-        do
-          if [[ $BRANCH_NAME =~ _${c}_ || $BRANCH_NAME =~ _${c}- ]]; then
-            branch_name=${branch_name//_$c/}
-            customer=$c
-            echo "customer: $customer"
-            if [[ "$branch_name" == "$customer" ]]; then
-              branch_name=""
-            fi
-          fi
-        done
-        if [[ -z $customer ]] ; then
+        app=$(jq  -rc '.app' ./visyn_product.json)
+        repo=$(jq  -rc '.repo' ./visyn_product.json)
+        branch=$(jq  -rc '.branch' ./visyn_product.json)
+        customer=$(jq  -rc '.customer' ./visyn_product.json)
+        sub_app=$(jq  -rc '.sub_app' ./visyn_product.json)
+        trigger_automatic_deployment=$(jq  -rc '.trigger_automatic_deployment' ./visyn_product.json)
+        create_workspace=$(jq  -rc '.create_workspace' ./visyn_product.json)
+        components=$(jq  -rc '.components | keys' ./visyn_product.json)
+        ecr_repos=$(jq -r  '.components |.[] | .ecr_repo'  ./visyn_product.json)
+        ecr_repos=$(echo $ecr_repos | tr " " ",")
+        ecr_repository_keys=$(jq  -rc '.components | keys | .[]' ./visyn_product.json)
+        ecr_repository_keys=$(echo $ecr_repository_keys | tr " " ",")
+        # set default customer
+        if [[ -z $customer || $customer == "null" ]] ; then
           customer='datavisyn'
         fi
-        sub_app=${branch_name#*_}
-        aws=true
-        # develop branch
-        if [[ $branch_name == develop* ]] ; then
-          develop=true
+        if [[ -z $trigger_automatic_deployment && $BRANCH_NAME == develop* ]] ; then
+          trigger_automatic_deployment=true
         fi
         # get image tags
         build_time=$(TZ=$TIME_ZONE date +%Y-%m-%dT%H%M%SZ)
-        image_tag2=$branch_name_orig
+        image_tag2=$BRANCH_NAME
         image_tag1=tagged-$image_tag2-$build_time
         # echo parameters
         echo "app=$app"
-        echo "api_repo=$api_repo"
-        echo "web_repo=$web_repo"
-        echo "develop=$develop"
-        echo "aws=$aws"
+        echo "repo=$repo"
+        echo "branch=$branch"
+        echo "trigger_automatic_deployment=$trigger_automatic_deployment"
         echo "customer=$customer"
         echo "sub_app=$sub_app"
-        echo "build_python=$build_python"
-        echo "build_node=$build_node"
-        echo "build_time=$build_time"
         echo "image_tag1=$image_tag1"
         echo "image_tag2=$image_tag2"
+        echo "components=$components"
+        echo "ecr_repos=$ecr_repos"
+        echo "ecr_repository_keys=$ecr_repository_keys"
+        echo "create_workspace=$create_workspace"
         # echo to output
         echo "app=$app" >> "$GITHUB_OUTPUT"
-        echo "api_repo=$api_repo" >> "$GITHUB_OUTPUT"
-        echo "web_repo=$web_repo" >> "$GITHUB_OUTPUT"
-        echo "develop=$develop" >> "$GITHUB_OUTPUT"
-        echo "aws=$aws" >> "$GITHUB_OUTPUT"
+        echo "repo=$repo" >> "$GITHUB_OUTPUT"
+        echo "branch=$branch" >> "$GITHUB_OUTPUT"
+        echo "trigger_automatic_deployment=$trigger_automatic_deployment" >> "$GITHUB_OUTPUT"
         echo "customer=$customer" >> "$GITHUB_OUTPUT"
         echo "sub_app=$sub_app" >> "$GITHUB_OUTPUT"
         echo "build_time=$build_time" >> "$GITHUB_OUTPUT"
         echo "image_tag1=$image_tag1" >> "$GITHUB_OUTPUT"
         echo "image_tag2=$image_tag2" >> "$GITHUB_OUTPUT"
-        echo "build_node=$build_node" >> "$GITHUB_OUTPUT"
-        echo "build_python=$build_python" >> "$GITHUB_OUTPUT"
+        echo "components=$components" >> "$GITHUB_OUTPUT"
+        echo "ecr_repos=$ecr_repos" >> "$GITHUB_OUTPUT"
+        echo "ecr_repository_keys=$ecr_repository_keys" >> "$GITHUB_OUTPUT"
+        echo "create_workspace=$create_workspace" >> "$GITHUB_OUTPUT"
       env:
         DV_CUSTOMERS: ${{ inputs.dv_customers }}
-        REPOSITORY_NAME: ${{ inputs.repository_name }}
         BRANCH_NAME: ${{ inputs.branch_name }}
         TIME_ZONE: ${{ inputs.time_zone }}
       shell: bash
-
-

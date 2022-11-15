@@ -22,44 +22,22 @@ jobs:
   release-repository:
     runs-on: ubuntu-20.04
     steps:
-      # - name: Dump GitHub context
-      #   id: github_context_step
-      #   run: echo '${{ toJSON(github) }}'
-      # - name: Dump job context
-      #   run: echo '${{ toJSON(job) }}'
-      # - name: Dump steps context
-      #   run: echo '${{ toJSON(steps) }}'
-      # - name: Dump runner context
-      #   run: echo '${{ toJSON(runner) }}'
-      # - name: Dump strategy context
-      #   run: echo '${{ toJSON(strategy) }}'
-      # - name: Dump matrix context
-      #   run: echo '${{ toJSON(matrix) }}'
-      - name: check actor
-        run: |
-          dv_devops=$DEVOPS
-          echo ${#dv_devops}
-          actor=$GITHUB_ACTOR
-          mapfile -t array < <(echo "${dv_devops}" | tr ',' "\n")
-          echo "${#array[@]}"
-          for e in "${array[@]}"; do
-            echo "$e"
-            echo "$actor"
-            if [[ "$e" == "$actor" ]] ; then
-              echo "ok"
-              exit 0
-            fi
-          done
-          echo "you are not allowed to run this job!"
-          exit 1
-        env:
-          DEVOPS: ${{ secrets.DV_DEVOPS }}
-          GITHUB_ACTOR: ${{ github.actor }}
       - name: check branch
-        if: ${{ github.ref != 'refs/heads/develop' }}
+        if: ${{ github.ref_name != 'develop' }}
         run: |
           echo 'only the develop branch can be released.'
           exit 1
+      # checkout this workflow repository to get actions
+      - uses: actions/checkout@v3
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+      - uses: ./tmp/github-workflows/.github/actions/check-actor
+        with:
+          dv_devops: ${{ secrets.DV_DEVOPS }}
+          actor: ${{ github.actor }}
+          qms_are_allowed: "false"
       # checkout specific repository
       - uses: actions/checkout@v3
         with:
@@ -149,12 +127,6 @@ jobs:
           fi
         env:
           BRANCH_NAME: ${{ steps.get-release-version.outputs.new_branch_name }}
-      # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
-        with:
-          repository: datavisyn/github-workflows
-          ref: ${{ env.WORKFLOW_BRANCH }}
-          path: ./tmp/github-workflows
       - name: prepare release
         uses: ./tmp/github-workflows/.github/actions/release-source-changes
         with:
