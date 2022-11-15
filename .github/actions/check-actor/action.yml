@@ -14,7 +14,8 @@ inputs:
     required: true
   qms_are_allowed:
     description: "true, if qms are allowed; else false"
-    required: true
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
@@ -40,7 +41,7 @@ runs:
         DV_DEVOPS: ${{ inputs.dv_devops }}
         DV_QMS: ${{ inputs.dv_qms }}
         GITHUB_ACTOR: ${{ inputs.actor }}
-        QMS_ALLOWED: ${{ qms_are_allowed }}
+        QMS_ALLOWED: ${{ inputs.qms_are_allowed }}
       shell: bash
 
 
