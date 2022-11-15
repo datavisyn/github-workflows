@@ -42,22 +42,23 @@ runs:
             branch=$(echo "$additional" | jq  -rc '.branch')
             echo $name
             echo $repository
-            if $PREPARE_RELEASE; then
+            echo $known_repositories
+            if [[$PREPARE_RELEASE == "true" ]]; then
               version="$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
             fi
             echo $version
             content+="{\"name\": \"$name\", \"repo\": \"$repository\", \"branch\": \"v$version\"},"
-            echo $content
+            echo "$content"
           done
           content=${content::-1}
           content+="]"
           echo $content
-          if [[${#myvar} > 1 ]] ; then
+          if [[ ${#content} -ge 1 ]] ; then
             echo -e "$(jq --arg var "${COMPONENT}" --argjson additionals "$content" '.components | to_entries | .[] | select(.key==$var)| .value.additionals = $additionals' ./visyn_product.json)" > ./visyn_product.json
           fi
         done
         #change version of github action references
-        if $PREPARE_RELEASE; then
+        if [[$PREPARE_RELEASE == "true" ]]; then
           find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@main/@$GA_VERSION/g" {} \;
         else
           find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@$GA_VERSION/@main/g" {} \;
