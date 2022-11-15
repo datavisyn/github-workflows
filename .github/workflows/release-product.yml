@@ -44,8 +44,8 @@ jobs:
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
-          path: ./tmp/github-workflows
-      - uses: ./tmp/github-workflows/.github/actions/check-actor
+          path: ../tmp/github-workflows
+      - uses: ../tmp/github-workflows/.github/actions/check-actor
         with:
           dv_devops: ${{ secrets.DV_DEVOPS }}
           dv_qms: ${{ secrets.DV_QMS }}
@@ -82,10 +82,14 @@ jobs:
           sub_app=$(jq  -rc '.sub_app' ./visyn_product.json)
           # shellcheck disable=SC2001
           repository=$(echo "$repository" | sed -e 's|.*/||')
+          echo "$repository"
+          echo "$sub_app"
           known_repositories=$_KNOWN_REPOSITORIES
           checked_repository="$(echo "$known_repositories" | jq -r '.' | jq --arg var "$repository" '.[$var]')"
           version="$(echo "$checked_repository" | jq -r '.version')"
-          release_version="${release_version}_${sub_app}"
+          release_version="${version}_${sub_app}"
+          echo "$checked_repository"
+          echo "$version"
           new_branch_name=$BRANCH_NAME
           new_branch_name=${new_branch_name/develop/"rc-$release_version"}
           main_branch_name=$new_branch_name
@@ -114,15 +118,12 @@ jobs:
         env:
           BRANCH_NAME: ${{ steps.check-repository.outputs.new_branch_name }}
       - name: prepare release
-        uses: ./tmp/github-workflows/.github/actions/release-product-changes
+        uses: ../tmp/github-workflows/.github/actions/release-product-changes
         with:
           known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
           repository_version: ${{ steps.check-repository.outputs.release_version }}
           ga_version:  ${{ env.GA_VERSION }}
           prepare_release: true
-      - name: delete tmp files
-        run: |
-          rm -rf ./tmp
       - name: setup git config
         run: |
           git config user.name "$GITHUB_ACTOR"
@@ -186,8 +187,8 @@ jobs:
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
-          path: ./tmp/github-workflows
-      - uses: ./tmp/github-workflows/.github/actions/check-actor
+          path: ../tmp/github-workflows
+      - uses: ../tmp/github-workflows/.github/actions/check-actor
         with:
           dv_devops: ${{ secrets.DV_DEVOPS }}
           actor: ${{ github.actor }}
@@ -272,7 +273,7 @@ jobs:
         with:
           repository: datavisyn/github-workflows
           ref: node16
-          path: ./tmp/github-workflows
+          path: ../tmp/github-workflows
       - name: read known repositories
         id: get-known-repositories
         run: |
@@ -295,15 +296,12 @@ jobs:
           REPO_IS_PRIVATE: ${{github.event.repository.private}}
           GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
       - name: prepare develop
-        uses: ./tmp/github-workflows/.github/actions/release-product-changes
+        uses: ../tmp/github-workflows/.github/actions/release-product-changes
         with:
           known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
           repository_version: ${{ steps.get-release-version.outputs.release_version }}"-SNAPSHOT"
           ga_version:  main
           prepare_release: false
-      - name: delete tmp files
-        run: |
-          rm -rf ./tmp/github-workflows
       - name: push develop
         run: |
           echo "push develop"
