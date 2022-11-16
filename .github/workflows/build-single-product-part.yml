@@ -178,13 +178,14 @@ jobs:
           echo "$stage_str"
           if [[ -f "$COMPONENT_DIRECTORY/.env" ]]; then
             cp "$COMPONENT_DIRECTORY/.env" "./tmp/$COMPONENT/$APP"
+            cat "./tmp/$COMPONENT/$APP/.env"
           fi
           if [[ -f "${COMPONENT_DIRECTORY}/${stage_str}.env" ]]; then
             cat "${COMPONENT_DIRECTORY}/${stage_str}.env" >> "./tmp/$COMPONENT/$APP/.env"
+            cat "./tmp/$COMPONENT/$APP/.env"
           fi
           cd "./tmp/$COMPONENT/$APP"
           ls -lah
-          cat .env
           touch ./yarn.lock
           yarn install --no-immutable
           yarn info --name-only
