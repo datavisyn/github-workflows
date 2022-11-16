@@ -54,6 +54,9 @@ outputs:
   create_workspace:
     description: "true if workspace should be created else false"
     value: ${{ steps.get-parameters.outputs.create_workspace }}
+  stage:
+    description: "stage for the image (develop or production) depending on the branch name"
+    value: ${{ steps.get-parameters.outputs.stage }}
 runs:
   using: "composite"
   steps:
@@ -79,6 +82,10 @@ runs:
         if [[ -z $trigger_automatic_deployment && $BRANCH_NAME == develop* ]] ; then
           trigger_automatic_deployment=true
         fi
+        stage=develop
+        if [[ $BRANCH_NAME == main* || $BRANCH_NAME == rc-* || $BRANCH_NAME == v[0-9]* ]] ; then
+          stage=production
+        fi
         # get image tags
         build_time=$(TZ=$TIME_ZONE date +%Y-%m-%dT%H%M%SZ)
         image_tag2=$BRANCH_NAME
@@ -96,6 +103,7 @@ runs:
         echo "ecr_repos=$ecr_repos"
         echo "ecr_repository_keys=$ecr_repository_keys"
         echo "create_workspace=$create_workspace"
+        echo "stage=$stage"
         # echo to output
         echo "app=$app" >> "$GITHUB_OUTPUT"
         echo "repo=$repo" >> "$GITHUB_OUTPUT"
@@ -110,6 +118,7 @@ runs:
         echo "ecr_repos=$ecr_repos" >> "$GITHUB_OUTPUT"
         echo "ecr_repository_keys=$ecr_repository_keys" >> "$GITHUB_OUTPUT"
         echo "create_workspace=$create_workspace" >> "$GITHUB_OUTPUT"
+        echo "stage=$stage" >> "$GITHUB_OUTPUT"
       env:
         DV_CUSTOMERS: ${{ inputs.dv_customers }}
         BRANCH_NAME: ${{ inputs.branch_name }}

@@ -42,6 +42,10 @@ on:
           description: "actually build time (in RFC 3339)"
           required: true
           type: string
+        stage:
+          description: "stage for the image (develop or production) depending on the branch name"
+          required: true
+          type: string
 env:
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: "16.16"
@@ -167,11 +171,20 @@ jobs:
       - name: Build web
         if: ${{ steps.get-parameters.outputs.type == 'web' }}
         run: |
+          stage_str=".dev"
+          if [[ $STAGE == "production" ]]; then
+            stage_str=".prod"
+          fi
+          echo "$stage_str"
           if [[ -f "$COMPONENT_DIRECTORY/.env" ]]; then
             cp "$COMPONENT_DIRECTORY/.env" "./tmp/$COMPONENT/$APP"
           fi
+          if [[ -f "${COMPONENT_DIRECTORY}/${stage_str}.env" ]]; then
+            cat "${COMPONENT_DIRECTORY}/${stage_str}.env" >> "./tmp/$COMPONENT/$APP/.env"
+          fi
           cd "./tmp/$COMPONENT/$APP"
           ls -lah
+          cat .env
           touch ./yarn.lock
           yarn install --no-immutable
           yarn info --name-only
@@ -180,6 +193,7 @@ jobs:
           COMPONENT: ${{ inputs.component }}
           APP: ${{ steps.get-parameters.outputs.app }}
           COMPONENT_DIRECTORY: ${{ steps.get-parameters.outputs.directory }}
+          STAGE: ${{ inputs.stage }}
       - name: Build api
         if: ${{ steps.get-parameters.outputs.type == 'api' }}
         run: |

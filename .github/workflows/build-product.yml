@@ -58,6 +58,7 @@ jobs:
       ecr_repos: ${{ steps.get-parameters.outputs.ecr_repos }}
       ecr_repository_keys: ${{ steps.get-parameters.outputs.ecr_repository_keys }}
       create_workspace: ${{ steps.get-parameters.outputs.create_workspace }}
+      stage: ${{ steps.get-parameters.outputs.stage }}
     runs-on: ubuntu-20.04
     steps:
       # checkout specific repository
@@ -101,6 +102,7 @@ jobs:
       image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
+      stage: ${{ needs.prepare-build.outputs.stage }}
     secrets: inherit
   build-workspace:
     needs: prepare-build
@@ -115,6 +117,7 @@ jobs:
       image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
+      stage: ${{ needs.prepare-build.outputs.stage }}
     secrets: inherit
   post-build:
     needs: [prepare-build, build-single, build-workspace]
