@@ -38,31 +38,30 @@ runs:
         for component in "${components[@]}"; do
           echo "component: $component"
           readarray -t additionals < <(jq --arg var "${component}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.additionals[]?' ./visyn_product.json)
-          content="["
+          component_json=$(jq --arg var "${component}" -rc '.components | to_entries | .[] | select(.key==$var) | .value | del(.additionals)' ./visyn_product.json)
+          additional_json="["
           for additional in "${additionals[@]}"; do
             name=$(echo "$additional" | jq  -rc '.name')
             repository=$(echo "$additional" | jq  -rc '.repo')
             branch=$(echo "$additional" | jq  -rc '.branch')
-            echo $name
-            echo $repository
-            echo $PREPARE_RELEASE
+            echo "$name"
             if [[ $PREPARE_RELEASE == "true" ]]; then
               version="v$(echo $repositories | jq -r --arg var $name '.[$var] | .version')"
             fi
-            echo $version
-            content+="{\"name\": \"$name\", \"repo\": \"$repository\", \"branch\": \"$version\"},"
-            echo "$content"
+            additional_json+="{\"name\": \"$name\", \"repo\": \"$repository\", \"branch\": \"$version\"},"
           done
-          content=${content::-1}
-          content+="]"
-          echo $content
-          echo ${#content}
-          if [[ ${#content} -ge 2 ]] ; then
-            cat ./visyn_product.json
-            echo -e "$(jq --arg var "${COMPONENT}" --argjson additionals "$content" '.components | to_entries | .[] | select(.key==$var)| .value.additionals = $additionals' ./visyn_product.json)" > ./visyn_product.json
-            cat ./visyn_product.json
+          additional_json=${additional_json::-1}
+          additional_json+="]"
+          echo "$additional_json"
+          if [[ ${#additional_json} -ge 2 ]] ; then
+            component_json=$(echo $component_json | jq --argjson additionals "$additional_json" '. + {additionals: $additionals}')
           fi
+          echo "$component_json"
+          cat ./visyn_product.json
+          echo -e "$(jq --arg var "${COMPONENT}" --argjson json "$component_json" '.components | .[$var] = $json' ./visyn_product.json)" > ./visyn_product.json
+          cat ./visyn_product.json
         done
+
         #change version of github action references
         if [[ $PREPARE_RELEASE == "true" ]]; then
           find ./.github/workflows/ -name '*.yml' -exec sed -i "s/@main/@$GA_VERSION/g" {} \;
