@@ -29,11 +29,11 @@ runs:
         # change visyn_product
         # change app version
         echo -e "$(jq --arg version "$REPOSITORY_VERSION" '.branch = $version' ./visyn_product.json)" > ./visyn_product.json
+        # get repositories
         known_repositories=$KNOWN_REPOSITORIES
-        echo $known_repositories | jq -r '.'
         repositories=$(echo $known_repositories | jq -r '.')
-        echo "repositories: ${repositories}"
         version=develop
+        # change additionals
         readarray -t components < <(jq  -rc '.components | keys[]' ./visyn_product.json)
         for component in "${components[@]}"; do
           echo "component: $component"
@@ -57,7 +57,8 @@ runs:
           content+="]"
           echo $content
           echo ${#content}
-          if [[ ${#content} -ge 1 ]] ; then
+          if [[ ${#content} -ge 2 ]] ; then
+            cat ./visyn_product.json
             echo -e "$(jq --arg var "${COMPONENT}" --argjson additionals "$content" '.components | to_entries | .[] | select(.key==$var)| .value.additionals = $additionals' ./visyn_product.json)" > ./visyn_product.json
             cat ./visyn_product.json
           fi
