@@ -30,7 +30,9 @@ runs:
         # change app version
         echo -e "$(jq --arg version "$REPOSITORY_VERSION" '.branch = $version' ./visyn_product.json)" > ./visyn_product.json
         known_repositories=$KNOWN_REPOSITORIES
-        echo $known_repositories
+        echo $known_repositories | jq -r '.'
+        repositories=$(echo $known_repositories | jq -r '.')
+        echo "repositories: ${repositories}"
         version=develop
         readarray -t components < <(jq  -rc '.components | keys[]' ./visyn_product.json)
         for component in "${components[@]}"; do
@@ -45,7 +47,7 @@ runs:
             echo $repository
             echo $PREPARE_RELEASE
             if [[ $PREPARE_RELEASE == "true" ]]; then
-              version="v$(echo $known_repositories | jq -r --arg var $name '.[$var] | .version')"
+              version="v$(echo $repositories | jq -r --arg var $name '.[$var] | .version')"
             fi
             echo $version
             content+="{\"name\": \"$name\", \"repo\": \"$repository\", \"branch\": \"$version\"},"
