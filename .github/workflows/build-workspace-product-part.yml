@@ -42,6 +42,10 @@ on:
           description: "actually build time (in RFC 3339)"
           required: true
           type: string
+        stage:
+          description: "stage for the image (develop or production) depending on the branch name"
+          required: true
+          type: string
 env:
   VISYN_SCRIPTS_VERSION: "develop"
   TIME_ZONE: "Europe/Vienna"
@@ -194,10 +198,20 @@ jobs:
       - name: Build web
         if: ${{ steps.get-parameters.outputs.type == 'web' }}
         run: |
-          if [[ -f "$COMPONENT_DIRECTORY/.env" ]]; then
-            echo "copy .env file"
-            cp "$COMPONENT_DIRECTORY/.env" "./tmp/$COMPONENT"
+          stage_str=".dev"
+          if [[ $STAGE == "production" ]]; then
+            stage_str=".prod"
           fi
+          echo "$stage_str"
+          if [[ -f "$COMPONENT_DIRECTORY/.env" ]]; then
+            cp "$COMPONENT_DIRECTORY/.env" "./tmp/$COMPONENT/$APP"
+          fi
+          if [[ -f "${COMPONENT_DIRECTORY}/${stage_str}.env" ]]; then
+            cat "${COMPONENT_DIRECTORY}/${stage_str}.env" >> "./tmp/$COMPONENT/$APP/.env"
+          fi
+          cd "./tmp/$COMPONENT/$APP"
+          ls -lah
+          cat .env
           if [[ -f "$COMPONENT_DIRECTORY/workspace.scss" ]]; then
             echo "copy workspace.scss"
             cp "$COMPONENT_DIRECTORY/workspace.scss" "./tmp/$COMPONENT"
@@ -211,6 +225,7 @@ jobs:
         env:
           COMPONENT: ${{ inputs.component }}
           COMPONENT_DIRECTORY: ${{ steps.get-parameters.outputs.directory }}
+          STAGE: ${{ inputs.stage }}
       - name: Build api
         if: ${{ steps.get-parameters.outputs.type == 'api' }}
         run: |
