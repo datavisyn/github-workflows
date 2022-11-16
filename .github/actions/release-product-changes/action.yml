@@ -56,8 +56,10 @@ runs:
           content=${content::-1}
           content+="]"
           echo $content
+          echo ${#content}
           if [[ ${#content} -ge 1 ]] ; then
             echo -e "$(jq --arg var "${COMPONENT}" --argjson additionals "$content" '.components | to_entries | .[] | select(.key==$var)| .value.additionals = $additionals' ./visyn_product.json)" > ./visyn_product.json
+            cat ./visyn_product.json
           fi
         done
         #change version of github action references
