@@ -50,9 +50,6 @@ runs:
     - name: Install dependencies
       run: yarn install --no-immutable --inline-builds
       shell: bash
-    - name: Show installed dependencies
-      run: yarn info --name-only
-      shell: bash
     - name: Build
       run: npm run dist
       shell: bash
