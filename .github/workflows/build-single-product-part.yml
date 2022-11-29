@@ -168,6 +168,17 @@ jobs:
           COMPONENT: ${{ inputs.component }}
           COMPONENT_DIRECTORY: ${{ steps.get-parameters.outputs.directory }}
           APP: ${{ steps.get-parameters.outputs.app }}
+      # Enable yarn download cache, @see https://github.com/actions/setup-node/issues/325
+      - name: Restore yarn cache
+        if: ${{ steps.get-parameters.outputs.type == 'web' }}
+        uses: actions/cache@v3
+        with:
+          # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
+          path: ~/.yarn/berry/cache/
+          # TODO: Add any postfix to make it unique? i.e. -${{ hashFiles('package.json') }}
+          key: yarn-download-cache
+          restore-keys: |
+            yarn-download-cache
       - name: Build web
         if: ${{ steps.get-parameters.outputs.type == 'web' }}
         run: |
