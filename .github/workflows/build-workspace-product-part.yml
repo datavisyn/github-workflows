@@ -161,7 +161,7 @@ jobs:
             repository=https://$GH_TOKEN@github.com/${repository}.git
           fi
           echo "$repository"
-          git clone -b "$BRANCH_NAME" --depth 1 "$repository" "$APP"
+          git clone -b "$BRANCH_NAME" --depth 1 "$repository"
           readarray -t my_array < <(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.additionals[]?' ../../visyn_product.json)
           for additional in "${my_array[@]}"; do
             echo "$additional"
@@ -209,10 +209,10 @@ jobs:
           if [[ -f "$COMPONENT_DIRECTORY/.env" ]]; then
             echo "copy .env"
             cat "$COMPONENT_DIRECTORY/.env"
-            cp "$COMPONENT_DIRECTORY/.env" "./tmp/$COMPONENT/$APP"
+            cp "$COMPONENT_DIRECTORY/.env" "./tmp/$COMPONENT"
           fi
           if [[ -f "${COMPONENT_DIRECTORY}/${stage_str}.env" ]]; then
-            cat "${COMPONENT_DIRECTORY}/${stage_str}.env" >> "./tmp/$COMPONENT/$APP/.env"
+            cat "${COMPONENT_DIRECTORY}/${stage_str}.env" >> "./tmp/$COMPONENT/.env"
           fi
           if [[ -f "$COMPONENT_DIRECTORY/workspace.scss" ]]; then
             echo "copy workspace.scss"
