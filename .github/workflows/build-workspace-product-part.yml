@@ -182,6 +182,7 @@ jobs:
           REPO: ${{ steps.get-parameters.outputs.repo }}
           BRANCH_NAME: ${{ steps.get-parameters.outputs.branch }}
           APP: ${{ steps.get-parameters.outputs.app }}
+          DEFAULT_APP: ${{ steps.get-parameters.outputs.default_app }}
           GH_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
           GITLAB_HOST:  ${{ secrets.GITLAB_HOST }}
@@ -237,12 +238,12 @@ jobs:
           pip install setuptools wheel
           mkdir -p ./build/source
           mkdir -p ./dist_python/
-          cd "$APP"
+          cd "$DEFAULT_APP"
           if test -f "makefile"; then
-            echo "makefile exists in $APP, trying to build"
+            echo "makefile exists in $DEFAULT_APP, trying to build"
             make build
             cp -r ./build/lib/* ../build/source/
-            cp -r "./${APP,,}.egg-info" "../build/source/${APP,,}.egg-info"
+            cp -r "./${DEFAULT_APP,,}.egg-info" "../build/source/${DEFAULT_APP,,}.egg-info"
             cp -r ./dist_python/* ../dist_python/
           else
             echo "$APP has no makefile, therefore no backend can be built"
@@ -264,6 +265,7 @@ jobs:
         env:
           COMPONENT: ${{ inputs.component }}
           APP: ${{ steps.get-parameters.outputs.app }}
+          DEFAULT_APP: ${{ steps.get-parameters.outputs.default_app }}
           COMPONENT_DIRECTORY: ${{ steps.get-parameters.outputs.directory }}
       # checkout this workflow repository to get actions
       - uses: ./tmp/github-workflows/.github/actions/build-push-image
