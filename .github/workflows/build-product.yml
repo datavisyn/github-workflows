@@ -149,7 +149,7 @@ jobs:
         with:
           node-version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
       - name: Set up python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           cache: 'pip'
