@@ -18,6 +18,7 @@ runs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ inputs.python_version }}
+        cache: 'pip'
     # needs wheel for make
     - name: install additional requirements
       run: |
