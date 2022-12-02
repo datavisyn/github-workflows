@@ -37,8 +37,17 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash
+    # Enable yarn download cache, @see https://github.com/actions/setup-node/issues/325
+    - name: Restore yarn cache
+      uses: actions/cache@v3
+      with:
+        # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
+        path: ~/.yarn/berry/cache/
+        key: yarn-download-cache-${{ hashFiles('package.json') }}
+        restore-keys: |
+          yarn-download-cache-
     - name: Install dependencies
-      run: yarn install --no-immutable
+      run: yarn install --no-immutable --inline-builds
       shell: bash
     - name: Show installed dependencies
       run: yarn info --name-only
