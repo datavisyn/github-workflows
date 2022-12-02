@@ -211,8 +211,6 @@ jobs:
           if [[ -f "${COMPONENT_DIRECTORY}/${stage_str}.env" ]]; then
             cat "${COMPONENT_DIRECTORY}/${stage_str}.env" >> "./tmp/$COMPONENT/$APP/.env"
           fi
-          cd "./tmp/$COMPONENT/$APP"
-          ls -lah
           if [[ -f "$COMPONENT_DIRECTORY/workspace.scss" ]]; then
             echo "copy workspace.scss"
             cp "$COMPONENT_DIRECTORY/workspace.scss" "./tmp/$COMPONENT"
