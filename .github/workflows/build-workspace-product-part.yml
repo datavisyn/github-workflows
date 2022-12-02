@@ -81,6 +81,7 @@ jobs:
           directory=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.directory' ./visyn_product.json)
           ecr_repo=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.ecr_repo' ./visyn_product.json)
           app=$(jq  -rc '.app' ./visyn_product.json)
+          default_app=$(jq  -rc '.defaultApp' ./visyn_product.json)
           repo=$(jq  -rc '.repo' ./visyn_product.json)
           branch=$(jq  -rc '.branch' ./visyn_product.json)
           if [[ ${type} == web ]]; then
@@ -94,16 +95,23 @@ jobs:
           echo "directory=$directory"
           echo "ecr_repo=$ecr_repo"
           echo "app=$app"
+          echo "default_app=$default_app"
           echo "repo=$repo"
           echo "branch=$branch"
           echo "image_base_label=$image_base_label"
           echo "image_url=$image_url"
+          
+          if [[ -z "$default_app" ]]; then
+            echo ERROR: workspace builds require explicitly setting a default_app in the visyn_product.json
+            exit 1
+          else
           # echo to output
           # shellcheck disable=SC2129
           echo "type=$type" >> "$GITHUB_OUTPUT"
           echo "directory=$directory" >> "$GITHUB_OUTPUT"
           echo "ecr_repo=$ecr_repo" >> "$GITHUB_OUTPUT"
           echo "app=$app" >> "$GITHUB_OUTPUT"
+          echo "default_app=$default_app" >> "$GITHUB_OUTPUT"
           echo "repo=$repo" >> "$GITHUB_OUTPUT"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
           echo "image_base_label=$image_base_label" >> "$GITHUB_OUTPUT"
@@ -173,7 +181,7 @@ jobs:
             git clone -b "$branch" --depth 1 "$repository" "$name"
           done
           rm -f ./../../.yo-rc.json
-          visyn_scripts workspace-update --defaultApp="$APP" --noAdditionals=true  --addWorkspaceRepos=false
+          visyn_scripts workspace-update --defaultApp="$DEFAULT_APP" --noAdditionals=true  --addWorkspaceRepos=false
         env:
           COMPONENT: ${{ inputs.component }}
           REPO: ${{ steps.get-parameters.outputs.repo }}
