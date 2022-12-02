@@ -1,4 +1,4 @@
-name: build-node-python
+name: cypress
 
 on:
   workflow_call:
@@ -9,7 +9,9 @@ on:
         required: false
       PYTHON_VERSION:
         required: false
-      NODE_BUILD_WEBPACK:
+      CYPRESS_BACKEND_ENV:
+        required: false
+      CYPRESS_ENV:
         required: false
 
 env:
@@ -25,46 +27,49 @@ permissions:
   id-token: write
 
 concurrency:
-  group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
+  group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}"
   cancel-in-progress: true
 
 jobs:
-  build-node:
-    permissions:
-      id-token: write
-      contents: write
+  cypress:
     runs-on: ubuntu-20.04
     steps:
       # checkout specific source repository
       - uses: actions/checkout@v3
-        with:
-          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }} # has to set because otherwise it will not work
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
-      - uses: ./tmp/github-workflows/.github/actions/build-node
+      - uses: ./tmp/github-workflows/.github/actions/cypress
         with:
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
-          github_ro_token:  ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
-          node_build_webpack: ${{ secrets.NODE_BUILD_WEBPACK }}
-
-  build-python:
-    runs-on: ubuntu-20.04
-    steps:
-      # checkout specific source repository
-      - uses: actions/checkout@v3
-      # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
-        with:
-          repository: datavisyn/github-workflows
-          ref: ${{ env.WORKFLOW_BRANCH }}
-          path: ./tmp/github-workflows
-      - uses: ./tmp/github-workflows/.github/actions/build-python
-        with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-
+      # TODO: Move to the actual Cypress action
+      - name: Write CYPRESS_BACKEND_ENV to <app>/.env
+        run: |
+          echo '${{ secrets.CYPRESS_BACKEND_ENV }}' > ./${{ github.event.repository.name }}/.env
+      - name: Run cypress
+        uses: cypress-io/github-action@v4
+        with:
+          install: false
+          # TODO: Create customizable variables for these?
+          start: |
+            yarn start
+            python ${{ github.event.repository.name }}
+          wait-on: "http://localhost:8080, http://localhost:9000/login"
+          env: ${{ secrets.CYPRESS_ENV }}
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+      # Test run video was always captured, so this action uses "always()" condition
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: cypress-videos
+          path: cypress/videos

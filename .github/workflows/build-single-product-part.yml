@@ -118,12 +118,6 @@ jobs:
         with:
           node-version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           registry-url: ${{ env.NPM_REGISTRY }}
-      - name: setup python
-        if: ${{ steps.get-parameters.outputs.type == 'api' }}
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
-          cache: 'pip'
       - name: Git config
         run: |
           git config --global url."https://${_GITHUB_TOKEN}@github".insteadOf "https://github"
@@ -207,6 +201,12 @@ jobs:
           APP: ${{ steps.get-parameters.outputs.app }}
           COMPONENT_DIRECTORY: ${{ steps.get-parameters.outputs.directory }}
           STAGE: ${{ inputs.stage }}
+      - name: setup python
+        if: ${{ steps.get-parameters.outputs.type == 'api' }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
+          cache: 'pip'
       - name: Build api
         if: ${{ steps.get-parameters.outputs.type == 'api' }}
         run: |
