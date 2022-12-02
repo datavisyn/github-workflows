@@ -100,7 +100,6 @@ jobs:
           echo "branch=$branch"
           echo "image_base_label=$image_base_label"
           echo "image_url=$image_url"
-          
           if [[ -z "$default_app" ]]; then
             echo ERROR: workspace builds require explicitly setting a default_app in the visyn_product.json
             exit 1
