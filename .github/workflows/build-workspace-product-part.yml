@@ -145,7 +145,7 @@ jobs:
           _GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
           GITLAB_HOST:  ${{ secrets.GITLAB_HOST }}
-      - name: Install generator
+      - name: Install visyn_scripts
         run: |
           if [[ "$VISYN_SCRIPTS_VERSION" == v[0-9]* ]] ; then
             npm install -g "visyn_scripts@$VISYN_SCRIPTS_VERSION"
