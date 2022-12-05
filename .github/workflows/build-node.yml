@@ -7,8 +7,6 @@ on:
         required: false
       NODE_VERSION:
         required: false
-      NODE_BUILD_WEBPACK:
-        required: false
 
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
@@ -45,4 +43,3 @@ jobs:
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-          node_build_webpack: ${{ secrets.NODE_BUILD_WEBPACK }}

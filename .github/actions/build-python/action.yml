@@ -11,6 +11,15 @@ inputs:
     description: "github read-only token"
     default: "admin"
     required: true
+  run_lint:
+    default: true
+    required: false
+  run_test:
+    default: true
+    required: false
+  run_build:
+    default: true
+    required: false
 
 runs:
   using: "composite"
@@ -43,11 +52,14 @@ runs:
       run: pip list || true
       shell: bash
     - name: Linting
+      if: inputs.run_lint == 'true'
       run: make lint check-format
       shell: bash
     - name: Run tests
+      if: inputs.run_test == 'true'
       run: make test
       shell: bash
     - name: Build wheel
+      if: inputs.run_build == 'true'
       run: make build
       shell: bash

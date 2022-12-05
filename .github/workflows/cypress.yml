@@ -14,7 +14,7 @@ on:
         required: false
       PYTHON_VERSION:
         required: false
-      CYPRESS_BACKEND_ENV:
+      BACKEND_ENV_PASS:
         required: false
       CYPRESS_ENV:
         required: false
@@ -65,16 +65,28 @@ jobs:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
-      - uses: ./tmp/github-workflows/.github/actions/cypress
+      # Node
+      - uses: ./tmp/github-workflows/.github/actions/build-node
         with:
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          download_yarn_lock: true
+          upload_yarn_lock: false
+          run_dist: false
+      # Python
+      - uses: ./tmp/github-workflows/.github/actions/build-python
+        with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-      # TODO: Move to the actual Cypress action
-      - name: Write CYPRESS_BACKEND_ENV to <app>/.env
+          run_lint: false
+          run_test: false
+          run_build: false
+      - name: Decrypt <app>/.env.enc
         run: |
-          echo '${{ secrets.CYPRESS_BACKEND_ENV }}' > ./${{ github.event.repository.name }}/.env
+          make env_decrypt || true
+        env:
+          BACKEND_ENV_PASS: ${{ secrets.BACKEND_ENV_PASS }}
       - name: Run cypress
         uses: cypress-io/github-action@v4
         with:
