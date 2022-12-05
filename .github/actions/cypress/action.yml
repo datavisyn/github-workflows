@@ -61,7 +61,7 @@ runs:
       with:
         name: node-yarn-lock
     - name: Install dependencies
-      run: yarn install --inline-builds
+      run: yarn install --no-immutable --inline-builds
       shell: bash
     # Python
     - name: Set up python
