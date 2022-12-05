@@ -2,6 +2,11 @@ name: cypress
 
 on:
   workflow_call:
+    inputs:
+      branch:
+        type: string
+        required: false
+        default: ${{ github.ref || github.head_ref }}
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -50,8 +55,10 @@ jobs:
           - 5432:5432
 
     steps:
-      # checkout specific source repository
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.branch }}
+          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
         with:
@@ -74,7 +81,7 @@ jobs:
           install: false
           # TODO: Create customizable variables for these?
           start: |
-            yarn start
+            yarn start:fast || yarn start
             python ${{ github.event.repository.name }}
           wait-on: "http://localhost:8080, http://localhost:9000/login"
           env: ${{ secrets.CYPRESS_ENV }}

@@ -2,6 +2,11 @@ name: build-node-python
 
 on:
   workflow_call:
+    inputs:
+      branch:
+        type: string
+        required: false
+        default: ${{ github.ref || github.head_ref }}
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -38,7 +43,8 @@ jobs:
       # checkout specific source repository
       - uses: actions/checkout@v3
         with:
-          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }} # has to set because otherwise it will not work
+          ref: ${{ inputs.branch }}
+          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
         with:
