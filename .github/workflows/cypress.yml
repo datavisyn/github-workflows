@@ -74,6 +74,7 @@ jobs:
           download_yarn_lock: true
           upload_yarn_lock: false
           run_dist: false
+          run_webpack: true
       # Python
       - uses: ./tmp/github-workflows/.github/actions/build-python
         with:
@@ -87,13 +88,18 @@ jobs:
           make env_decrypt || true
         env:
           BACKEND_ENV_PASS: ${{ secrets.BACKEND_ENV_PASS }}
+      # TODO: Maybe use the webpack-dev-server w/ the built bundles?
+      - name: Install http-server
+        run: npm i -g http-server
+        shell: bash
       - name: Run cypress
         uses: cypress-io/github-action@v4
         with:
+          config: videoCompression=false
           install: false
           # TODO: Create customizable variables for these?
           start: |
-            yarn start:fast || yarn start
+            http-server ./bundles --proxy http://localhost:9000 --port 8080 --silent
             python ${{ github.event.repository.name }}
           wait-on: "http://localhost:8080, http://localhost:9000/login"
           env: ${{ secrets.CYPRESS_ENV }}
