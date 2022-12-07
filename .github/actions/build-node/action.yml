@@ -19,10 +19,18 @@ inputs:
     description: "downloads the node-yarn-lock artifact (only available when build-node was called before)"
     required: false
     default: false
+  download_node_modules:
+    description: "downloads the node-node-modules artifact (only available when build-node was called before)"
+    required: false
+    default: false
   upload_yarn_lock:
     description: "uploads the node-yarn-lock artifact"
     required: false
     default: true
+  upload_node_modules:
+    description: "uploads the node-node-modules artifact"
+    required: false
+    default: false
   run_dist:
     default: true
     required: false
@@ -57,8 +65,15 @@ runs:
       if: inputs.download_yarn_lock == 'true'
       with:
         name: node-yarn-lock
+    - uses: actions/download-artifact@v3
+      id: download_node_modules
+      # TODO: Remove the variable whenever we can ensure that build-node was called before
+      if: inputs.download_node_modules == 'true'
+      with:
+        name: node-node-modules
     # Enable yarn download cache, @see https://github.com/actions/setup-node/issues/325
     - name: Restore yarn cache
+      if: steps.download_node_modules.outcome != 'success'
       uses: actions/cache@v3
       with:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
@@ -67,6 +82,7 @@ runs:
         restore-keys: |
           yarn-download-cache-
     - name: Install dependencies
+      if: steps.download_node_modules.outcome != 'success'
       run: yarn install --no-immutable --inline-builds
       shell: bash
     - name: Show installed dependencies
@@ -81,6 +97,12 @@ runs:
       with:
         name: node-yarn-lock
         path: ./yarn.lock
+    - uses: actions/upload-artifact@v3
+      if: inputs.upload_node_modules == 'true'
+      with:
+        name: node-node-modules
+        path: ./node_modules
+        retention-days: 1
     - name: Webpack build
       if: inputs.run_webpack == 'true'
       run: npm run webpack:prod

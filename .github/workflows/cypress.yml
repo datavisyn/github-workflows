@@ -25,7 +25,7 @@ env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "new_deployment_node_modules"
 
 permissions:
   contents: read
@@ -72,7 +72,9 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           download_yarn_lock: true
+          download_node_modules: true
           upload_yarn_lock: false
+          upload_node_modules: false
           run_dist: false
       # Python
       - uses: ./tmp/github-workflows/.github/actions/build-python
