@@ -1,0 +1,114 @@
+name: cypress_built
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        type: string
+        required: false
+        default: ${{ github.ref || github.head_ref }}
+    secrets:
+      DATAVISYN_BOT_REPO_TOKEN:
+        required: false
+      NODE_VERSION:
+        required: false
+      PYTHON_VERSION:
+        required: false
+      BACKEND_ENV_PASS:
+        required: false
+      CYPRESS_ENV:
+        required: false
+
+env:
+  NPM_REGISTRY: "https://registry.npmjs.org/"
+  NODE_VERSION: "16.16"
+  PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
+  PYPI_USERNAME: "datavisyn"
+  PYTHON_VERSION: "3.10"
+  WORKFLOW_BRANCH: "new_deployment"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}"
+  cancel-in-progress: true
+
+jobs:
+  cypress:
+    runs-on: ubuntu-20.04
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: admin
+          POSTGRES_DB: db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.branch }}
+          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
+      # checkout this workflow repository to get actions
+      - uses: actions/checkout@v3
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+      # Node
+      - uses: ./tmp/github-workflows/.github/actions/build-node
+        with:
+          node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
+          npm_registry: ${{ env.NPM_REGISTRY }}
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          download_yarn_lock: true
+          upload_yarn_lock: false
+          run_dist: false
+          run_webpack: true
+      # Python
+      - uses: ./tmp/github-workflows/.github/actions/build-python
+        with:
+          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          run_lint: false
+          run_test: false
+          run_build: false
+      - name: Decrypt <app>/.env.enc
+        run: |
+          make env_decrypt || true
+        env:
+          BACKEND_ENV_PASS: ${{ secrets.BACKEND_ENV_PASS }}
+      - name: Install http-server
+        run: npm i -g http-server
+        shell: bash
+      - name: Run cypress
+        uses: cypress-io/github-action@v4
+        with:
+          install: false
+          # TODO: Create customizable variables for these?
+          start: |
+            http-server ./bundles --proxy http://localhost:9000 --port 8080
+            python ${{ github.event.repository.name }}
+          wait-on: "http://localhost:8080, http://localhost:9000/login"
+          env: ${{ secrets.CYPRESS_ENV }}
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+      # Test run video was always captured, so this action uses "always()" condition
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: cypress-videos
+          path: cypress/videos
