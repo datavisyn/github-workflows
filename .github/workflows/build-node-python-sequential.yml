@@ -1,0 +1,191 @@
+name: build-node-python-sequential
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        type: string
+        required: false
+        default: ${{ github.ref || github.head_ref }}
+      cypress_enable:
+        description: "Global enable for cypress"
+        type: boolean
+        required: false
+        default: false
+      cypress_run_because_flag:
+        description: "Local flag to run cypress. Will only work if cypress_enable: true."
+        type: boolean
+        required: false
+        default: false
+      cypress_run_because_branch:
+        description: "Branch names to run cypress on. Will only work if cypress_enable: true."
+        type: boolean
+        required: false
+        default: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/release-') }}
+    secrets:
+      DATAVISYN_BOT_REPO_TOKEN:
+        required: false
+      NODE_VERSION:
+        required: false
+      PYTHON_VERSION:
+        required: false
+      BACKEND_ENV_PASS:
+        required: false
+      CYPRESS_ENV:
+        required: false
+
+env:
+  NPM_REGISTRY: "https://registry.npmjs.org/"
+  NODE_VERSION: "16.16"
+  PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
+  PYPI_USERNAME: "datavisyn"
+  PYTHON_VERSION: "3.10"
+  WORKFLOW_BRANCH: "new_deployment"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}"
+  cancel-in-progress: true
+
+jobs:
+  build-node:
+    name: Node
+    if: ${{ !inputs.cypress_enable || (!inputs.cypress_run_because_flag && !inputs.cypress_run_because_branch) }}
+    permissions:
+      id-token: write
+      contents: write
+    runs-on: ubuntu-20.04
+    steps:
+      # checkout specific source repository
+      - uses: actions/checkout@v3
+        name: Checkout source repository
+        with:
+          ref: ${{ inputs.branch }}
+          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
+      # checkout this workflow repository to get actions
+      - uses: actions/checkout@v3
+        name: Checkout github-workflows
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+      # Node
+      - uses: ./tmp/github-workflows/.github/actions/build-node
+        name: Build node
+        with:
+          node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
+          npm_registry: ${{ env.NPM_REGISTRY }}
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
+
+  build-python:
+    name: Python
+    if: ${{ !inputs.cypress_enable || (!inputs.cypress_run_because_flag && !inputs.cypress_run_because_branch) }}
+    runs-on: ubuntu-20.04
+    steps:
+      # checkout specific source repository
+      - uses: actions/checkout@v3
+        name: Checkout source repository
+        with:
+          ref: ${{ inputs.branch }}
+          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
+      # checkout this workflow repository to get actions
+      - uses: actions/checkout@v3
+        name: Checkout github-workflows
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+      # Python
+      - uses: ./tmp/github-workflows/.github/actions/build-python
+        name: Build python
+        with:
+          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+
+  # If cypress is used, build node and python sequentially as it is avoiding the duplicate install overhead
+  build-node-python-cypress:
+    name: Node, Python, Cypress
+    if: ${{ inputs.cypress_enable && (inputs.cypress_run_because_flag || inputs.cypress_run_because_branch) }}
+    permissions:
+      id-token: write
+      contents: write
+    runs-on: ubuntu-20.04
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: admin
+          POSTGRES_DB: db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      # checkout specific source repository
+      - uses: actions/checkout@v3
+        name: Checkout source repository
+        with:
+          ref: ${{ inputs.branch }}
+          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
+      # checkout this workflow repository to get actions
+      - uses: actions/checkout@v3
+        name: Checkout github-workflows
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+      # Node
+      - uses: ./tmp/github-workflows/.github/actions/build-node
+        name: Build node
+        with:
+          node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
+          npm_registry: ${{ env.NPM_REGISTRY }}
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
+          run_webpack: true
+      # Python
+      - uses: ./tmp/github-workflows/.github/actions/build-python
+        name: Build python
+        with:
+          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+      - name: Decrypt <app>/.env.enc
+        run: |
+          make env_decrypt || true
+        env:
+          BACKEND_ENV_PASS: ${{ secrets.BACKEND_ENV_PASS }}
+      # TODO: Maybe use the webpack-dev-server w/ the built bundles?
+      - name: Install http-server
+        run: npm i -g http-server
+        shell: bash
+      - name: Run cypress
+        uses: cypress-io/github-action@v4
+        with:
+          # Currently, the videos are buggy because of low-cpu/electron environment: https://github.com/cypress-io/cypress/issues/8210
+          config: video=false,modifyObstructiveCode=false
+          browser: chrome
+          install: false
+          # TODO: Create customizable variables for these?
+          start: |
+            http-server ./bundles --proxy http://localhost:9000 --port 8080 --silent
+            python ${{ github.event.repository.name }}
+          wait-on: "http://localhost:8080, http://localhost:9000/login"
+          env: ${{ secrets.CYPRESS_ENV }}
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+      # - uses: actions/upload-artifact@v3
+      #   if: always()
+      #   with:
+      #     name: cypress-videos
+      #     path: cypress/videos
