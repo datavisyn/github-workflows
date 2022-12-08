@@ -25,7 +25,7 @@ on:
         required: false
 
 concurrency:
-  group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
+  group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}"
   cancel-in-progress: true
 
 env:
@@ -48,7 +48,7 @@ jobs:
       develop: ${{ steps.get-parameters.outputs.develop }}
       sub_app: ${{ steps.get-parameters.outputs.sub_app }}
       trigger_automatic_deployment: ${{ steps.get-parameters.outputs.trigger_automatic_deployment }}
-      customer: ${{ steps.get-parameters.outputs.customer }}
+      customers: ${{ steps.get-parameters.outputs.customers }}
       image_tag1: ${{ steps.get-parameters.outputs.image_tag1 }}
       image_tag2: ${{ steps.get-parameters.outputs.image_tag2 }}
       build_time: ${{ steps.get-parameters.outputs.build_time }}
@@ -137,15 +137,23 @@ jobs:
           ecr_repositories: ${{ needs.prepare-build.outputs.ecr_repos }}
           current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
           additional_image_tag: ${{ needs.prepare-build.outputs.image_tag2 }}
+  deploy:
+    needs: [prepare-build, post-build]
+    # Add always() as otherwise the job is being skipped: https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions
+    if: ${{ always() && needs.post-build.result == 'success' && fromJSON(needs.prepare-build.outputs.trigger_automatic_deployment) }}
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        customer: ${{ fromJSON(needs.prepare-build.outputs.customers) }}
+    steps:
       - name: trigger deployment
-        if: ${{ needs.prepare-build.outputs.trigger_automatic_deployment == 'true' }}
         uses: datavisyn/github-action-trigger-workflow@v1
         with:
           owner: "datavisyn"
-          repo:  "infrastructure-k8s"
+          repo: "infrastructure-k8s"
           github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
           workflow_file_name: "deploy-app.yml"
           ref: ${{ env.WORKFLOW_BRANCH }}
           github_user: ${{ secrets.DV_BOT_USER }}
-          client_payload: '{ "app": "${{ needs.prepare-build.outputs.app }}", "customer": "${{ needs.prepare-build.outputs.customer }}", "stage": "develop", "sub_app": "${{ needs.prepare-build.outputs.sub_app }}", "branch": "${{ needs.prepare-build.outputs.image_tag2 }}" }'
-
+          # TODO: The deployment is always triggered to develop, do we want to make this configurable?
+          client_payload: '{ "app": "${{ needs.prepare-build.outputs.app }}", "customer": "${{ matrix.customer }}", "stage": "develop", "sub_app": "${{ needs.prepare-build.outputs.sub_app }}", "branch": "${{ needs.prepare-build.outputs.image_tag2 }}" }'

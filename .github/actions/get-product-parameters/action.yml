@@ -27,9 +27,9 @@ outputs:
   trigger_automatic_deployment:
     description: "true, if the branch should be deployed automatically, otherwise false"
     value: ${{ steps.get-parameters.outputs.trigger_automatic_deployment }}
-  customer:
-    description: "customer of the branch - depending on the branch name"
-    value: ${{ steps.get-parameters.outputs.customer }}
+  customers:
+    description: "customers of the branch - depending on the branch name"
+    value: ${{ steps.get-parameters.outputs.customers }}
   sub_app:
     description: "sub_app of the repository (f.e. literature) - depending on the branch name"
     value: ${{ steps.get-parameters.outputs.sub_app }}
@@ -66,7 +66,7 @@ runs:
         app=$(jq  -rc '.app' ./visyn_product.json)
         repo=$(jq  -rc '.repo' ./visyn_product.json)
         branch=$(jq  -rc '.branch' ./visyn_product.json)
-        customer=$(jq  -rc '.customer' ./visyn_product.json)
+        customers=$(jq  -rc '.customers' ./visyn_product.json)
         sub_app=$(jq  -rc '.sub_app' ./visyn_product.json)
         trigger_automatic_deployment=$(jq  -rc '.trigger_automatic_deployment' ./visyn_product.json)
         create_workspace=$(jq  -rc '.create_workspace' ./visyn_product.json)
@@ -75,9 +75,9 @@ runs:
         ecr_repos=$(echo $ecr_repos | tr " " ",")
         ecr_repository_keys=$(jq  -rc '.components | keys | .[]' ./visyn_product.json)
         ecr_repository_keys=$(echo $ecr_repository_keys | tr " " ",")
-        # set default customer
-        if [[ -z $customer || $customer == "null" ]] ; then
-          customer='datavisyn'
+        # set default customers
+        if [[ -z $customers || $customers == "null" ]] ; then
+          customers=[\"datavisyn\"]
         fi
         if [[ -z $trigger_automatic_deployment && $BRANCH_NAME == develop* ]] ; then
           trigger_automatic_deployment=true
@@ -95,7 +95,7 @@ runs:
         echo "repo=$repo"
         echo "branch=$branch"
         echo "trigger_automatic_deployment=$trigger_automatic_deployment"
-        echo "customer=$customer"
+        echo "customers=$customers"
         echo "sub_app=$sub_app"
         echo "image_tag1=$image_tag1"
         echo "image_tag2=$image_tag2"
@@ -109,7 +109,7 @@ runs:
         echo "repo=$repo" >> "$GITHUB_OUTPUT"
         echo "branch=$branch" >> "$GITHUB_OUTPUT"
         echo "trigger_automatic_deployment=$trigger_automatic_deployment" >> "$GITHUB_OUTPUT"
-        echo "customer=$customer" >> "$GITHUB_OUTPUT"
+        echo "customers=$customers" >> "$GITHUB_OUTPUT"
         echo "sub_app=$sub_app" >> "$GITHUB_OUTPUT"
         echo "build_time=$build_time" >> "$GITHUB_OUTPUT"
         echo "image_tag1=$image_tag1" >> "$GITHUB_OUTPUT"
