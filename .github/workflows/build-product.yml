@@ -1,4 +1,4 @@
-name: build-single-product
+name: build-product
 
 on:
   workflow_call:

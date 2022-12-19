@@ -157,7 +157,7 @@ jobs:
       - name: Install http-server
         run: npm i -g http-server
         shell: bash
-      - name: Run cypress
+      - name: Run cypress e2e tests
         uses: cypress-io/github-action@v4
         with:
           # Currently, the videos are buggy because of low-cpu/electron environment: https://github.com/cypress-io/cypress/issues/8210
@@ -169,6 +169,16 @@ jobs:
             http-server ./bundles --proxy http://localhost:9000 --port 8080 --silent
             python ${{ github.event.repository.name }}
           wait-on: "http://localhost:8080, http://localhost:9000/login"
+          env: ${{ secrets.CYPRESS_ENV }}
+      - name: Run cypress component tests
+        uses: cypress-io/github-action@v4
+        with:
+          # Currently, the videos are buggy because of low-cpu/electron environment: https://github.com/cypress-io/cypress/issues/8210
+          config: video=false,modifyObstructiveCode=false
+          browser: chrome
+          install: false
+          component: true
+          # TODO: Do component tests need the frontend/backend?
           env: ${{ secrets.CYPRESS_ENV }}
       - name: Upload cypress screenshots
         uses: actions/upload-artifact@v3
