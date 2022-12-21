@@ -241,14 +241,14 @@ jobs:
           mkdir -p ./build/source
           mkdir -p ./dist_python/
           cd "$DEFAULT_APP"
-          if test -f "makefile"; then
-            echo "makefile exists in $DEFAULT_APP, trying to build"
+          if test -f "Makefile"; then
+            echo "Makefile exists in $DEFAULT_APP, trying to build"
             make build
             cp -r ./build/lib/* ../build/source/
             cp -r "./${DEFAULT_APP,,}.egg-info" "../build/source/${DEFAULT_APP,,}.egg-info"
             cp -r ./dist_python/* ../dist_python/
           else
-            echo "$APP has no makefile, therefore no backend can be built"
+            echo "$APP has no Makefile, therefore no backend can be built"
           fi
           cd ..
           readarray -t my_array < <(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.additionals[]?' ../../visyn_product.json)
