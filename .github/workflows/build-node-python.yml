@@ -168,7 +168,7 @@ jobs:
           start: |
             http-server ./bundles --proxy http://localhost:9000 --port 8080 --silent
             python ${{ github.event.repository.name }}
-          wait-on: "http://localhost:8080, http://localhost:9000/login"
+          wait-on: "http://localhost:8080, http://localhost:9000/health"
           env: ${{ secrets.CYPRESS_ENV }}
       - name: Run cypress component tests
         uses: cypress-io/github-action@v4
