@@ -136,6 +136,16 @@ jobs:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
+      - name: Echo $NODE_ENV_FILE into .env
+        run: |
+          echo "$ENV_FILE" | base64 -d > .env
+        env:
+          ENV_FILE: ${{ secrets.NODE_ENV_FILE }}
+      - name: Decrypt <app>/.env.enc
+        run: |
+          make env_decrypt || true
+        env:
+          BACKEND_ENV_PASS: ${{ secrets.BACKEND_ENV_PASS }}
       - name: Build node
         uses: ./tmp/github-workflows/.github/actions/build-node
         with:
@@ -148,15 +158,6 @@ jobs:
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-      - name: Decrypt <app>/.env.enc
-        run: |
-          make env_decrypt || true
-        env:
-          BACKEND_ENV_PASS: ${{ secrets.BACKEND_ENV_PASS }}
-      # TODO: Maybe use the webpack-dev-server w/ the built bundles?
-      - name: Install http-server
-        run: npm i -g http-server
-        shell: bash
       - name: Run cypress e2e tests
         uses: cypress-io/github-action@v4
         with:
@@ -166,7 +167,7 @@ jobs:
           install: false
           # TODO: Create customizable variables for these?
           start: |
-            http-server ./bundles --proxy http://localhost:9000 --port 8080 --silent
+            yarn start dev_server_only=true
             python ${{ github.event.repository.name }}
           wait-on: "http://localhost:8080, http://localhost:9000/health"
           env: ${{ secrets.CYPRESS_ENV }}
