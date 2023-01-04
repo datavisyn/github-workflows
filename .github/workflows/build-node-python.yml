@@ -23,6 +23,11 @@ on:
         type: string
         required: false
         default: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || !!startsWith(github.ref, 'refs/heads/release-') }}
+      node_run_webpack:
+        description: "Flag to always run the webpack production build."
+        type: boolean
+        required: false
+        default: false
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -30,7 +35,7 @@ on:
         required: false
       PYTHON_VERSION:
         required: false
-      BACKEND_ENV_PASS:
+      ENV_PASSWORD:
         required: false
       CYPRESS_ENV:
         required: false
@@ -77,6 +82,7 @@ jobs:
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
+          run_webpack: ${{ inputs.node_run_webpack }}
 
   build-python:
     name: Python
@@ -136,28 +142,27 @@ jobs:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
-      - name: Echo $NODE_ENV_FILE into .env
-        run: |
-          echo "$ENV_FILE" | base64 -d > .env
-        env:
-          ENV_FILE: ${{ secrets.NODE_ENV_FILE }}
-      - name: Decrypt <app>/.env.enc
-        run: |
-          make env_decrypt || true
-        env:
-          BACKEND_ENV_PASS: ${{ secrets.BACKEND_ENV_PASS }}
       - name: Build node
         uses: ./tmp/github-workflows/.github/actions/build-node
         with:
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
-          run_webpack: true
+          run_webpack: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
       - name: Build python
         uses: ./tmp/github-workflows/.github/actions/build-python
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+      - name: Decrypt .env.enc and <app>/.env.enc
+        run: |
+          yarn run env:decrypt -pass env:ENV_PASSWORD || true
+          make env_decrypt || true
+        env:
+          ENV_PASSWORD: ${{ secrets.ENV_PASSWORD }}
+      - name: Webpack build
+        run: npm run webpack:prod
+        shell: bash
       - name: Run cypress e2e tests
         uses: cypress-io/github-action@v4
         with:
@@ -168,7 +173,7 @@ jobs:
           # TODO: Create customizable variables for these?
           start: |
             yarn start dev_server_only=true
-            python ${{ github.event.repository.name }}
+            make start
           wait-on: "http://localhost:8080, http://localhost:9000/health"
           env: ${{ secrets.CYPRESS_ENV }}
       - name: Run cypress component tests
