@@ -136,16 +136,16 @@ jobs:
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
       - name: multiple tags
-        #if: ${{ inputs.add_githubsha_tag == 'true' }}
-        run: echo "tag_matrix=[\"test\",\"test\"]" >> "$GITHUB_OUTPUT"
-        #run: echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\",\"${{ github.sha }}\"]" >> $GITHUB_OUTPUT
+        if: ${{ inputs.add_githubsha_tag == 'true' }}
+        #run: echo "tag_matrix=[\"test\",\"test\"]" >> "$GITHUB_OUTPUT"
+        run: echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\",\"${{ github.sha }}\"]" >> "$GITHUB_OUTPUT"
         #run: echo test
         shell: bash
       - name: single tag
-        #if: ${{ inputs.add_githubsha_tag == 'false' }}
+        if: ${{ inputs.add_githubsha_tag == 'false' }}
         #run: echo "tag_matrix=[\"${additional_image_tag1}\"]" >> $GITHUB_OUTPUT
-        run: echo "tag_matrix={\"teest\"}" >> "$GITHUB_OUTPUT"
-        #run: echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]" >> $GITHUB_OUTPUT
+        #run: echo "tag_matrix={\"teest\"}" >> "$GITHUB_OUTPUT"
+        run: echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]" >> "$GITHUB_OUTPUT"
         #run: echo test
         shell: bash
       - name: retag images
