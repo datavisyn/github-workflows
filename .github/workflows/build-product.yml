@@ -136,12 +136,12 @@ jobs:
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
       - name: multiple tags
-        #if: inputs.add_githubsha_tag == 'true'
+        if: ${{ inputs.add_githubsha_tag == 'true' }}
         #run: echo "tag_matrix=[\"test\",\"test\"]" >> $GITHUB_OUTPUT
         run: echo "tag_matrix=test123"
         shell: bash
       - name: single tag
-        #if: inputs.add_githubsha_tag == 'false'
+        if: ${{ inputs.add_githubsha_tag == 'false' }}
         #run: echo "tag_matrix=[\"${additional_image_tag1}\"]" >> $GITHUB_OUTPUT
         #run: echo "tag_matrix={\"teest\"}" >> $GITHUB_OUTPUT
         run: echo "test"
