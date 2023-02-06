@@ -2,7 +2,7 @@ name: build-product
 
 on:
   workflow_call:
-    input:
+    inputs:
       add_githubsha_tag:
         description: add additional tag containing github-sha
         type: boolean
