@@ -21,6 +21,10 @@ inputs:
 
 runs:
   using: "composite"
+  strategy:
+    matrix:
+      tags: ${{ fromJSON(inputs.additional_image_tag) }}
+      
   steps:
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1.7.0
@@ -45,5 +49,5 @@ runs:
       env:
         REPOSITORY_NAMES: ${{ inputs.ecr_repositories }}
         CURRENT_IMAGE_TAG: ${{ inputs.current_image_tag }}
-        ADDITIONAL_IMAGE_TAG: ${{ inputs.additional_image_tag }}
+        ADDITIONAL_IMAGE_TAG: ${{ matrix.tags }}
       shell: bash
