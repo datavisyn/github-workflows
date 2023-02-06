@@ -138,7 +138,7 @@ jobs:
       - name: multiple tags
         if: github.event.inputs.add_githubsha_tag == true
         #run: echo "tag_matrix=[\"test\",\"test\"]" >> $GITHUB_OUTPUT
-        run: echo "tag_matrix={\"include\":[{\"project\":\"foo\",\"config\":\"Debug\"},{\"project\":\"bar\",\"config\":\"Release\"}]}" >> $GITHUB_OUTPUT
+        run: echo "tag_matrix=test123" >> $GITHUB_OUTPUT
       - name: single tag
         if: github.event.inputs.add_githubsha_tag == false
         #run: echo "tag_matrix=[\"${additional_image_tag1}\"]" >> $GITHUB_OUTPUT
