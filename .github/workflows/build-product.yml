@@ -137,10 +137,10 @@ jobs:
           path: ./tmp/github-workflows
       - name: multiple tags
         if: github.event.inputs.add_githubsha_tag == true
-        run: echo "tag_matrix=['${{ needs.prepare-build.outputs.image_tag2 }}','${{ github.sha }}']" >> $GITHUB_OUTPUT
+        run: echo 'tag_matrix=["'${{ needs.prepare-build.outputs.image_tag2 }}'","'${{ github.sha }}'"]' >> $GITHUB_OUTPUT
       - name: single tag
         if: github.event.inputs.add_githubsha_tag == false
-        run: echo "tag_matrix=['\''${{ needs.prepare-build.outputs.image_tag2 }}'\'']" >> $GITHUB_OUTPUT
+        run: echo 'tag_matrix=["'${{ needs.prepare-build.outputs.image_tag2 }}'"]' >> $GITHUB_OUTPUT
       - name: retag images
         uses: ./tmp/github-workflows/.github/actions/retag-image
         with:
