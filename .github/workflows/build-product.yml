@@ -64,6 +64,7 @@ jobs:
       ecr_repository_keys: ${{ steps.get-parameters.outputs.ecr_repository_keys }}
       create_workspace: ${{ steps.get-parameters.outputs.create_workspace }}
       stage: ${{ steps.get-parameters.outputs.stage }}
+      image_tag_matrix : $${{ steps.set-matrix.outputs.image_tag_matrix }}
     runs-on: ubuntu-20.04
     steps:
       # checkout specific repository
@@ -94,6 +95,26 @@ jobs:
           dv_customers: ${{ secrets.DV_CUSTOMERS }}
           branch_name: ${{ github.ref_name }}
           time_zone: ${{ env.TIME_ZONE }}
+#      - name: multiple tags
+#        if: inputs.add_githubsha_tag == 'true'
+#        run: |
+#          echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\",\"${{ github.sha }}\"]"
+#          echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\",\"${{ github.sha }}\"]" >> "$GITHUB_OUTPUT"
+#        shell: bash
+      - id: set-matrix
+        #if: inputs.add_githubsha_tag == 'false'
+        #run: |
+        #  echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]"
+        #  echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]" >> "$GITHUB_OUTPUT"
+        run: |
+          if [[ $ADD_GITHUBSHA_TAG == false]] ; then
+            echo "::set-output name=image_tag_matrix::[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]"
+          else
+            echo "::set-output name=image_tag_matrix::[\"${{ needs.prepare-build.outputs.image_tag2 }}\",\"${{ github.sha }}\"]"
+          fi
+        env:
+          ADD_GITHUBSHA_TAG: ${{ inputs.add_githubsha_tag }}
+        shell: bash
   build-single:
     needs: prepare-build
     if: ${{ needs.prepare-build.outputs.create_workspace != 'true' && needs.prepare-build.outputs.components != '[]' && needs.prepare-build.outputs.components != ''}}
@@ -124,47 +145,40 @@ jobs:
       build_time: ${{ needs.prepare-build.outputs.build_time }}
       stage: ${{ needs.prepare-build.outputs.stage }}
     secrets: inherit
-  
+
   post-build:
     needs: [prepare-build, build-single, build-workspace]
     if: ${{ always() && (needs.build-single.result == 'success' || needs.build-single.result == 'skipped') && (needs.build-workspace.result == 'success' || needs.build-workspace.result == 'skipped') && !(needs.build-workspace.result == 'skipped' && needs.build-single.result == 'skipped')}}
     runs-on: ubuntu-20.04
-    outputs:
-      tag_matrix: ${{ steps.set-matrix.outputs.tag_matrix }}
+    strategy:
+      matrix:
+        image_tag: ${{ fromJSON(needs.prepare-build.outputs.image_tag_matrix) }}
     steps:
-      - uses: actions/checkout@v3
+     # - uses: actions/checkout@v3
+     #   with:
+     #     repository: datavisyn/github-workflows
+     #     ref: ${{ env.WORKFLOW_BRANCH }}
+     #     path: ./tmp/github-workflows
+
+      - name: retag images 
+        uses: datavisyn/github-action-trigger-workflow@v1
         with:
-          repository: datavisyn/github-workflows
+          owner: "datavisyn"
+          repo: "github-workflows"
+          github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+          workflow_file_name: "retag-image.yml"
           ref: ${{ env.WORKFLOW_BRANCH }}
-          path: ./tmp/github-workflows
-      - name: multiple tags
-        if: inputs.add_githubsha_tag == 'true'
-        run: |
-          echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\",\"${{ github.sha }}\"]"
-          echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\",\"${{ github.sha }}\"]" >> "$GITHUB_OUTPUT"
-        shell: bash
-      - id: set-matrix
-        #if: inputs.add_githubsha_tag == 'false'
-        #run: |
-        #  echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]"
-        #  echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]" >> "$GITHUB_OUTPUT"
-        run: echo "::set-output name=tag_matrix::[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]"
-        shell: bash
-      - name: check env matrix
-        run: |
-          echo "tag_matrix"
-          echo "$tag_matrix"
-          echo "env.tag_matrix"
-          echo "${{ env.tag_matrix}}"
-          echo "${{ steps.set-matrix.outputs.tag_matrix }}"
-      - name: retag images
-        uses: ./tmp/github-workflows/.github/actions/retag-image
-        with:
-          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
-          aws_region: ${{ secrets.DV_AWS_REGION }}
-          ecr_repositories: ${{ needs.prepare-build.outputs.ecr_repos }}
-          current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
-          additional_image_tag: ${{ steps.set-matrix.outputs.tag_matrix }}
+          github_user: ${{ secrets.DV_BOT_USER }}
+          client_payload: '{ "aws_role": "${{ secrets.DV_AWS_ECR_ROLE }}", "aws_region": "${{ secrets.DV_AWS_REGION }}", "ecr_repositories": "${{ needs.prepare-build.outputs.ecr_repos }}", "current_image_tag": "${{ needs.prepare-build.outputs.image_tag1 }}", "additional_image_tag": "${{ matrix.image_tag }}" }'
+
+      #- name: retag images
+      #  uses: ./tmp/github-workflows/.github/actions/retag-image
+      #  with:
+      #    aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
+      #    aws_region: ${{ secrets.DV_AWS_REGION }}
+       #   ecr_repositories: ${{ needs.prepare-build.outputs.ecr_repos }}
+       #   current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
+      #    additional_image_tag: ${{ matrix.image_tag }}
   deploy:
     needs: [prepare-build, post-build]
     # Add always() as otherwise the job is being skipped: https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions

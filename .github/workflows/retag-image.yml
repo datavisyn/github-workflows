@@ -48,5 +48,5 @@ runs:
       env:
         REPOSITORY_NAMES: ${{ inputs.ecr_repositories }}
         CURRENT_IMAGE_TAG: ${{ inputs.current_image_tag }}
-        ADDITIONAL_IMAGE_TAG: ${{ inputs.additional-image-tag }}
+        ADDITIONAL_IMAGE_TAG: ${{ inputs.additional_image_tag }}
       shell: bash
