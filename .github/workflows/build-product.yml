@@ -149,10 +149,10 @@ jobs:
         shell: bash
       - name: check env matrix
         run: |
-          echo tag_matrix
-          echo $tag_matrix
-          echo env.tag_matrix
-          echo ${{ env.tag_matrix}}
+          echo "tag_matrix"
+          echo "$tag_matrix"
+          echo "env.tag_matrix"
+          echo "${{ env.tag_matrix}}"
       - name: retag images
         uses: ./tmp/github-workflows/.github/actions/retag-image
         with:
