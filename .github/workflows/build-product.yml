@@ -147,6 +147,12 @@ jobs:
           echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]"
           echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]" >> "$GITHUB_OUTPUT"
         shell: bash
+      - name: check env matrix
+        run: |
+          echo tag_matrix
+          echo $tag_matrix
+          echo env.tag_matrix
+          echo ${{ env.tag_matrix}}
       - name: retag images
         uses: ./tmp/github-workflows/.github/actions/retag-image
         with:
