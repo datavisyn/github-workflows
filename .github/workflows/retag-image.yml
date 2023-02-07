@@ -1,52 +1,53 @@
 name: retag-image
-description: add a tag to existing AWS ECR image
-author: datavisyn
+#description: add a tag to existing AWS ECR image
+#author: datavisyn
 
-inputs:
-  aws_role:
-    description: "aws role to push to the ecr registry"
-    required: true
-  aws_region:
-    description: "aws region to use"
-    required: true
-  ecr_repositories:
-    description: "ecr repositories (name only) - seperated with ,"
-    required: true
-  current_image_tag:
-    description: "current tag of the image"
-    required: true
-  additional_image_tag:
-    description: "additional image tag"
-    required: true
+on:
+  workflow_call:
+    inputs:
+      aws_role:
+        description: "aws role to push to the ecr registry"
+        required: true
+      aws_region:
+        description: "aws region to use"
+        required: true
+      ecr_repositories:
+        description: "ecr repositories (name only) - seperated with ,"
+        required: true
+      current_image_tag:
+        description: "current tag of the image"
+        required: true
+      additional_image_tag:
+        description: "additional image tag"
+        required: true
 
-runs:
-  using: "composite"
-
-  steps:
-    - name: print variables
-      run: echo "ADDITIONAL_IMAGE_TAG=$ADDITIONAL_IMAGE_TAG"
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1.7.0
-      with:
-        role-to-assume: ${{ inputs.aws_role }}
-        aws-region: ${{ inputs.aws_region }}
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1.5.3
-    - name: retag image
-      run: |
-        mapfile -t array < <(echo "${REPOSITORY_NAMES}" | tr ',' "\n")
-        for REPOSITORY_NAME in "${array[@]}"; do
-          IMAGE_META=$(aws ecr describe-images --repository-name "$REPOSITORY_NAME" --image-ids imageTag="$CURRENT_IMAGE_TAG" --output json | jq --arg var "${ADDITIONAL_IMAGE_TAG}" '.imageDetails[0].imageTags | index( $var )')
-          if [[ -z "${IMAGE_META}" || ${IMAGE_META} == "null" ]]; then
-            MANIFEST=$(aws ecr batch-get-image --repository-name $REPOSITORY_NAME --image-ids imageTag=$CURRENT_IMAGE_TAG --output json | jq --raw-output --join-output '.images[0].imageManifest')
-            aws ecr put-image --repository-name $REPOSITORY_NAME --image-tag $ADDITIONAL_IMAGE_TAG --image-manifest "$MANIFEST"
-          else
-            echo "image already tagged!"
-          fi
-        done;
-      env:
-        REPOSITORY_NAMES: ${{ inputs.ecr_repositories }}
-        CURRENT_IMAGE_TAG: ${{ inputs.current_image_tag }}
-        ADDITIONAL_IMAGE_TAG: ${{ inputs.additional_image_tag }}
-      shell: bash
+jobs:
+  retag-images:
+    steps:
+      - name: print variables
+        run: echo "ADDITIONAL_IMAGE_TAG=$ADDITIONAL_IMAGE_TAG"
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1.7.0
+        with:
+          role-to-assume: ${{ inputs.aws_role }}
+          aws-region: ${{ inputs.aws_region }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1.5.3
+      - name: retag image
+        run: |
+          mapfile -t array < <(echo "${REPOSITORY_NAMES}" | tr ',' "\n")
+          for REPOSITORY_NAME in "${array[@]}"; do
+            IMAGE_META=$(aws ecr describe-images --repository-name "$REPOSITORY_NAME" --image-ids imageTag="$CURRENT_IMAGE_TAG" --output json | jq --arg var "${ADDITIONAL_IMAGE_TAG}" '.imageDetails[0].imageTags | index( $var )')
+            if [[ -z "${IMAGE_META}" || ${IMAGE_META} == "null" ]]; then
+              MANIFEST=$(aws ecr batch-get-image --repository-name $REPOSITORY_NAME --image-ids imageTag=$CURRENT_IMAGE_TAG --output json | jq --raw-output --join-output '.images[0].imageManifest')
+              aws ecr put-image --repository-name $REPOSITORY_NAME --image-tag $ADDITIONAL_IMAGE_TAG --image-manifest "$MANIFEST"
+            else
+              echo "image already tagged!"
+            fi
+          done;
+        env:
+          REPOSITORY_NAMES: ${{ inputs.ecr_repositories }}
+          CURRENT_IMAGE_TAG: ${{ inputs.current_image_tag }}
+          ADDITIONAL_IMAGE_TAG: ${{ inputs.additional_image_tag }}
+        shell: bash
