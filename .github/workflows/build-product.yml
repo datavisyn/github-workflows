@@ -136,13 +136,13 @@ jobs:
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
       - name: multiple tags
-        if: ${{ inputs.add_githubsha_tag == 'true' }}
+        if: inputs.add_githubsha_tag == 'true'
         run: |
           echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\",\"${{ github.sha }}\"]"
           echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\",\"${{ github.sha }}\"]" >> "$GITHUB_OUTPUT"
         shell: bash
       - name: single tag
-        if: ${{ inputs.add_githubsha_tag == 'false' }}
+        if: inputs.add_githubsha_tag == 'false'
         run: |
           echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]"
           echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]" >> "$GITHUB_OUTPUT"
