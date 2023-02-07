@@ -148,7 +148,7 @@ jobs:
           echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]" >> "$GITHUB_OUTPUT"
         shell: bash
       - name: retag images
-        uses: ./tmp/github-workflows/.github/actions/retag-image@github_tag_test
+        uses: ./tmp/github-workflows/.github/actions/retag-image
         with:
           aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
           aws_region: ${{ secrets.DV_AWS_REGION }}
