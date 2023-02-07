@@ -110,9 +110,11 @@ jobs:
         #echo "::set-output name=image_tag_matrix::[\"${{ needs.prepare-build.outputs.image_tag2 }}\",\"${{ github.sha }}\"]"
         run: |
           if [[ $ADD_GITHUBSHA_TAG == 'false' ]]; then
-            echo "image_tag_matrix=[\"${{ steps.get-parameters.outputs.image_tag2 }}\",\"${{ github.sha }}\"]" >> "$GITHUB_OUTPUT"
+            image_tag_matrix=$(echo "[\"${{ steps.get-parameters.outputs.image_tag2 }}\",\"${{ github.sha }}\"]" | jq -rc '.' )
+            echo "image_tag_matrix=$image_tag_matrix" >> "$GITHUB_OUTPUT"
           else
-            echo "image_tag_matrix=[\"${{ steps.get-parameters.outputs.image_tag2 }}\"]" >> "$GITHUB_OUTPUT"
+            image_tag_matrix=$(echo "[\"${{ steps.get-parameters.outputs.image_tag2 }}\"]" | jq -rc '.')
+            echo "image_tag_matrix=$image_tag_matrix" >> "$GITHUB_OUTPUT"
           fi
         env:
           ADD_GITHUBSHA_TAG: ${{ inputs.add_githubsha_tag }}
@@ -153,7 +155,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        image_tag: ${{ fromJSON(needs.prepare-build.outputs.image_tag_matrix) }}
+        image_tag: ${{fromJson(needs.prepare-build.outputs.image_tag_matrix)}}
     steps:
      # - uses: actions/checkout@v3
      #   with:
