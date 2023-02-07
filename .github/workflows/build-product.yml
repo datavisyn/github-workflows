@@ -64,7 +64,7 @@ jobs:
       ecr_repository_keys: ${{ steps.get-parameters.outputs.ecr_repository_keys }}
       create_workspace: ${{ steps.get-parameters.outputs.create_workspace }}
       stage: ${{ steps.get-parameters.outputs.stage }}
-      image_tag_matrix : $${{ steps.set-matrix.outputs.image_tag_matrix }}
+      image_tag_matrix : ${{ steps.set-matrix.outputs.image_tag_matrix }}
     runs-on: ubuntu-20.04
     steps:
       # checkout specific repository
@@ -158,7 +158,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        image_tag: ${{needs.prepare-build.outputs.image_tag_matrix}}
+        image_tag: ${{ fromJson(needs.prepare-build.outputs.image_tag_matrix) }}
     steps:
      # - uses: actions/checkout@v3
      #   with:
