@@ -151,7 +151,6 @@ jobs:
           ecr_repositories: ${{ needs.prepare-build.outputs.ecr_repos }}
           current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
           additional_image_tag: ${{ env.tag_matrix }}
-          github_sha: ${{ github.sha }}
   deploy:
     needs: [prepare-build, post-build]
     # Add always() as otherwise the job is being skipped: https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions
