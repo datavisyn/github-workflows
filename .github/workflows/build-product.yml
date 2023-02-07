@@ -101,7 +101,8 @@ jobs:
 #          echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\",\"${{ github.sha }}\"]"
 #          echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\",\"${{ github.sha }}\"]" >> "$GITHUB_OUTPUT"
 #        shell: bash
-      - id: set-matrix
+      - name: collect additional image tags
+        id: set-matrix
         #if: inputs.add_githubsha_tag == 'false'
         #run: |
         #  echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]"
@@ -109,11 +110,13 @@ jobs:
         ##echo "::set-output name=image_tag_matrix::[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]"
         #echo "::set-output name=image_tag_matrix::[\"${{ needs.prepare-build.outputs.image_tag2 }}\",\"${{ github.sha }}\"]"
         run: |
-          if [[ $ADD_GITHUBSHA_TAG == 'false' ]]; then
+          if [[ $ADD_GITHUBSHA_TAG == 'true' ]]; then
             image_tag_matrix=$(echo "[\"${{ steps.get-parameters.outputs.image_tag2 }}\",\"${{ github.sha }}\"]" | jq -rc '.' )
+            echo "image_tag_matrix=$image_tag_matrix"
             echo "image_tag_matrix=$image_tag_matrix" >> "$GITHUB_OUTPUT"
           else
             image_tag_matrix=$(echo "[\"${{ steps.get-parameters.outputs.image_tag2 }}\"]" | jq -rc '.')
+            echo "image_tag_matrix=$image_tag_matrix"
             echo "image_tag_matrix=$image_tag_matrix" >> "$GITHUB_OUTPUT"
           fi
         env:
