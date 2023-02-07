@@ -107,7 +107,7 @@ jobs:
         #  echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]"
         #  echo "tag_matrix=[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]" >> "$GITHUB_OUTPUT"
         run: |
-          if [[ $ADD_GITHUBSHA_TAG == 'false']]; then
+          if [[ $ADD_GITHUBSHA_TAG == 'false' ]]; then
             echo "::set-output name=image_tag_matrix::[\"${{ needs.prepare-build.outputs.image_tag2 }}\"]"
           else
             echo "::set-output name=image_tag_matrix::[\"${{ needs.prepare-build.outputs.image_tag2 }}\",\"${{ github.sha }}\"]"
