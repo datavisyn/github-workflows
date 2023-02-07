@@ -41,18 +41,18 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1.5.3
       - name: retag image
-        env:
-          REPOSITORY_NAMES: ${{ inputs.ecr_repositories }}
-          CURRENT_IMAGE_TAG: ${{ inputs.current_image_tag }}
-          ADDITIONAL_IMAGE_TAG: ${{ inputs.additional_image_tag }}
         run: |
           mapfile -t array < <(echo "${REPOSITORY_NAMES}" | tr ',' "\n")
-          for REPOSITORY_NAME in "${array[@]}"; do
-            IMAGE_META="$(aws ecr describe-images --repository-name "$REPOSITORY_NAME" --image-ids imageTag="$CURRENT_IMAGE_TAG" --output json | jq --arg var "${ADDITIONAL_IMAGE_TAG}" '.imageDetails[0].imageTags | index( $var )')"
+          for REPO_NAME in "${array[@]}"; do
+            IMAGE_META="$(aws ecr describe-images --repository-name "$REPO_NAME" --image-ids imageTag="$CURRENT_IMAGE_TAG" --output json | jq --arg var "${ADDITIONAL_IMAGE_TAG}" '.imageDetails[0].imageTags | index( $var )')"
             if [[ -z "${IMAGE_META}" || "${IMAGE_META}" == "null" ]]; then
-              MANIFEST="$(aws ecr batch-get-image --repository-name "$REPOSITORY_NAME" --image-ids imageTag="$CURRENT_IMAGE_TAG" --output json | jq --raw-output --join-output '.images[0].imageManifest')"
-              aws ecr put-image --repository-name "$REPOSITORY_NAME" --image-tag "$ADDITIONAL_IMAGE_TAG" --image-manifest "$MANIFEST"
+              MANIFEST="$(aws ecr batch-get-image --repository-name "$REPO_NAME" --image-ids imageTag="$CURRENT_IMAGE_TAG" --output json | jq --raw-output --join-output '.images[0].imageManifest')"
+              aws ecr put-image --repository-name "$REPO_NAME" --image-tag "$ADDITIONAL_IMAGE_TAG" --image-manifest "$MANIFEST"
             else
               echo "image already tagged!"
             fi
           done;
+        env:
+          REPOSITORY_NAMES: ${{ inputs.ecr_repositories }}
+          CURRENT_IMAGE_TAG: ${{ inputs.current_image_tag }}
+          ADDITIONAL_IMAGE_TAG: ${{ inputs.additional_image_tag }}
