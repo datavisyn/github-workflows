@@ -6,23 +6,29 @@ on:
   workflow_call:
     inputs:
       aws_role:
+        type: string
         description: "aws role to push to the ecr registry"
         required: true
       aws_region:
+        type: string
         description: "aws region to use"
         required: true
       ecr_repositories:
+        type: string
         description: "ecr repositories (name only) - seperated with ,"
         required: true
       current_image_tag:
+        type: string
         description: "current tag of the image"
         required: true
       additional_image_tag:
+        type: string
         description: "additional image tag"
         required: true
 
 jobs:
   retag-images:
+    runs-on: ubuntu-20.04
     steps:
       - name: print variables
         run: echo "ADDITIONAL_IMAGE_TAG=$ADDITIONAL_IMAGE_TAG"
