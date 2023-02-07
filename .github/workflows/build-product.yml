@@ -154,7 +154,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        image_tag: ${{ fromJSON(env.image_tag_matrix) }}
+        image_tag: ${{ fromJSON(${{env.image_tag_matrix}}) }}
     steps:
      # - uses: actions/checkout@v3
      #   with:
