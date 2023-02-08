@@ -160,12 +160,6 @@ jobs:
       matrix:
         image_tag: ${{ fromJson(needs.prepare-build.outputs.image_tag_matrix) }}
     steps:
-     # - uses: actions/checkout@v3
-     #   with:
-     #     repository: datavisyn/github-workflows
-     #     ref: ${{ env.WORKFLOW_BRANCH }}
-     #     path: ./tmp/github-workflows
-
       - name: retag images 
         uses: datavisyn/github-action-trigger-workflow@v1
         with:
@@ -176,15 +170,6 @@ jobs:
           ref: ${{ env.WORKFLOW_BRANCH }}
           github_user: ${{ secrets.DV_BOT_USER }}
           client_payload: '{ "aws_role": "${{ secrets.DV_AWS_ECR_ROLE }}", "aws_region": "${{ secrets.DV_AWS_REGION }}", "ecr_repositories": "${{ needs.prepare-build.outputs.ecr_repos }}", "current_image_tag": "${{ needs.prepare-build.outputs.image_tag1 }}", "additional_image_tag": "${{ matrix.image_tag }}" }'
-
-      #- name: retag images
-      #  uses: ./tmp/github-workflows/.github/actions/retag-image
-      #  with:
-      #    aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
-      #    aws_region: ${{ secrets.DV_AWS_REGION }}
-       #   ecr_repositories: ${{ needs.prepare-build.outputs.ecr_repos }}
-       #   current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
-      #    additional_image_tag: ${{ matrix.image_tag }}
   deploy:
     needs: [prepare-build, post-build]
     # Add always() as otherwise the job is being skipped: https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions
