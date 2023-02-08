@@ -168,7 +168,6 @@ jobs:
           github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
           workflow_file_name: "retag-image.yml"
           ref: ${{ env.WORKFLOW_BRANCH }}
-          ref: "github_tag_test"
           github_user: ${{ secrets.DV_BOT_USER }}
           client_payload: '{ "aws_role": "${{ secrets.DV_AWS_ECR_ROLE }}", "aws_region": "${{ secrets.DV_AWS_REGION }}", "ecr_repositories": "${{ needs.prepare-build.outputs.ecr_repos }}", "current_image_tag": "${{ needs.prepare-build.outputs.image_tag1 }}", "additional_image_tag": "${{ matrix.image_tag }}" }'
   deploy:
