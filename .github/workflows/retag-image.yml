@@ -26,6 +26,10 @@ on:
         description: "additional image tag"
         required: true
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   retag-images:
     runs-on: ubuntu-20.04
