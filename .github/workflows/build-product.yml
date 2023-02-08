@@ -97,6 +97,7 @@ jobs:
           time_zone: ${{ env.TIME_ZONE }}
       - name: collect additional image tags
         id: set-matrix
+        run: |
           if [[ $ADD_GITHUBSHA_TAG == 'true' ]]; then
             image_tag_matrix=$(echo "[\"${{ steps.get-parameters.outputs.image_tag2 }}\",\"${{ github.sha }}\"]" | jq -rc '.' )
             echo "image_tag_matrix=$image_tag_matrix"
