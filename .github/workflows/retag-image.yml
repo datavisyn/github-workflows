@@ -3,7 +3,7 @@ name: retag-image
 #author: datavisyn
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       aws_role:
         type: string
@@ -30,8 +30,6 @@ jobs:
   retag-images:
     runs-on: ubuntu-20.04
     steps:
-      - name: print variables
-        run: echo "ADDITIONAL_IMAGE_TAG=$ADDITIONAL_IMAGE_TAG"
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
