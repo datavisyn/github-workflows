@@ -64,7 +64,6 @@ jobs:
       ecr_repository_keys: ${{ steps.get-parameters.outputs.ecr_repository_keys }}
       create_workspace: ${{ steps.get-parameters.outputs.create_workspace }}
       stage: ${{ steps.get-parameters.outputs.stage }}
-      image_tag_matrix: ${{ steps.set-matrix.outputs.image_tag_matrix }}
     runs-on: ubuntu-20.04
     steps:
       # checkout specific repository
@@ -95,20 +94,6 @@ jobs:
           dv_customers: ${{ secrets.DV_CUSTOMERS }}
           branch_name: ${{ github.ref_name }}
           time_zone: ${{ env.TIME_ZONE }}
-      - name: collect additional image tags
-        id: set-matrix
-        run: |
-          if [[ $ADD_GITHUBSHA_TAG == 'true' ]]; then
-            image_tag_matrix=$(echo "[\"${{ steps.get-parameters.outputs.image_tag2 }}\",\"${{ github.sha }}\"]" | jq -rc '.' )
-            echo "image_tag_matrix=$image_tag_matrix"
-            echo "image_tag_matrix=$image_tag_matrix" >> "$GITHUB_OUTPUT"
-          else
-            image_tag_matrix=$(echo "[\"${{ steps.get-parameters.outputs.image_tag2 }}\"]" | jq -rc '.')
-            echo "image_tag_matrix=$image_tag_matrix"
-            echo "image_tag_matrix=$image_tag_matrix" >> "$GITHUB_OUTPUT"
-          fi
-        env:
-          ADD_GITHUBSHA_TAG: ${{ inputs.add_githubsha_tag }}
   build-single:
     needs: prepare-build
     if: ${{ needs.prepare-build.outputs.create_workspace != 'true' && needs.prepare-build.outputs.components != '[]' && needs.prepare-build.outputs.components != ''}}
@@ -139,25 +124,33 @@ jobs:
       build_time: ${{ needs.prepare-build.outputs.build_time }}
       stage: ${{ needs.prepare-build.outputs.stage }}
     secrets: inherit
-
   post-build:
     needs: [prepare-build, build-single, build-workspace]
     if: ${{ always() && (needs.build-single.result == 'success' || needs.build-single.result == 'skipped') && (needs.build-workspace.result == 'success' || needs.build-workspace.result == 'skipped') && !(needs.build-workspace.result == 'skipped' && needs.build-single.result == 'skipped')}}
     runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        image_tag: ${{ fromJson(needs.prepare-build.outputs.image_tag_matrix) }}
     steps:
-      - name: retag images
-        uses: datavisyn/github-action-trigger-workflow@v1
+      - uses: actions/checkout@v3
         with:
-          owner: "datavisyn"
-          repo: "github-workflows"
-          github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-          workflow_file_name: "retag-image.yml"
-          ref: "github_tag_test"
-          github_user: ${{ secrets.DV_BOT_USER }}
-          client_payload: '{ "aws_role": "${{ secrets.DV_AWS_ECR_ROLE }}", "aws_region": "${{ secrets.DV_AWS_REGION }}", "ecr_repositories": "${{ needs.prepare-build.outputs.ecr_repos }}", "current_image_tag": "${{ needs.prepare-build.outputs.image_tag1 }}", "additional_image_tag": "${{ matrix.image_tag }}" }'
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+      - name: retag images
+        uses: ./tmp/github-workflows/.github/actions/retag-image
+        with:
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ secrets.DV_AWS_REGION }}
+          ecr_repositories: ${{ needs.prepare-build.outputs.ecr_repos }}
+          current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
+          additional_image_tag: ${{ needs.prepare-build.outputs.image_tag2 }}
+      - name: retag images github.sha
+        if: inputs.add_github_sha == 'true'
+        uses: ./tmp/github-workflows/.github/actions/retag-image
+        with:
+          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ secrets.DV_AWS_REGION }}
+          ecr_repositories: ${{ needs.prepare-build.outputs.ecr_repos }}
+          current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
+          additional_image_tag: ${{ github.sha }}
   deploy:
     needs: [prepare-build, post-build]
     # Add always() as otherwise the job is being skipped: https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions
