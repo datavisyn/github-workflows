@@ -7,6 +7,7 @@ on:
         description: add additional tag containing github-sha
         type: boolean
         default: false
+        required: true
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -143,7 +144,7 @@ jobs:
           current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
           additional_image_tag: ${{ needs.prepare-build.outputs.image_tag2 }}
       - name: retag images github.sha
-        if: ${{ github.events.inputs.add_githubsha_tag }}
+        if: ${{ inputs.add_githubsha_tag }}
         uses: ./tmp/github-workflows/.github/actions/retag-image
         with:
           aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
