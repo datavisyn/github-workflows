@@ -143,7 +143,7 @@ jobs:
           current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
           additional_image_tag: ${{ needs.prepare-build.outputs.image_tag2 }}
       - name: retag images github.sha
-        if: inputs.add_githubsha_tag == 'true'
+        #if: inputs.add_githubsha_tag == 'true'
         uses: ./tmp/github-workflows/.github/actions/retag-image
         with:
           aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
