@@ -7,7 +7,6 @@ on:
         description: add additional tag containing github-sha
         type: boolean
         default: false
-        required: true
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
