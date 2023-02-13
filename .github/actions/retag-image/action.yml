@@ -21,10 +21,7 @@ inputs:
 
 runs:
   using: "composite"
-
   steps:
-    - name: print variables
-      run: echo "ADDITIONAL_IMAGE_TAG=$ADDITIONAL_IMAGE_TAG"
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1.7.0
       with:

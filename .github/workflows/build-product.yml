@@ -143,7 +143,7 @@ jobs:
           ecr_repositories: ${{ needs.prepare-build.outputs.ecr_repos }}
           current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
           additional_image_tag: ${{ needs.prepare-build.outputs.image_tag2 }}
-      - name: retag images github.sha
+      - name: retag images with github.sha
         if: ${{ inputs.add_githubsha_tag }}
         uses: ./tmp/github-workflows/.github/actions/retag-image
         with:
