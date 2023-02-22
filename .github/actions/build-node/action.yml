@@ -57,9 +57,9 @@ runs:
       if: inputs.download_yarn_lock == 'true'
       with:
         name: node-yarn-lock
-    # Enable yarn download cache, @see https://github.com/actions/setup-node/issues/325
+    # Enable yarn download cache, @see https://github.com/actions/cache/tree/main/save#always-save-cache and https://github.com/actions/setup-node/issues/325
     - name: Restore yarn cache
-      uses: actions/cache@v3
+      uses: actions/cache/restore@v3
       with:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
         path: ~/.yarn/berry/cache/
@@ -67,8 +67,16 @@ runs:
         restore-keys: |
           yarn-download-cache-
     - name: Install dependencies
+      id: install
       run: yarn install --no-immutable --inline-builds
       shell: bash
+    - name: Save yarn cache
+      uses: actions/cache/save@v3
+      if: steps.install.outcome == 'success'
+      with:
+        # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
+        path: ~/.yarn/berry/cache/
+        key: yarn-download-cache-${{ hashFiles('package.json') }}
     - name: Show installed dependencies
       run: yarn info --name-only
       shell: bash
