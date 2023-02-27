@@ -68,8 +68,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.DV_AWS_ECR_ROLE }}
           aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
-          aws_region: ${{ secrets.DV_AWS_REGION }}
-          ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
+          aws-region: ${{ secrets.DV_AWS_REGION }}
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1.5.3
