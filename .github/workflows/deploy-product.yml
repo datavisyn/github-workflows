@@ -88,9 +88,10 @@ jobs:
           ref: ${{ env.WORKFLOW_BRANCH }}
           github_user: ${{ secrets.DV_BOT_USER }}
           client_payload: '{ "app": "${{ steps.get-parameters.outputs.app }}", "customer": "${{ inputs.customer }}", "stage": "${{ inputs.stage }}", "sub_app": "${{ steps.get-parameters.outputs.sub_app }}", "branch": "${{ steps.get-parameters.outputs.image_tag2 }}" }'
-      - name: get labels
-        # if: ${{ add_revision_as_tag == 'true' }}
+      - name: get revision label
+        if: ${{ inputs.add_revision_as_tag == 'true' }}
         run: |
           echo "fetch labels of image"
           MANIFEST=$(aws ecr batch-get-image --repository-name "sightline/web" --image-id imageTag="${{ steps.get-parameters.outputs.image_tag2 }}" --accepted-media-types "application/vnd.docker.distribution.manifest.v1+json" --output json |jq -r '.images[].imageManifest' |jq -r '.history[0].v1Compatibility' |jq -r '.config.Labels | to_entries | .[] | select(.key=="org.opencontainers.image.revision") | .value')
           echo "$MANIFEST"
+          echo "revision_label=$MANIFEST" >> "$GITHUB_OUTPUT"
