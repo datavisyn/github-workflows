@@ -83,4 +83,5 @@ jobs:
         # if: ${{ add_revision_as_tag == 'true' }}
         run: |
           echo "fetch labels of image"
-          aws ecr batch-get-image --repository-name "${{ steps.get-parameters.outputs.repo }}" --image-id imageTag="${{ steps.get-parameters.outputs.image_tag2 }}" --accepted-media-types "application/vnd.docker.distribution.manifest.v1+json" --output json |jq -r '.images[].imageManifest' |jq -r '.history[0].v1Compatibility' |jq -r '.config.Labels'
+          MANIFEST=$(aws ecr batch-get-image --repository-name "${{ steps.get-parameters.outputs.repo }}" --image-id imageTag="${{ steps.get-parameters.outputs.image_tag2 }}" --accepted-media-types "application/vnd.docker.distribution.manifest.v1+json" --output json |jq -r '.images[].imageManifest' |jq -r '.history[0].v1Compatibility' |jq -r '.config.Labels')
+          echo "$MANIFEST"
