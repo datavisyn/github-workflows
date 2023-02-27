@@ -63,6 +63,14 @@ jobs:
           dv_qms: ${{ secrets.DV_QMS }}
           actor: ${{ github.actor }}
           qms_are_allowed: "true"
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1.7.0
+        with:
+          role-to-assume: ${{ inputs.aws_role }}
+          aws-region: ${{ inputs.aws_region }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1.5.3
       - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
         id: get-parameters
         with:
