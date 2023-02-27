@@ -24,6 +24,11 @@ on:
         description: "customer for that the app should be deployed"
         required: true
         type: string
+      add_revision_as_tag:
+        description: "customer for that the app should be deployed"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   id-token: write
