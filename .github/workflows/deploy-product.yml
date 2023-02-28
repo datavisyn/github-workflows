@@ -45,6 +45,8 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-20.04
+    outputs:
+      revision_label: ${{ steps.trigger-deployment.outputs.revision_label }}
     steps:
       # checkout repo to get package.json
       - uses: actions/checkout@v3
@@ -76,6 +78,7 @@ jobs:
           branch_name: ${{ github.ref_name }}
           time_zone: ${{ env.TIME_ZONE }}
       - name: trigger deployment
+        id: trigger-deployment
         uses: datavisyn/github-action-trigger-workflow@v1
         with:
           owner: "datavisyn"
