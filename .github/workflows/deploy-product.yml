@@ -99,7 +99,7 @@ jobs:
         run: |
           echo "fetch labels of image"
           ECR_REPOS=(${{ steps.get-parameters.outputs.app }})
-          echo "ECR_REPO: $ECR_REPOS[0]"
-          MANIFEST=$(aws ecr batch-get-image --repository-name "$ECR_REPOS[0]" --image-id imageTag="${{ steps.get-parameters.outputs.image_tag2 }}" --accepted-media-types "application/vnd.docker.distribution.manifest.v1+json" --output json |jq -r '.images[].imageManifest' |jq -r '.history[0].v1Compatibility' |jq -r '.config.Labels | to_entries | .[] | select(.key=="org.opencontainers.image.revision") | .value')
+          echo "ECR_REPO: $ECR_REPOS"
+          MANIFEST=$(aws ecr batch-get-image --repository-name "$ECR_REPOS" --image-id imageTag="${{ steps.get-parameters.outputs.image_tag2 }}" --accepted-media-types "application/vnd.docker.distribution.manifest.v1+json" --output json |jq -r '.images[].imageManifest' |jq -r '.history[0].v1Compatibility' |jq -r '.config.Labels | to_entries | .[] | select(.key=="org.opencontainers.image.revision") | .value')
           echo "$MANIFEST"
           echo "revision_label=$MANIFEST" >> "$GITHUB_OUTPUT"
