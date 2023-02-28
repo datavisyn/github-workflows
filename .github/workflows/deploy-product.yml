@@ -51,7 +51,7 @@ jobs:
   deploy:
     runs-on: ubuntu-20.04
     outputs:
-      revision_label: ${{ steps.trigger-deployment.outputs.revision_label }}
+      revision_label: ${{ steps.get-revision-label.outputs.revision_label }}
     steps:
       # checkout repo to get package.json
       - uses: actions/checkout@v3
