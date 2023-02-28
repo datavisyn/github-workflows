@@ -45,7 +45,7 @@ concurrency:
 
 env:
   GA_VERSION: "main"
-  WORKFLOW_BRANCH: "vstoiber/add_revision_as_tag"
+  WORKFLOW_BRANCH: "add_revision_as_tag"
 
 jobs:
   deploy:
