@@ -32,7 +32,7 @@ on:
     outputs:
       revision_label:
         description: "revision that is stored as a label"
-        value: ${{ jobs.get-revision-label.outputs.revision_label }}
+        value: ${{ jobs.deploy.outputs.revision_label }}
 
 
 permissions:
