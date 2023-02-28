@@ -29,6 +29,11 @@ on:
         required: false
         type: boolean
         default: false
+    outputs:
+      revision_label:
+        description: "revision that is stored as a label"
+        value: ${{ jobs.deploy.outputs.revision_label }}
+
 
 permissions:
   id-token: write
