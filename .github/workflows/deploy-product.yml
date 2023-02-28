@@ -84,7 +84,7 @@ jobs:
           time_zone: ${{ env.TIME_ZONE }}
       - name: trigger deployment
         id: trigger-deployment
-        uses: datavisyn/github-action-trigger-workflow@test
+        uses: datavisyn/github-action-trigger-workflow@add_revision_as_tag
         with:
           owner: "datavisyn"
           repo:  "infrastructure-k8s"
