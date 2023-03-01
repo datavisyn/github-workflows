@@ -1,4 +1,5 @@
 name: build-product
+run-name: building ${{ github.ref }}
 
 on:
   workflow_call:
