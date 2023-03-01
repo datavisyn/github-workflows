@@ -50,7 +50,7 @@ concurrency:
 
 env:
   GA_VERSION: "main"
-  WORKFLOW_BRANCH: "add_revision_as_tag"
+  WORKFLOW_BRANCH: "new_deployment"
 
 jobs:
   deploy:
