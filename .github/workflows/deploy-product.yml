@@ -14,7 +14,7 @@ on:
       DV_AWS_ECR_REGISTRY:
         required: false
       DV_BOT_USER:
-        required: true
+        required: false
     inputs:
       stage:
         description: "stage that should be deployed (develop|qa|production)"
