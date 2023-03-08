@@ -7,8 +7,6 @@ on:
         required: false
       DV_BOT_USER:
         required: false
-      DV_CUSTOMERS:
-        required: true
       DV_AWS_ECR_ROLE:
         required: false
       DV_AWS_REGION:
@@ -86,7 +84,6 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
         id: get-parameters
         with:
-          dv_customers: ${{ secrets.DV_CUSTOMERS }}
           branch_name: ${{ github.ref_name }}
           time_zone: ${{ env.TIME_ZONE }}
   build-single:
@@ -146,6 +143,26 @@ jobs:
       matrix:
         customer: ${{ fromJSON(needs.prepare-build.outputs.customers) }}
     steps:
+      - name: determine stage to be deployed to
+        id: get-parameters
+        run: |
+          # Try to split the customer from the format customer:stage
+          customer="$(echo "$CUSTOMER_FULL" | cut -d ":" -s -f 1)"
+          stage="$(echo "$CUSTOMER_FULL" | cut -d ":" -s -f 2)"
+          # If nothing is found, we assume we just got the customer
+          if [ -z "$customer" ]; then
+            customer="$CUSTOMER_FULL"
+          fi
+          # And will deploy to develop if no stage is defined
+          if [ -z "$stage" ]; then
+            echo "customer $CUSTOMER_FULL does not include stage, using develop instead"
+            stage="develop"
+          fi
+          echo "customer=$customer" >> "$GITHUB_OUTPUT"
+          echo "stage=$stage" >> "$GITHUB_OUTPUT"
+        env:
+          CUSTOMER_FULL: ${{ matrix.customer }}
+        shell: bash
       - name: trigger deployment
         uses: datavisyn/github-action-trigger-workflow@v1
         with:
@@ -155,5 +172,4 @@ jobs:
           workflow_file_name: "deploy-app.yml"
           ref: ${{ env.WORKFLOW_BRANCH }}
           github_user: ${{ secrets.DV_BOT_USER }}
-          # TODO: The deployment is always triggered to develop, do we want to make this configurable?
-          client_payload: '{ "app": "${{ needs.prepare-build.outputs.app }}", "customer": "${{ matrix.customer }}", "stage": "develop", "sub_app": "${{ needs.prepare-build.outputs.sub_app }}", "branch": "${{ needs.prepare-build.outputs.image_tag2 }}" }'
+          client_payload: '{ "app": "${{ needs.prepare-build.outputs.app }}", "customer": "${{ steps.get-parameters.outputs.customer }}", "stage": "${{ steps.get-parameters.outputs.stage }}", "sub_app": "${{ needs.prepare-build.outputs.sub_app }}", "branch": "${{ needs.prepare-build.outputs.image_tag2 }}" }'

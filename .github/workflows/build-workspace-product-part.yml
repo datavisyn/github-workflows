@@ -9,8 +9,6 @@ on:
         required: false
       DV_BOT_USER:
         required: false
-      DV_CUSTOMERS:
-        required: true
       DV_AWS_ECR_ROLE:
         required: false
       DV_AWS_REGION:

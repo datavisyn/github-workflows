@@ -7,8 +7,6 @@ on:
         required: true
       DV_DEVOPS:
         required: true
-      DV_CUSTOMERS:
-        required: true
       DV_QMS:
         required: true
 
@@ -208,9 +206,9 @@ jobs:
           echo "release_version=$release_version"
           echo "main_branch_name=$main_branch_name"
           echo "develop_branch_name=$develop_branch_name"
-          echo "::set-output name=release_version::$release_version"
-          echo "::set-output name=main_branch_name::$main_branch_name"
-          echo "::set-output name=develop_branch_name::$develop_branch_name"
+          echo "release_version=$release_version >> $GITHUB_OUTPUT"
+          echo "main_branch_name=$main_branch_name >> $GITHUB_OUTPUT"
+          echo "develop_branch_name=$develop_branch_name >> $GITHUB_OUTPUT"
         env:
           BRANCH_NAME: ${{ github.ref_name }}
       - name: delete release branch
