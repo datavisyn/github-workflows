@@ -5,8 +5,6 @@ on:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: true
-      DV_CUSTOMERS:
-        required: true
       DV_DEVOPS:
         required: true
       DV_QMS:
@@ -75,7 +73,6 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
         id: get-parameters
         with:
-          dv_customers: ${{ secrets.DV_CUSTOMERS }}
           branch_name: ${{ github.ref_name }}
           time_zone: ${{ env.TIME_ZONE }}
       - name: trigger deployment

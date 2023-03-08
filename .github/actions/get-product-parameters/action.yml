@@ -3,10 +3,6 @@ description: get product parameters for building product
 author: datavisyn
 
 inputs:
-  dv_customers:
-    description: "customers of datavisyn; seperated with ','"
-    required: true
-    type: string
   branch_name:
     description: "name of the current branch"
     required: true
@@ -120,7 +116,6 @@ runs:
         echo "create_workspace=$create_workspace" >> "$GITHUB_OUTPUT"
         echo "stage=$stage" >> "$GITHUB_OUTPUT"
       env:
-        DV_CUSTOMERS: ${{ inputs.dv_customers }}
         BRANCH_NAME: ${{ inputs.branch_name }}
         TIME_ZONE: ${{ inputs.time_zone }}
       shell: bash
