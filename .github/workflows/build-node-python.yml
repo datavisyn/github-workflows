@@ -167,7 +167,7 @@ jobs:
         uses: cypress-io/github-action@v4
         with:
           # Currently, the videos are buggy because of low-cpu/electron environment: https://github.com/cypress-io/cypress/issues/8210
-          config: video=false,modifyObstructiveCode=false
+          config: video=true,modifyObstructiveCode=false
           browser: chrome
           install: false
           # TODO: Create customizable variables for these?
@@ -192,6 +192,12 @@ jobs:
         with:
           name: cypress-screenshots
           path: cypress/screenshots
+      - name: Upload Video
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: cypress-videos
+          path: cypress/videos
       # - name: Upload cypress videos
       #   uses: actions/upload-artifact@v3
       #   if: always()
