@@ -16,20 +16,23 @@ echo "$HADOLINT_RECURSIVE"
 echo "$@"
 
 if [ -n "$HADOLINT_CONFIG" ]; then
+  echo "####### Inside first if"
   HADOLINT_CONFIG="-c ${HADOLINT_CONFIG}"
 fi
 
 if [ "$HADOLINT_RECURSIVE" = "true" ]; then
   shopt -s globstar
-
+  echo "####### Inside second if"
   filename="${!#}"
   # shellcheck disable=SC2124
   flags="${@:1:$#-1}"
   # shellcheck disable=SC2086
-  RESULTS=$(hadolint $HADOLINT_CONFIG $flags ./**/$filename)
+  RESULTS=$(hadolint -V $HADOLINT_CONFIG $flags ./**/$filename)
+  echo "####### Inside second if, RESULTS= $RESULTS"
 else
   # shellcheck disable=SC2086,SC2068
-  RESULTS=$(hadolint $HADOLINT_CONFIG $@)
+  RESULTS=$(hadolint -V $HADOLINT_CONFIG $@)
+  echo "####### Inside second if/else, RESULTS= $RESULTS"
 fi
 FAILED=$?
 
