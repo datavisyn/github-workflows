@@ -4,6 +4,7 @@
 cp /hadolint-matcher.json "$HOME/"
 # remove matcher during cleanup
 cleanup() {
+    # shellcheck disable=SC2317
     echo "::remove-matcher owner=datavisyn/lint-docker::"
 }
 trap cleanup EXIT
@@ -34,6 +35,7 @@ else
   RESULTS=$(hadolint -V $HADOLINT_CONFIG $@)
   echo "####### Inside second if/else, RESULTS= $RESULTS"
 fi
+
 FAILED=$?
 
 if [ -n "$HADOLINT_OUTPUT" ]; then
