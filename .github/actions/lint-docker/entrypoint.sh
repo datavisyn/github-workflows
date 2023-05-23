@@ -29,14 +29,16 @@ if [ "$HADOLINT_RECURSIVE" = "true" ]; then
   flags="${@:1:$#-1}"
   # shellcheck disable=SC2086
   RESULTS=$(hadolint -V $HADOLINT_CONFIG $flags ./**/$filename)
+  FAILED=$?
   echo "####### Inside second if, RESULTS= $RESULTS"
 else
   # shellcheck disable=SC2086,SC2068
   RESULTS=$(hadolint -V $HADOLINT_CONFIG $@)
+  FAILED=$?
   echo "####### Inside second if/else, RESULTS= $RESULTS"
 fi
 
-FAILED=$?
+
 
 if [ -n "$HADOLINT_OUTPUT" ]; then
   if [ -f "$HADOLINT_OUTPUT" ]; then
