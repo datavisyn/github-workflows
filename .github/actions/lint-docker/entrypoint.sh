@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 # copy matcher json file to home
 cp /hadolint-matcher.json "$HOME/"
 # remove matcher during cleanup
