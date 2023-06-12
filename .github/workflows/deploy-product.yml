@@ -75,7 +75,7 @@ jobs:
           additional_image_tag=$IMAGE_TAG
           additional_image_tag=${additional_image_tag/main/qa}
           echo "additional_image_tag=${additional_image_tag}"
-          echo "::set-output name=additional_image_tag::$additional_image_tag"
+          echo "additional_image_tag=$additional_image_tag" >> "$GITHUB_OUTPUT"
         env:
           IMAGE_TAG: ${{ steps.get-parameters.outputs.image_tag1 }}         
       - uses: ./tmp/github-workflows/.github/actions/retag-image
@@ -157,7 +157,7 @@ jobs:
         run: |
           additional_image_tag=$IMAGE_TAG
           echo "additional_image_tag=${additional_image_tag}"
-          echo "::set-output name=additional_image_tag::$additional_image_tag"
+          echo "additional_image_tag=$additional_image_tag" >> "$GITHUB_OUTPUT"
         env:
           IMAGE_TAG: ${{ steps.get-parameters.outputs.image_tag1 }}      
       - uses: ./tmp/github-workflows/.github/actions/retag-image
