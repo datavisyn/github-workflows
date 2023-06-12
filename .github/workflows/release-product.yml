@@ -85,7 +85,7 @@ jobs:
           known_repositories=$(echo $(jq -c '.' ./known_repositories.json) | jq -R '.')
           echo "known_repositories=${known_repositories}"
           rm ./known_repositories.json
-          echo "::set-output name=known_repositories::$known_repositories"
+          echo "known_repositories=$known_repositories" >> "$GITHUB_OUTPUT"
         env:
           REPO_IS_PRIVATE: ${{github.event.repository.private}}
           GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
@@ -115,11 +115,11 @@ jobs:
           echo "generator_version=$generator_version"
           echo "new_branch_name=$new_branch_name"
           echo "main_branch_name=$main_branch_name"
-          echo ::set-output name=repository::${checked_repository}
-          echo ::set-output name=release_version::${release_version}
-          echo ::set-output name=generator_version::${generator_version}
-          echo ::set-output name=new_branch_name::${new_branch_name}
-          echo ::set-output name=main_branch_name::${main_branch_name}
+          echo "repository=$checked_repository" >> "$GITHUB_OUTPUT"
+          echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
+          echo "generator_version=$generator_version" >> "$GITHUB_OUTPUT"
+          echo "new_branch_name=$new_branch_name" >> "$GITHUB_OUTPUT"
+          echo "main_branch_name=$main_branch_name" >> "$GITHUB_OUTPUT"
         env:
           KNOWN_REPOSITORIES: ${{ steps.get-known-repositories.outputs.known_repositories }}
           SUB_APP: ${{ steps.get-parameters.outputs.sub_app }}
@@ -258,9 +258,9 @@ jobs:
           echo "release_version=$release_version"
           echo "main_branch_name=$main_branch_name"
           echo "develop_branch_name=$develop_branch_name"
-          echo "::set-output name=release_version::$release_version"
-          echo "::set-output name=main_branch_name::$main_branch_name"
-          echo "::set-output name=develop_branch_name::$develop_branch_name"
+          echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
+          echo "main_branch_name=$main_branch_name" >> "$GITHUB_OUTPUT"
+          echo "develop_branch_name=$develop_branch_name" >> "$GITHUB_OUTPUT"
         env:
           BRANCH_NAME: github.ref  
       - name: delete release branch

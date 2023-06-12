@@ -82,7 +82,7 @@ jobs:
           known_repositories=$(echo $(jq -c '.' ./known_repositories.json) | jq -R '.')
           echo "known_repositories=${known_repositories}"
           rm ./known_repositories.json
-          echo "::set-output name=known_repositories::$known_repositories" 
+          echo "known_repositories=$known_repositories" >> "$GITHUB_OUTPUT"
         env:
           REPO_IS_PRIVATE: ${{github.event.repository.private}}
           GITHUB_TOKEN: ${{ github.token }}              
@@ -103,10 +103,11 @@ jobs:
           echo "new_branch_name=$new_branch_name"
           echo "main_branch_name=$main_branch_name"
           echo "private=$private"
-          echo ::set-output name=release_version::${release_version}
-          echo ::set-output name=new_branch_name::${new_branch_name}
-          echo ::set-output name=next_dev_version::${next_dev_version}
-          echo ::set-output name=private::${private}
+          echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
+          echo "new_branch_name=$new_branch_name" >> "$GITHUB_OUTPUT"
+          echo "next_dev_version=$next_dev_version" >> "$GITHUB_OUTPUT"
+          echo "private=$private" >> "$GITHUB_OUTPUT"
+          
         env:
           KNOWN_REPOSITORIES: ${{ steps.get-known-repositories.outputs.known_repositories }}
           REPOSITORY_NAME: ${{ github.event.repository.name }}
@@ -182,8 +183,8 @@ jobs:
           readme="$readme* [ ] Celebrate the new release 🥳"
           echo -e $readme
           echo "commits=$commit_titles"
-          echo ::set-output name=readme::${readme}
-          echo ::set-output name=commits::${commit_titles}
+          echo "readme=$readme" >> "$GITHUB_OUTPUT"
+          echo "commits=$commit_titles" >> "$GITHUB_OUTPUT"
       - name: setup git config
         run: |
           git config user.name "$GITHUB_ACTOR"
