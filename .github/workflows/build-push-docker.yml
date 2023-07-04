@@ -33,15 +33,14 @@ permissions:
   id-token: write
   contents: read
 
-concurrency:
-  group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ github.event.inputs.image_tag }}'
-  cancel-in-progress: true
-
 env:
   WORKFLOW_BRANCH: "new_deployment"
 
 jobs:
   build:
+    concurrency:
+      group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.image_tag }}'
+      cancel-in-progress: true
     runs-on: ubuntu-20.04
     steps:
       # checkout specific source repository
