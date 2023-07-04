@@ -39,7 +39,7 @@ env:
 jobs:
   build:
     concurrency:
-      group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.image_tag }}'
+      group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.ecr_repository || secrets.DV_ECR_REPOSITORY }}'
       cancel-in-progress: true
     runs-on: ubuntu-20.04
     steps:
