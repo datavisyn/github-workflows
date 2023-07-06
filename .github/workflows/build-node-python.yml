@@ -86,6 +86,9 @@ jobs:
   build-python:
     name: Python
     if: ${{ !inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true') }}
+    concurrency:
+      group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      cancel-in-progress: true
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout source repository
@@ -109,6 +112,9 @@ jobs:
   build-node-python-cypress:
     name: Node, Python, Cypress
     if: ${{ inputs.cypress_enable && (inputs.cypress_run_because_flag || inputs.cypress_run_because_branch == 'true') }}
+    concurrency:
+      group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      cancel-in-progress: true
     permissions:
       id-token: write
       contents: write
