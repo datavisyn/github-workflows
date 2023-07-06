@@ -52,14 +52,13 @@ permissions:
   contents: read
   id-token: write
 
-concurrency:
-  group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}"
-  cancel-in-progress: true
-
 jobs:
   build-node:
     name: Node
     if: ${{ !inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true') }}
+    concurrency:
+      group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      cancel-in-progress: true
     permissions:
       id-token: write
       contents: write
