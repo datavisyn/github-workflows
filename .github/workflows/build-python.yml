@@ -2,6 +2,12 @@ name: Build python repositories
 
 on: 
   workflow_call:
+    inputs:
+      branch:
+        description: "Branch name"
+        type: string
+        required: false
+        default: ${{ github.ref }}
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -27,6 +33,8 @@ jobs:
     steps:
       # checkout specific source repository  
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.branch }}
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v3
         with:
