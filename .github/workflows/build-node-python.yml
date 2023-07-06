@@ -16,7 +16,7 @@ on:
         required: false
       PYTHON_VERSION:
         required: false
-        
+
 env: 
   NPM_REGISTRY: "https://registry.npmjs.org/"
   NODE_VERSION: "16.16"
