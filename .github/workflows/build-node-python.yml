@@ -57,7 +57,7 @@ jobs:
     name: Node
     if: ${{ !inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true') }}
     concurrency:
-      group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      group: "node-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
       cancel-in-progress: true
     permissions:
       id-token: write
@@ -87,7 +87,7 @@ jobs:
     name: Python
     if: ${{ !inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true') }}
     concurrency:
-      group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      group: "python-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
       cancel-in-progress: true
     runs-on: ubuntu-20.04
     steps:
@@ -113,7 +113,7 @@ jobs:
     name: Node, Python, Cypress
     if: ${{ inputs.cypress_enable && (inputs.cypress_run_because_flag || inputs.cypress_run_because_branch == 'true') }}
     concurrency:
-      group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      group: "node-python-cypress-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
       cancel-in-progress: true
     permissions:
       id-token: write
