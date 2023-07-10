@@ -28,6 +28,12 @@ concurrency:
 
 jobs:
   build-python:
+    concurrency:
+      group: "python-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      cancel-in-progress: true
+    permissions:
+      id-token: write
+      contents: write
     runs-on: ubuntu-20.04
     steps:
       # checkout specific source repository
