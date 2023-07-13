@@ -48,7 +48,7 @@ concurrency:
 
 env:
   GA_VERSION: "main"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "insight"
 
 jobs:
   deploy:
