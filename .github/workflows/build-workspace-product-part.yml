@@ -205,7 +205,7 @@ jobs:
           stage_str=".dev"
           if [[ $STAGE == "production" ]]; then
             stage_str=".prod"
-          if [[ $STAGE == "insight" ]]; then
+          elif [[ $STAGE == "insight" ]]; then
             stage_str=".insight"
           fi
           echo "$stage_str"
