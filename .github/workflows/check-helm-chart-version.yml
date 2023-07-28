@@ -35,4 +35,4 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/check-helm-chart-version
         with:
           package_file: ${{ inputs.package_file }}
-          current_directory: ${{ inputs.chart_directory }}
+          chart_directory: ${{ inputs.chart_directory }}
