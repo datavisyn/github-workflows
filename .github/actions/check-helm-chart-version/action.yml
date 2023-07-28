@@ -1,0 +1,57 @@
+name: check-helm-chart-version
+description: Check helm chart version and appVersion in Chart.yaml with package.json version
+author: datavisyn
+
+inputs:
+  package_file:
+    description: "Path to the package.json file"
+    default: "./package.json"
+    required: false
+  chart_directory:
+    description: "Helm chart directory where to find the Chart.yaml file"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Check helm chart version
+      run: |
+        export CHART_YAML=$CHART_DIRECTORY/Chart.yaml
+        export CHART_VERSION=$(yq '.version' < $CHART_YAML)
+        export CHART_APP_VERSION=$(yq '.appVersion' < $CHART_YAML)
+        export CHART_IMAGE_TAG=$(yq '.imageTag' < $CHART_DIRECTORY/values.yaml)
+        export PACKAGE_VERSION=$(jq -r '.version' $PACKAGE_FILE)
+        export SHOULD_EXIT=0
+      
+        if [[ $CHART_VERSION != $PACKAGE_VERSION ]]; then
+          echo "Chart version is not equal to package version."
+          echo "Chart version: $CHART_VERSION"
+          echo "Package version: $PACKAGE_VERSION"
+          echo "---"
+          export SHOULD_EXIT=1
+        fi
+
+        if [[ $CHART_APP_VERSION != $PACKAGE_VERSION ]]; then
+          echo "Chart appVersion is not equal to package version."
+          echo "Chart appVersion: $CHART_APP_VERSION"
+          echo "Package version: $PACKAGE_VERSION"
+          echo "---"
+          export SHOULD_EXIT=1
+        fi
+
+        if [[ $CHART_IMAGE_TAG != v$PACKAGE_VERSION ]]; then
+          echo "Chart imageTag is not equal to package version."
+          echo "Chart imageTag: $CHART_IMAGE_TAG"
+          echo "Package version: v$PACKAGE_VERSION"
+          echo "---"
+          export SHOULD_EXIT=1
+        fi
+
+        if [[ $SHOULD_EXIT == 1 ]]; then
+          echo "Version mismatch. Please update the version in Chart.yaml and values.yaml to match the version in package.json."
+          echo "Exiting..."
+          exit 1
+        fi
+      shell: bash
+      env:
+        PACKAGE_FILE: ${{ inputs.package_file }}
+        CHART_DIRECTORY: ${{ inputs.chart_directory }}
