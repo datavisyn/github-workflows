@@ -12,6 +12,11 @@ on:
             description: "Helm chart directory where to find the Chart.yaml file"
             type: string
             required: true
+        check_image_tag:
+            description: "Check if the image tag in values.yaml is equal to the package.json version"
+            default: false
+            type: boolean
+            required: false
 
 permissions:
   id-token: write
@@ -36,3 +41,4 @@ jobs:
         with:
           package_file: ${{ inputs.package_file }}
           chart_directory: ${{ inputs.chart_directory }}
+          check_image_tag: ${{ inputs.check_image_tag }}

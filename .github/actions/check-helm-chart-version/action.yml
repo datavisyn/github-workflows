@@ -10,6 +10,10 @@ inputs:
   chart_directory:
     description: "Helm chart directory where to find the Chart.yaml file"
     required: true
+  check_image_tag:
+    description: "Check if the image tag in values.yaml is equal to the package.json version"
+    required: false
+    default: "false"
 runs:
   using: "composite"
   steps:
@@ -28,6 +32,11 @@ runs:
           echo "Package version: $PACKAGE_VERSION"
           echo "---"
           export SHOULD_EXIT=1
+        else
+          echo "Chart version is equal to package version."
+          echo "Chart version: $CHART_VERSION"
+          echo "Package version: $PACKAGE_VERSION"
+          echo "---"
         fi
 
         if [[ $CHART_APP_VERSION != $PACKAGE_VERSION ]]; then
@@ -36,14 +45,27 @@ runs:
           echo "Package version: $PACKAGE_VERSION"
           echo "---"
           export SHOULD_EXIT=1
+        else
+          echo "Chart appVersion is equal to package version."
+          echo "Chart appVersion: $CHART_APP_VERSION"
+          echo "Package version: $PACKAGE_VERSION"
+          echo "---"
         fi
 
-        if [[ $CHART_IMAGE_TAG != v$PACKAGE_VERSION ]]; then
-          echo "Chart imageTag is not equal to package version."
-          echo "Chart imageTag: $CHART_IMAGE_TAG"
-          echo "Package version: v$PACKAGE_VERSION"
-          echo "---"
-          export SHOULD_EXIT=1
+        if [[ $CHECK_IMAGE_TAG == "true" ]]; then
+          echo "Checking imageTag in values.yaml"
+          if [[ $CHART_IMAGE_TAG != v$PACKAGE_VERSION ]]; then
+            echo "Chart imageTag is not equal to package version."
+            echo "Chart imageTag: $CHART_IMAGE_TAG"
+            echo "Package version: v$PACKAGE_VERSION"
+            echo "---"
+            export SHOULD_EXIT=1
+          else
+            echo "Chart imageTag is equal to package version."
+            echo "Chart imageTag: $CHART_IMAGE_TAG"
+            echo "Package version: v$PACKAGE_VERSION"
+            echo "---"
+          fi
         fi
 
         if [[ $SHOULD_EXIT == 1 ]]; then
@@ -55,3 +77,4 @@ runs:
       env:
         PACKAGE_FILE: ${{ inputs.package_file }}
         CHART_DIRECTORY: ${{ inputs.chart_directory }}
+        CHECK_IMAGE_TAG: ${{ inputs.check_image_tag }}
