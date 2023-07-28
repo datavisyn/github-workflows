@@ -30,9 +30,15 @@ runs:
       run: |
         helm version
       shell: bash
+    - name: Install Helm push plugin
+      run: |
+        helm plugin install https://github.com/chartmuseum/helm-push
+        helm push --help
+      shell: bash
     - name: Set up helm chart repository
       run: |
-        helm repo add datavisyn $CHART_REPOSITORY_URL --username $CHART_REPOSITORY_USERNAME --password $CHART_REPOSITORY_PASSWORD
+        helm repo add chartmuseum $CHART_REPOSITORY_URL --username $CHART_REPOSITORY_USERNAME --password $CHART_REPOSITORY_PASSWORD
+        helm repo list
         helm repo update
       env:
         CHART_REPOSITORY_URL: ${{ inputs.chart_repository_url }}
@@ -59,7 +65,7 @@ runs:
     - name: Push helm chart
       run: |
         cd $CURRENT_DIRECTORY
-        helm push *.tgz datavisyn
+        helm cm-push *.tgz chartmuseum
       env:
         CURRENT_DIRECTORY: ${{ inputs.current_directory }}
       shell: bash
