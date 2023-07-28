@@ -53,21 +53,14 @@ runs:
       env:
         CURRENT_DIRECTORY: ${{ inputs.current_directory }}
       shell: bash
-    - name: Build helm chart
+    - name: Build and push helm chart
       run: |
         cd $CURRENT_DIRECTORY
         helm dependency update
-        helm package . --version $CHART_VERSION --app-version $CHART_VERSION --destination $CURRENT_DIRECTORY
+        helm cm-push . --version $CHART_VERSION --app-version $CHART_VERSION chartmuseum
       env:
         CURRENT_DIRECTORY: ${{ inputs.current_directory }}
         CHART_VERSION: ${{ inputs.chart_version }}
-      shell: bash
-    - name: Push helm chart
-      run: |
-        cd $CURRENT_DIRECTORY
-        helm cm-push *.tgz chartmuseum
-      env:
-        CURRENT_DIRECTORY: ${{ inputs.current_directory }}
       shell: bash
     - name: Remove helm chart
       run: |
