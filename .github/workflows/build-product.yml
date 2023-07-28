@@ -108,7 +108,7 @@ jobs:
       fail-fast: true
       matrix:
         component: ${{fromJson(needs.prepare-build.outputs.components)}}
-    uses: datavisyn/github-workflows/.github/workflows/build-workspace-product-part.yml@new_deployment_inject-version-in-workspace
+    uses: datavisyn/github-workflows/.github/workflows/build-workspace-product-part.yml@new_deployment
     with:
       component: ${{ matrix.component }}
       image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
