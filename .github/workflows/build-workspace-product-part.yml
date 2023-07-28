@@ -186,6 +186,26 @@ jobs:
           GH_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
           GITLAB_HOST:  ${{ secrets.GITLAB_HOST }}
+      - name: Inject version from product package.json into workspace package.json
+        run: |
+          product_version=$(jq -rc '.version' ./package.json)
+          echo "product_version=$product_version"
+          
+          if [[ $product_version == *"SNAPSHOT"* ]]; then
+            echo "replace SNAPSHOT in version with timestamp"
+            product_version=$(echo "$product_version" | sed "s/SNAPSHOT/$(date +%Y%m%d-%H%M)/g")
+            echo "product_version=$product_version"
+          fi
+
+          workspace_version=$(jq -rc '.version' ./tmp/$COMPONENT/package.json)
+          echo "workspace_version=$workspace_version"
+          
+          if [[ $product_version != $workspace_version ]]; then
+            echo "update workspace version"
+            jq --arg version "$product_version" '.version = $version' ./tmp/$COMPONENT/package.json > ./tmp/$COMPONENT/package.json.tmp
+            mv ./tmp/$COMPONENT/package.json.tmp ./tmp/$COMPONENT/package.json
+            echo "workspace version updated to $(jq -rc '.version' ./tmp/$COMPONENT/package.json)"
+          fi
       - name: Copy docker sources
         run: |
           ls -lah .
