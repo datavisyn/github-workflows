@@ -199,13 +199,15 @@ jobs:
 
           workspace_version=$(jq -rc '.version' ./tmp/$COMPONENT/package.json)
           echo "workspace_version=$workspace_version"
-          
+
           if [[ $product_version != $workspace_version ]]; then
             echo "update workspace version"
             jq --arg version "$product_version" '.version = $version' ./tmp/$COMPONENT/package.json > ./tmp/$COMPONENT/package.json.tmp
             mv ./tmp/$COMPONENT/package.json.tmp ./tmp/$COMPONENT/package.json
             echo "workspace version updated to $(jq -rc '.version' ./tmp/$COMPONENT/package.json)"
           fi
+        env:
+          COMPONENT: ${{ inputs.component }}
       - name: Copy docker sources
         run: |
           ls -lah .
