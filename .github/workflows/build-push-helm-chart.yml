@@ -14,10 +14,6 @@ on:
         description: "Current directory for building the helm chart"
         required: true
         type: string
-      chart_version:
-        description: "Helm chart version is used as chart version and application version. Use semantic versioning."
-        required: true
-        type: string
       chart_repository_url:
         description: "Helm chart repository URL where to push the chart"
         required: false
@@ -51,4 +47,3 @@ jobs:
           chart_repository_username: ${{ secrets.DV_CHARTMUSEUM_USER }}
           chart_repository_password: ${{ secrets.DV_CHARTMUSEUM_PASSWORD }}
           current_directory: ${{ inputs.current_directory }}
-          chart_version: ${{ inputs.chart_version }}

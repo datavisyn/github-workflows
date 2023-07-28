@@ -15,9 +15,6 @@ inputs:
   current_directory:
     description: "Current directory for building the helm chart"
     required: true
-  chart_version:
-    description: "The version is used as chart version and application version. Use semantic versioning."
-    required: true
 runs:
   using: "composite"
   steps:
@@ -57,15 +54,7 @@ runs:
       run: |
         cd $CURRENT_DIRECTORY
         helm dependency update
-        helm cm-push . --version $CHART_VERSION --app-version $CHART_VERSION chartmuseum
-      env:
-        CURRENT_DIRECTORY: ${{ inputs.current_directory }}
-        CHART_VERSION: ${{ inputs.chart_version }}
-      shell: bash
-    - name: Remove helm chart
-      run: |
-        cd $CURRENT_DIRECTORY
-        rm *.tgz
+        helm cm-push . chartmuseum
       env:
         CURRENT_DIRECTORY: ${{ inputs.current_directory }}
       shell: bash
