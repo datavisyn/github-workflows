@@ -28,6 +28,10 @@ on:
         type: boolean
         required: false
         default: false
+      runs_on:
+        type: string
+        required: false
+        default: "ubuntu-20.04"
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -62,7 +66,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    runs-on: ubuntu-20.04
+    runs-on: ${{ inputs.platform }}
     steps:
       - name: Checkout source repository
         uses: actions/checkout@v3
