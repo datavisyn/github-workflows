@@ -44,6 +44,10 @@ on:
           description: "stage for the image (develop or production) depending on the branch name"
           required: true
           type: string
+        timeout:
+          description: "Timeout in minutes for each job"
+          type: string
+          default: 30
 env:
   VISYN_SCRIPTS_VERSION: "develop"
   TIME_ZONE: "Europe/Vienna"
@@ -61,6 +65,7 @@ permissions:
 jobs:
   build-components:
     runs-on: ubuntu-20.04
+    timeout-minutes: ${{ fromJSON(github.event.inputs.timeout) }}
     steps:
       # checkout specific repository
       - uses: actions/checkout@v3
