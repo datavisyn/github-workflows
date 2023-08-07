@@ -4,6 +4,7 @@
 cp /hadolint-matcher.json "$HOME/"
 # remove matcher during cleanup
 cleanup() {
+    # shellcheck disable=SC2317
     echo "::remove-matcher owner=datavisyn/lint-docker::"
 }
 trap cleanup EXIT
