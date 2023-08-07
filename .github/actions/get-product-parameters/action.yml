@@ -81,6 +81,8 @@ runs:
         stage=develop
         if [[ $BRANCH_NAME == main* || $BRANCH_NAME == rc-* || $BRANCH_NAME == v[0-9]* ]] ; then
           stage=production
+        elif [[ $BRANCH_NAME == insight* ]] ; then
+          stage=insight
         fi
         # get image tags
         build_time=$(TZ=$TIME_ZONE date +%Y-%m-%dT%H%M%SZ)
