@@ -193,18 +193,18 @@ jobs:
           
           if [[ $product_version == *"SNAPSHOT"* ]]; then
             echo "replace SNAPSHOT in version with timestamp"
-            product_version=$(echo "$product_version" | sed "s/SNAPSHOT/$(date +%Y%m%d-%H%M%S)/g")
+            product_version="${product_version//SNAPSHOT/$(date +%Y%m%d-%H%M%S)/g}"
             echo "product_version=$product_version"
           fi
 
-          workspace_version=$(jq -rc '.version' ./tmp/$COMPONENT/package.json)
+          workspace_version=$(jq -rc '.version' "./tmp/$COMPONENT/package.json")
           echo "workspace_version=$workspace_version"
 
-          if [[ $product_version != $workspace_version ]]; then
+          if [[ "$product_version" != "$workspace_version" ]]; then
             echo "update workspace version"
-            jq --arg version "$product_version" '.version = $version' ./tmp/$COMPONENT/package.json > ./tmp/$COMPONENT/package.json.tmp
-            mv ./tmp/$COMPONENT/package.json.tmp ./tmp/$COMPONENT/package.json
-            echo "workspace version updated to $(jq -rc '.version' ./tmp/$COMPONENT/package.json)"
+            jq --arg version "$product_version" '.version = $version' "./tmp/$COMPONENT/package.json" > "./tmp/$COMPONENT/package.json.tmp"
+            mv "./tmp/$COMPONENT/package.json.tmp" "./tmp/$COMPONENT/package.json"
+            echo "workspace version updated to $(jq -rc '.version' './tmp/$COMPONENT/package.json')"
           fi
         env:
           COMPONENT: ${{ inputs.component }}
