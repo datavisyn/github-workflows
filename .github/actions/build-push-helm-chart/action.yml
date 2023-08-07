@@ -1,0 +1,61 @@
+name: build-push-helm-chart
+description: Build helm chart and push it to ChartMuseum
+author: datavisyn
+
+inputs:
+  chart_repository_url:
+    description: "Helm chart repository URL where to push the chart"
+    required: true
+  chart_repository_username:
+    description: "Helm chart repository username"
+    required: true
+  chart_repository_password:
+    description: "Helm chart repository password"
+    required: true
+  current_directory:
+    description: "Current directory for building the helm chart"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Set up helm
+      uses: azure/setup-helm@v3
+      with:
+        version: "v3.12.2"
+      id: install
+    - name: Print helm version
+      run: |
+        helm version
+      shell: bash
+    - name: Install Helm push plugin
+      run: |
+        helm plugin install https://github.com/chartmuseum/helm-push
+        helm push --help
+      shell: bash
+    - name: Set up helm chart repository
+      run: |
+        helm repo add chartmuseum $CHART_REPOSITORY_URL --username $CHART_REPOSITORY_USERNAME --password $CHART_REPOSITORY_PASSWORD
+        helm repo list
+        helm repo update
+      env:
+        CHART_REPOSITORY_URL: ${{ inputs.chart_repository_url }}
+        CHART_REPOSITORY_USERNAME: ${{ inputs.chart_repository_username }}
+        CHART_REPOSITORY_PASSWORD: ${{ inputs.chart_repository_password }}
+      shell: bash
+    - name: Inspect and lint helm chart
+      run: |
+        cd $CURRENT_DIRECTORY
+        helm inspect chart .
+        helm lint
+      env:
+        CURRENT_DIRECTORY: ${{ inputs.current_directory }}
+      shell: bash
+    - name: Build and push helm chart
+      run: |
+        cd $CURRENT_DIRECTORY
+        helm dependency update
+        helm cm-push . chartmuseum
+      env:
+        CURRENT_DIRECTORY: ${{ inputs.current_directory }}
+      shell: bash
+
