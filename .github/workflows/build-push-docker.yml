@@ -34,7 +34,7 @@ permissions:
   contents: read
 
 env:
-  WORKFLOW_BRANCH: "insight"
+  WORKFLOW_BRANCH: "new_deployment"
 
 jobs:
   build:
