@@ -2,6 +2,11 @@ name: build-product
 
 on:
   workflow_call:
+    inputs:
+      timeout:
+        description: "Timeout in minutes for each job"
+        type: string
+        default: 30
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -58,6 +63,7 @@ jobs:
       create_workspace: ${{ steps.get-parameters.outputs.create_workspace }}
       stage: ${{ steps.get-parameters.outputs.stage }}
     runs-on: ubuntu-20.04
+    timeout-minutes: ${{ fromJSON(github.event.inputs.timeout) }}
     steps:
       # checkout specific repository
       - uses: actions/checkout@v3
@@ -100,6 +106,7 @@ jobs:
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
       stage: ${{ needs.prepare-build.outputs.stage }}
+      timeout: ${{ inputs.timeout }}
     secrets: inherit
   build-workspace:
     needs: prepare-build
@@ -115,9 +122,11 @@ jobs:
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
       stage: ${{ needs.prepare-build.outputs.stage }}
+      timeout: ${{ inputs.timeout }}
     secrets: inherit
   post-build:
     needs: [prepare-build, build-single, build-workspace]
+    timeout-minutes: ${{ fromJSON(github.event.inputs.timeout) }}
     if: ${{ always() && (needs.build-single.result == 'success' || needs.build-single.result == 'skipped') && (needs.build-workspace.result == 'success' || needs.build-workspace.result == 'skipped') && !(needs.build-workspace.result == 'skipped' && needs.build-single.result == 'skipped')}}
     runs-on: ubuntu-20.04
     steps:
@@ -139,6 +148,7 @@ jobs:
     # Add always() as otherwise the job is being skipped: https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions
     if: ${{ always() && needs.post-build.result == 'success' && fromJSON(needs.prepare-build.outputs.trigger_automatic_deployment) }}
     runs-on: ubuntu-20.04
+    timeout-minutes: ${{ fromJSON(github.event.inputs.timeout) }}
     strategy:
       matrix:
         customer: ${{ fromJSON(needs.prepare-build.outputs.customers) }}
