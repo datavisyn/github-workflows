@@ -193,7 +193,7 @@ jobs:
           
           if [[ $product_version == *"SNAPSHOT"* ]]; then
             echo "replace SNAPSHOT in version with timestamp"
-            product_version="${product_version//SNAPSHOT/$(date +%Y%m%d-%H%M%S)/g}"
+            product_version="${product_version//SNAPSHOT/$(date +%Y%m%d-%H%M%S)}"
             echo "product_version=$product_version"
           fi
 
