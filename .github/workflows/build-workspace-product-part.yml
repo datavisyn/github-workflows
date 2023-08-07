@@ -225,9 +225,9 @@ jobs:
         if: ${{ steps.get-parameters.outputs.type == 'web' }}
         run: |
           stage_str=".dev"
-          if [[ $STAGE == "production" ]]; then
+          if [[ "$STAGE" == "production" ]]; then
             stage_str=".prod"
-          elif [[ $STAGE == "insight" ]]; then
+          elif [[ "$STAGE" == "insight" ]]; then
             stage_str=".insight"
           fi
           echo "$stage_str"
