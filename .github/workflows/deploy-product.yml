@@ -55,9 +55,9 @@ jobs:
         env:
           HEAD_REF: ${{ github.head_ref }}
       # checkout repo to get package.json    
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: node16
@@ -138,9 +138,9 @@ jobs:
           echo 'deploy to qa before you deploy to prod.'
           exit 1
       # checkout repo to get package.json    
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: node16

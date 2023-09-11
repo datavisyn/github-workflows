@@ -60,7 +60,7 @@ jobs:
           echo 'only the develop branch can be released.'
           exit 1
       # checkout specific repository         
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           token: ${{ github.token }}
       - name: read known repositories
@@ -149,7 +149,7 @@ jobs:
         env:
           BRANCH_NAME: ${{ steps.get-release-version.outputs.new_branch_name }}
       # checkout this workflow repository to get actions    
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: node16
@@ -319,7 +319,7 @@ jobs:
           echo "merge main to develop"
           git merge -X theirs main --allow-unrelated-histories
       # checkout this workflow repository to get actions    
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: node16

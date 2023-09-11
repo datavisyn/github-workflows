@@ -50,9 +50,9 @@ jobs:
           echo "only the main branch can be published."
           exit 1          
       # checkout specific source repository            
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: main

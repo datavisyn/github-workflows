@@ -49,9 +49,9 @@ jobs:
     runs-on: ubuntu-20.04
     steps: 
       # checkout specific repository    
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: node16
@@ -69,7 +69,7 @@ jobs:
     if: ${{ needs.prepare-build.outputs.build_node && needs.prepare-build.outputs.build_node == 'true'}}
     steps: 
       # checkout specific product repository    
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       - name: Set up node version
@@ -96,7 +96,7 @@ jobs:
           GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
           GITLAB_HOST:  ${{ secrets.GITLAB_HOST }} 
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: node16
@@ -142,7 +142,7 @@ jobs:
     if: ${{ needs.prepare-build.outputs.build_python && needs.prepare-build.outputs.build_python == 'true'}}
     steps: 
       # checkout specific product repository    
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       # need node because of the generator
       - name: Set up node version 
         uses: actions/setup-node@v3
@@ -175,7 +175,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install setuptools wheel
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: node16
