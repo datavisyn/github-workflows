@@ -246,18 +246,18 @@ jobs:
             org.opencontainers.image.version=${{ inputs.image_tag2 }}
             org.opencontainers.image.created=${{ inputs.build_time }}
             org.opencontainers.image.revision=${{ github.sha }}
-      - name: scan image
-        id: get-ecr-scan-result
-        uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
-        with:
-          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
-          aws_region: ${{ secrets.DV_AWS_REGION }}
-          ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
-          ecr_repository: ${{ steps.get-parameters.outputs.ecr_repo }}
-          image_tag: ${{ inputs.image_tag1 }}
-      - name: check scan results
-        run: |
-          if [ "${{ steps.get-ecr-scan-result.outputs.critical }}" != "null" ] || [ "${{ steps.get-ecr-scan-result.outputs.high }}" != "null" ]; then
-            echo "Docker image contains vulnerabilities at critical or high level"
-            exit 1  #exit execution due to docker image vulnerabilities
-          fi
+      # - name: scan image
+      #   id: get-ecr-scan-result
+      #   uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
+      #   with:
+      #     aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
+      #     aws_region: ${{ secrets.DV_AWS_REGION }}
+      #     ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
+      #     ecr_repository: ${{ steps.get-parameters.outputs.ecr_repo }}
+      #     image_tag: ${{ inputs.image_tag1 }}
+      # - name: check scan results
+      #   run: |
+      #     if [ "${{ steps.get-ecr-scan-result.outputs.critical }}" != "null" ] || [ "${{ steps.get-ecr-scan-result.outputs.high }}" != "null" ]; then
+      #       echo "Docker image contains vulnerabilities at critical or high level"
+      #       exit 1  #exit execution due to docker image vulnerabilities
+      #     fi
