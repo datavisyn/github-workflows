@@ -106,7 +106,7 @@ jobs:
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
       stage: ${{ needs.prepare-build.outputs.stage }}
-      timeout: ${{ inputs.timeout }}
+      timeout: ${{ github.event.inputs.timeout }}
     secrets: inherit
   build-workspace:
     needs: prepare-build
@@ -122,7 +122,7 @@ jobs:
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
       stage: ${{ needs.prepare-build.outputs.stage }}
-      timeout: ${{ inputs.timeout }}
+      timeout: ${{ github.event.inputs.timeout }}
     secrets: inherit
   post-build:
     needs: [prepare-build, build-single, build-workspace]
@@ -143,43 +143,43 @@ jobs:
           ecr_repositories: ${{ needs.prepare-build.outputs.ecr_repos }}
           current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
           additional_image_tag: ${{ needs.prepare-build.outputs.image_tag2 }}
-  deploy:
-    needs: [prepare-build, post-build]
-    # Add always() as otherwise the job is being skipped: https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions
-    if: ${{ always() && needs.post-build.result == 'success' && fromJSON(needs.prepare-build.outputs.trigger_automatic_deployment) }}
-    runs-on: ubuntu-20.04
-    timeout-minutes: ${{ fromJSON(github.event.inputs.timeout) }}
-    strategy:
-      matrix:
-        customer: ${{ fromJSON(needs.prepare-build.outputs.customers) }}
-    steps:
-      - name: determine stage to be deployed to
-        id: get-parameters
-        run: |
-          # Try to split the customer from the format customer:stage
-          customer="$(echo "$CUSTOMER_FULL" | cut -d ":" -s -f 1)"
-          stage="$(echo "$CUSTOMER_FULL" | cut -d ":" -s -f 2)"
-          # If nothing is found, we assume we just got the customer
-          if [ -z "$customer" ]; then
-            customer="$CUSTOMER_FULL"
-          fi
-          # And will deploy to develop if no stage is defined
-          if [ -z "$stage" ]; then
-            echo "customer $CUSTOMER_FULL does not include stage, using develop instead"
-            stage="develop"
-          fi
-          echo "customer=$customer" >> "$GITHUB_OUTPUT"
-          echo "stage=$stage" >> "$GITHUB_OUTPUT"
-        env:
-          CUSTOMER_FULL: ${{ matrix.customer }}
-        shell: bash
-      - name: trigger deployment
-        uses: datavisyn/github-action-trigger-workflow@v1
-        with:
-          owner: "datavisyn"
-          repo: "infrastructure-k8s"
-          github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-          workflow_file_name: "deploy-app.yml"
-          ref: ${{ env.WORKFLOW_BRANCH }}
-          github_user: ${{ secrets.DV_BOT_USER }}
-          client_payload: '{ "app": "${{ needs.prepare-build.outputs.app }}", "customer": "${{ steps.get-parameters.outputs.customer }}", "stage": "${{ steps.get-parameters.outputs.stage }}", "sub_app": "${{ needs.prepare-build.outputs.sub_app }}", "branch": "${{ needs.prepare-build.outputs.image_tag2 }}" }'
+  # deploy:
+  #   needs: [prepare-build, post-build]
+  #   # Add always() as otherwise the job is being skipped: https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions
+  #   if: ${{ always() && needs.post-build.result == 'success' && fromJSON(needs.prepare-build.outputs.trigger_automatic_deployment) }}
+  #   runs-on: ubuntu-20.04
+  #   timeout-minutes: ${{ fromJSON(github.event.inputs.timeout) }}
+  #   strategy:
+  #     matrix:
+  #       customer: ${{ fromJSON(needs.prepare-build.outputs.customers) }}
+  #   steps:
+  #     - name: determine stage to be deployed to
+  #       id: get-parameters
+  #       run: |
+  #         # Try to split the customer from the format customer:stage
+  #         customer="$(echo "$CUSTOMER_FULL" | cut -d ":" -s -f 1)"
+  #         stage="$(echo "$CUSTOMER_FULL" | cut -d ":" -s -f 2)"
+  #         # If nothing is found, we assume we just got the customer
+  #         if [ -z "$customer" ]; then
+  #           customer="$CUSTOMER_FULL"
+  #         fi
+  #         # And will deploy to develop if no stage is defined
+  #         if [ -z "$stage" ]; then
+  #           echo "customer $CUSTOMER_FULL does not include stage, using develop instead"
+  #           stage="develop"
+  #         fi
+  #         echo "customer=$customer" >> "$GITHUB_OUTPUT"
+  #         echo "stage=$stage" >> "$GITHUB_OUTPUT"
+  #       env:
+  #         CUSTOMER_FULL: ${{ matrix.customer }}
+  #       shell: bash
+  #     - name: trigger deployment
+  #       uses: datavisyn/github-action-trigger-workflow@v1
+  #       with:
+  #         owner: "datavisyn"
+  #         repo: "infrastructure-k8s"
+  #         github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+  #         workflow_file_name: "deploy-app.yml"
+  #         ref: ${{ env.WORKFLOW_BRANCH }}
+  #         github_user: ${{ secrets.DV_BOT_USER }}
+  #         client_payload: '{ "app": "${{ needs.prepare-build.outputs.app }}", "customer": "${{ steps.get-parameters.outputs.customer }}", "stage": "${{ steps.get-parameters.outputs.stage }}", "sub_app": "${{ needs.prepare-build.outputs.sub_app }}", "branch": "${{ needs.prepare-build.outputs.image_tag2 }}" }'
