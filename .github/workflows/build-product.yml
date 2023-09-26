@@ -106,7 +106,7 @@ jobs:
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
       stage: ${{ needs.prepare-build.outputs.stage }}
-      timeout: ${{ github.event.inputs.timeout }}
+      timeout: ${{ inputs.timeout }}
     secrets: inherit
   build-workspace:
     needs: prepare-build
@@ -122,7 +122,7 @@ jobs:
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
       stage: ${{ needs.prepare-build.outputs.stage }}
-      timeout: ${{ github.event.inputs.timeout }}
+      timeout: ${{ inputs.timeout }}
     secrets: inherit
   post-build:
     needs: [prepare-build, build-single, build-workspace]
