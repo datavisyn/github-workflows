@@ -35,7 +35,7 @@ env:
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: "16.16"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "new_deployment_timeout"
   PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
@@ -63,7 +63,7 @@ jobs:
       create_workspace: ${{ steps.get-parameters.outputs.create_workspace }}
       stage: ${{ steps.get-parameters.outputs.stage }}
     runs-on: ubuntu-20.04
-    timeout-minutes: ${{ fromJSON(github.event.inputs.timeout) }}
+    timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     steps:
       # checkout specific repository
       - uses: actions/checkout@v3
