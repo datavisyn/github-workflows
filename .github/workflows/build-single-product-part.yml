@@ -64,7 +64,7 @@ permissions:
 jobs:
   build-components:
     runs-on: ubuntu-20.04
-    timeout-minutes: ${{ fromJSON(github.event.inputs.timeout) }}
+    timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     steps:
       # checkout specific repository
       - uses: actions/checkout@v3
