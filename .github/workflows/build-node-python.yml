@@ -51,7 +51,7 @@ env:
   PYPI_USERNAME: "datavisyn"
   PYTHON_VERSION: "3.10"
   WORKFLOW_BRANCH: "new_deployment"
-  AGENT_TOOLSDIRECTORY: ${{ runner.tool_cache }}
+  AGENT_TOOLSDIRECTORY: "~/actions-runner/_work/_tool"
   
 permissions:
   contents: read
