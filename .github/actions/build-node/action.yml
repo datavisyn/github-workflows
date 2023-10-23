@@ -47,7 +47,7 @@ runs:
     - name: Git config
       if: inputs.github_ro_token != ''
       run: |
-        git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
+        git config --global --replace-all url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
         git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
       env:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
