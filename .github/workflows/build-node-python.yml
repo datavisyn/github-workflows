@@ -28,6 +28,10 @@ on:
         type: boolean
         required: false
         default: false
+      runs_on:
+        type: string
+        required: false
+        default: "ubuntu-20.04"
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -62,7 +66,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    runs-on: ubuntu-20.04
+    runs-on: ${{ inputs.runs_on }}
     steps:
       - name: Checkout source repository
         uses: actions/checkout@v3
@@ -89,7 +93,7 @@ jobs:
     concurrency:
       group: "python-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
       cancel-in-progress: true
-    runs-on: ubuntu-20.04
+    runs-on: ${{ inputs.runs_on }}
     steps:
       - name: Checkout source repository
         uses: actions/checkout@v3
@@ -118,7 +122,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    runs-on: ubuntu-20.04
+    runs-on: ${{ inputs.runs_on }}
 
     services:
       postgres:
