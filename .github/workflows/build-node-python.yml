@@ -293,7 +293,7 @@ jobs:
         run: npm run webpack:prod
         shell: bash
       - name: Install playwright browsers
-        run: yarn playwright install --with-deps
+        run: yarn playwright install --with-deps chromium
         shell: bash
       - name: Run playwright e2e tests
         run: yarn run pw:run
@@ -304,9 +304,3 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report/
-      # - name: Upload cypress videos
-      #   uses: actions/upload-artifact@v3
-      #   if: always()
-      #   with:
-      #     name: cypress-videos
-      #     path: cypress/videos
