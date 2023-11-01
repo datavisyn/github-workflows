@@ -1,0 +1,53 @@
+name: build-push-helm-chart
+
+on:
+  workflow_call:
+    secrets:
+      DV_CHARTMUSEUM_URL:
+        required: false
+      DV_CHARTMUSEUM_USER:
+        required: true
+      DV_CHARTMUSEUM_PASSWORD:
+        required: true
+    inputs:
+      current_directory:
+        description: "Current directory for building the helm chart"
+        required: true
+        type: string
+      chart_repository_url:
+        description: "Helm chart repository URL where to push the chart"
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  WORKFLOW_BRANCH: "new_deployment"
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
+  cancel-in-progress: true
+
+jobs:
+  build:
+    concurrency:
+      group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.chart_repository_url }}"
+      cancel-in-progress: true
+    runs-on: ubuntu-20.04
+    steps:
+      # checkout specific source repository
+      - uses: actions/checkout@v3
+      # checkout this workflow repository to get actions
+      - uses: actions/checkout@v3
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+      - uses: ./tmp/github-workflows/.github/actions/build-push-helm-chart
+        with:
+          chart_repository_url: ${{ inputs.chart_repository_url || secrets.DV_CHARTMUSEUM_URL }}
+          chart_repository_username: ${{ secrets.DV_CHARTMUSEUM_USER }}
+          chart_repository_password: ${{ secrets.DV_CHARTMUSEUM_PASSWORD }}
+          current_directory: ${{ inputs.current_directory }}

@@ -20,7 +20,7 @@ on:
 
     inputs:
       stage:
-        description: "stage that should be deployed (develop|qa|production)"
+        description: "stage that should be deployed (develop|qa|production|insight)"
         required: true
         type: string
       customer:

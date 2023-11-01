@@ -1,0 +1,44 @@
+name: check-helm-chart-version
+
+on:
+  workflow_call:
+    inputs:
+        package_file:
+            description: "Path to the package.json file"
+            default: "./package.json"
+            type: string
+            required: false
+        chart_directory:
+            description: "Helm chart directory where to find the Chart.yaml file"
+            type: string
+            required: true
+        check_image_tag:
+            description: "Check if the image tag in values.yaml is equal to the package.json version"
+            default: false
+            type: boolean
+            required: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  WORKFLOW_BRANCH: "new_deployment"
+
+jobs:
+  check-helm-chart-version:
+    runs-on: ubuntu-20.04
+    steps:
+      # checkout specific source repository
+      - uses: actions/checkout@v3
+      # checkout this workflow repository to get actions
+      - uses: actions/checkout@v3
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+      - uses: ./tmp/github-workflows/.github/actions/check-helm-chart-version
+        with:
+          package_file: ${{ inputs.package_file }}
+          chart_directory: ${{ inputs.chart_directory }}
+          check_image_tag: ${{ inputs.check_image_tag }}
