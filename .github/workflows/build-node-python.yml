@@ -193,8 +193,8 @@ jobs:
           make env_decrypt || true
         env:
           ENV_PASSWORD: ${{ secrets.ENV_PASSWORD }}
-      - name: Webpack build
-        run: npm run webpack:prod
+      - name: Webpack dev build
+        run: npm run webpack:dev
         shell: bash
       - name: Run cypress e2e tests
         uses: cypress-io/github-action@v4
@@ -289,8 +289,8 @@ jobs:
           make env_decrypt || true
         env:
           ENV_PASSWORD: ${{ secrets.ENV_PASSWORD }}
-      - name: Webpack build
-        run: npm run webpack:prod
+      - name: Webpack dev build
+        run: npm run webpack:dev
         shell: bash
       - name: Install playwright browsers
         run: yarn playwright install --with-deps chromium
