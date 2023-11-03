@@ -236,6 +236,9 @@ jobs:
   build-node-python-playwright:
     name: Node, Python, Playwright
     if: ${{ inputs.playwright_enable && (inputs.playwright_run_because_flag || inputs.playwright_run_because_branch == 'true') }}
+    container:
+      # Run in container to avoid installing the required browsers: https://playwright.dev/docs/ci-intro#via-containers
+      image: mcr.microsoft.com/playwright:v1.39.0-jammy
     concurrency:
       group: "node-python-playwright-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
       cancel-in-progress: true
@@ -290,10 +293,7 @@ jobs:
         env:
           ENV_PASSWORD: ${{ secrets.ENV_PASSWORD }}
       - name: Webpack build
-        run: npm run webpack:prod
-        shell: bash
-      - name: Install playwright browsers
-        run: yarn playwright install --with-deps chromium
+        run: npm run webpack:dev
         shell: bash
       - name: Run playwright e2e tests
         run: yarn run pw:run
