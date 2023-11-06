@@ -16,7 +16,7 @@ on:
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
   NODE_VERSION: "16.16"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "new_deployment_migrate_to_vars"
 
 permissions:
   contents: read

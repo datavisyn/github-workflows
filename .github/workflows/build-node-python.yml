@@ -74,7 +74,7 @@ env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "new_deployment_migrate_to_vars"
 
 permissions:
   contents: read

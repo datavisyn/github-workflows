@@ -34,7 +34,7 @@ permissions:
   contents: read
 
 env:
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "new_deployment_migrate_to_vars"
 
 jobs:
   build:
