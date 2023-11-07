@@ -130,7 +130,7 @@ jobs:
         uses: ./tmp/github-workflows/.github/actions/retag-image
         with:
           aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
-          aws_region: ${{ secrets.DV_AWS_REGION }}
+          aws_region: ${{ vars.DV_AWS_REGION }}
           ecr_repositories: ${{ needs.prepare-build.outputs.ecr_repos }}
           current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
           additional_image_tag: ${{ needs.prepare-build.outputs.image_tag2 }}

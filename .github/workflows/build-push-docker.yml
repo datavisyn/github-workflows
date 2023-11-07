@@ -54,7 +54,7 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/build-push-image
         with:
           aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
-          aws_region: ${{ secrets.DV_AWS_REGION }}
+          aws_region: ${{ vars.DV_AWS_REGION }}
           ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ inputs.ecr_repository || secrets.DV_ECR_REPOSITORY }}
           docker_file: ${{ inputs.docker_file }}
