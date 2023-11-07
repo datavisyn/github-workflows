@@ -66,8 +66,8 @@ jobs:
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/check-actor
         with:
-          dv_devops: ${{ secrets.DV_DEVOPS }}
-          dv_qms: ${{ secrets.DV_QMS }}
+          dv_devops: ${{ vars.DV_DEVOPS }}
+          dv_qms: ${{ vars.DV_QMS }}
           actor: ${{ github.actor }}
           qms_are_allowed: "true"
       - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
