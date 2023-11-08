@@ -63,11 +63,11 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       # checkout specific repository
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
