@@ -5,7 +5,7 @@ author: datavisyn
 inputs:
   node_version:
     description: "node version to use"
-    default: "16.16"
+    default: "20.9"
     required: true
   github_ro_token:
     description: "github read-only token"
