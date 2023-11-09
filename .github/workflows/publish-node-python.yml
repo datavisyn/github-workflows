@@ -19,12 +19,12 @@ on:
         required: false
 
 env:
-  NODE_VERSION: "16.16"
+  NODE_VERSION: "20.9"
   NPM_REGISTRY: "https://registry.npmjs.org/"
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "new_deployment_node_20"
 
 permissions:
   contents: read
