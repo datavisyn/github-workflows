@@ -57,7 +57,7 @@ jobs:
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/check-actor
         with:
-          dv_devops: ${{ secrets.DV_DEVOPS }}
+          dv_devops: ${{ vars.DV_DEVOPS }}
           actor: ${{ github.actor }}
           qms_are_allowed: "false"
       - uses: ./tmp/github-workflows/.github/actions/build-node
@@ -87,7 +87,7 @@ jobs:
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/check-actor
         with:
-          dv_devops: ${{ secrets.DV_DEVOPS }}
+          dv_devops: ${{ vars.DV_DEVOPS }}
           actor: ${{ github.actor }}
           qms_are_allowed: "false"
       - uses: ./tmp/github-workflows/.github/actions/build-python

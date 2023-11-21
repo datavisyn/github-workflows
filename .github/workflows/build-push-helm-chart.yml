@@ -47,7 +47,7 @@ jobs:
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/build-push-helm-chart
         with:
-          chart_repository_url: ${{ inputs.chart_repository_url || secrets.DV_CHARTMUSEUM_URL }}
+          chart_repository_url: ${{ inputs.chart_repository_url || vars.DV_CHARTMUSEUM_URL }}
           chart_repository_username: ${{ secrets.DV_CHARTMUSEUM_USER }}
           chart_repository_password: ${{ secrets.DV_CHARTMUSEUM_PASSWORD }}
           current_directory: ${{ inputs.current_directory }}
