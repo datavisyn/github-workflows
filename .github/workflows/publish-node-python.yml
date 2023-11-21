@@ -19,7 +19,7 @@ on:
         required: false
 
 env:
-  NODE_VERSION: "16.16"
+  NODE_VERSION: "20.9"
   NPM_REGISTRY: "https://registry.npmjs.org/"
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
@@ -38,7 +38,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: check branch
         if: ${{ github.ref_name != 'main' }}
@@ -70,7 +70,7 @@ jobs:
           npm_token:  ${{ secrets.NPM_TOKEN }}
 
   publish-python:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: check branch
         if: ${{ github.ref_name != 'main' }}

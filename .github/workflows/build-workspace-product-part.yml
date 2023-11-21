@@ -47,7 +47,7 @@ on:
 env:
   VISYN_SCRIPTS_VERSION: "develop"
   TIME_ZONE: "Europe/Vienna"
-  NODE_VERSION: "16.16"
+  NODE_VERSION: "20.9"
   PYTHON_VERSION: "3.10"
   WORKFLOW_BRANCH: "new_deployment_migrate_to_vars"
   PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
@@ -60,7 +60,7 @@ permissions:
 
 jobs:
   build-components:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       # checkout specific repository
       - uses: actions/checkout@v3
