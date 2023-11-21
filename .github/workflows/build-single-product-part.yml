@@ -248,7 +248,8 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
       - name: show values
         run: |
-          echo $ROLE | sed 's/./& /g'
+          # shellcheck disable=SC2001
+          echo "$ROLE" | sed "s/./& /g"
         env:
           ROLE: ${{ secrets.DV_AWS_ECR_ROLE }}
       # - name: scan image
