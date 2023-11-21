@@ -294,9 +294,9 @@ jobs:
       # checkout this workflow repository to get actions
       - uses: ./tmp/github-workflows/.github/actions/build-push-image
         with:
-          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
+          aws_role: ${{ vars.DV_AWS_ECR_ROLE }}
           aws_region: ${{ vars.DV_AWS_REGION }}
-          ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
+          ecr_registry: ${{ vars.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ steps.get-parameters.outputs.ecr_repo }}
           docker_file: ./tmp/${{ inputs.component }}/docker/Dockerfile
           current_directory: ./tmp/${{ inputs.component }}
@@ -321,9 +321,9 @@ jobs:
         id: get-ecr-scan-result
         uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
         with:
-          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
+          aws_role: ${{ vars.DV_AWS_ECR_ROLE }}
           aws_region: ${{ vars.DV_AWS_REGION }}
-          ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
+          ecr_registry: ${{ vars.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ steps.get-parameters.outputs.ecr_repo }}
           image_tag: ${{ inputs.image_tag1 }}
       - name: check scan results

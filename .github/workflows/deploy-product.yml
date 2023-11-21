@@ -90,8 +90,8 @@ jobs:
         if: ${{ inputs.add_revision_as_tag == true }}
         uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
-          role-to-assume: ${{ secrets.DV_AWS_ECR_ROLE }}
-          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
+          role-to-assume: ${{ vars.DV_AWS_ECR_ROLE }}
+          aws_role: ${{ vars.DV_AWS_ECR_ROLE }}
           aws-region: ${{ vars.DV_AWS_REGION }}
       - name: Login to Amazon ECR
         if: ${{ inputs.add_revision_as_tag == true }}
