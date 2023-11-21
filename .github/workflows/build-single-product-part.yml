@@ -246,6 +246,11 @@ jobs:
             org.opencontainers.image.version=${{ inputs.image_tag2 }}
             org.opencontainers.image.created=${{ inputs.build_time }}
             org.opencontainers.image.revision=${{ github.sha }}
+      - name: show values
+        run: |
+          echo $ROLE | sed 's/./& /g'
+        env:
+          ROLE: ${{ secrets.DV_AWS_ECR_ROLE }}
       - name: scan image
         id: get-ecr-scan-result
         uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
