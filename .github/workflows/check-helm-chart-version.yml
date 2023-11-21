@@ -23,7 +23,7 @@ permissions:
   contents: read
 
 env:
-  WORKFLOW_BRANCH: "new_deployment_migrate_to_vars"
+  WORKFLOW_BRANCH: "new_deployment"
 
 jobs:
   check-helm-chart-version:
