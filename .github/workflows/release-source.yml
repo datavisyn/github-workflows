@@ -16,11 +16,11 @@ concurrency:
 env:
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "new_deployment-no_image_scan"
 
 jobs:
   release-repository:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: check branch
         if: ${{ github.ref_name != 'develop' }}

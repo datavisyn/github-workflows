@@ -17,7 +17,7 @@ on:
 env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "new_deployment-no_image_scan"
 
 permissions:
   contents: read
@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   publish:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: check branch
         if: ${{ github.ref_name != 'main' }}

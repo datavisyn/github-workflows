@@ -41,7 +41,7 @@ jobs:
     concurrency:
       group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.ecr_repository }}'
       cancel-in-progress: true
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       # checkout specific source repository
       - uses: actions/checkout@v3
