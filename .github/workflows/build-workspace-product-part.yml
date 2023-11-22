@@ -44,6 +44,10 @@ on:
           description: "stage for the image (develop or production) depending on the branch name"
           required: true
           type: string
+        runs_on:
+          type: string
+          required: false
+          default: "ubuntu-22.04"
 env:
   VISYN_SCRIPTS_VERSION: "develop"
   TIME_ZONE: "Europe/Vienna"
@@ -60,7 +64,7 @@ permissions:
 
 jobs:
   build-components:
-    runs-on: ubuntu-22.04
+    runs-on: ${{ inputs.runs_on }}
     steps:
       # checkout specific repository
       - uses: actions/checkout@v3

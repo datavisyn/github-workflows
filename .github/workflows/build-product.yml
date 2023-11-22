@@ -21,6 +21,15 @@ on:
         required: false
       GITLAB_HOST:
         required: false
+    inputs:
+      runs_on:
+        type: string
+        required: false
+        default: "ubuntu-22.04"
+      build_runs_on:
+        type: string
+        required: false
+        default: "ubuntu-22.04-large"
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}"
@@ -57,7 +66,7 @@ jobs:
       ecr_repository_keys: ${{ steps.get-parameters.outputs.ecr_repository_keys }}
       create_workspace: ${{ steps.get-parameters.outputs.create_workspace }}
       stage: ${{ steps.get-parameters.outputs.stage }}
-    runs-on: ubuntu-22.04
+    runs-on: ${{ inputs.runs_on }}
     steps:
       # checkout specific repository
       - uses: actions/checkout@v3
@@ -100,6 +109,7 @@ jobs:
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
       stage: ${{ needs.prepare-build.outputs.stage }}
+      runs_on: ${{ inputs.build_runs_on || inputs.runs_on }}
     secrets: inherit
   build-workspace:
     needs: prepare-build
@@ -115,11 +125,12 @@ jobs:
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
       stage: ${{ needs.prepare-build.outputs.stage }}
+      runs_on: ${{ inputs.build_runs_on || inputs.runs_on }}
     secrets: inherit
   post-build:
     needs: [prepare-build, build-single, build-workspace]
     if: ${{ always() && (needs.build-single.result == 'success' || needs.build-single.result == 'skipped') && (needs.build-workspace.result == 'success' || needs.build-workspace.result == 'skipped') && !(needs.build-workspace.result == 'skipped' && needs.build-single.result == 'skipped')}}
-    runs-on: ubuntu-22.04
+    runs-on: ${{ inputs.runs_on }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -138,7 +149,7 @@ jobs:
     needs: [prepare-build, post-build]
     # Add always() as otherwise the job is being skipped: https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions
     if: ${{ always() && needs.post-build.result == 'success' && fromJSON(needs.prepare-build.outputs.trigger_automatic_deployment) }}
-    runs-on: ubuntu-22.04
+    runs-on: ${{ inputs.runs_on }}
     strategy:
       matrix:
         customer: ${{ fromJSON(needs.prepare-build.outputs.customers) }}
