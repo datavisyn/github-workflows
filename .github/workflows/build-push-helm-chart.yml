@@ -24,7 +24,7 @@ permissions:
   contents: read
 
 env:
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "new_deployment_fix_show_lint_errors"
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
