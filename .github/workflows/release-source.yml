@@ -2,9 +2,6 @@ name: release-source
 
 on:
   workflow_call:
-    secrets:
-      DV_DEVOPS:
-        required: true
 
 permissions:
   contents: write
