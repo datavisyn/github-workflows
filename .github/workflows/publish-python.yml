@@ -3,8 +3,6 @@ name: publish-python
 on:
   workflow_call:
     secrets:
-      DV_DEVOPS:
-        required: true
       PYPI_USERNAME:
         required: true
       PYPI_PASSWORD:
