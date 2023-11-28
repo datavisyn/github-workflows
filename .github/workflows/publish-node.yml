@@ -13,7 +13,7 @@ on:
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
   NODE_VERSION: "20.9"
-  WORKFLOW_BRANCH: "vstoiber-fix-secrets-inherit"
+  WORKFLOW_BRANCH: "new_deployment"
 
 permissions:
   contents: read

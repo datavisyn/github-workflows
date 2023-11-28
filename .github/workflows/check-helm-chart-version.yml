@@ -23,7 +23,7 @@ permissions:
   contents: read
 
 env:
-  WORKFLOW_BRANCH: "vstoiber-fix-secrets-inherit"
+  WORKFLOW_BRANCH: "new_deployment"
 
 jobs:
   check-helm-chart-version:

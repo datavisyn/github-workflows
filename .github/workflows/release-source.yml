@@ -13,7 +13,7 @@ concurrency:
 env:
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
-  WORKFLOW_BRANCH: "vstoiber-fix-secrets-inherit"
+  WORKFLOW_BRANCH: "new_deployment"
 
 jobs:
   release-repository:
