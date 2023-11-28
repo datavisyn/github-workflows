@@ -28,7 +28,7 @@ permissions:
   contents: read
 
 env:
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "vstoiber-fix-secrets-inherit"
 
 jobs:
   build:

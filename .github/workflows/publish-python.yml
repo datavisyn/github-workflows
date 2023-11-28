@@ -15,7 +15,7 @@ on:
 env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "vstoiber-fix-secrets-inherit"
 
 permissions:
   contents: read
