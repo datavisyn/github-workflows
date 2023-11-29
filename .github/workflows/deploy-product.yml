@@ -38,7 +38,7 @@ concurrency:
 
 env:
   GA_VERSION: "main"
-  WORKFLOW_BRANCH: "new_deployment_fix_show_lint_errors"
+  WORKFLOW_BRANCH: "new_deployment"
 
 jobs:
   deploy:
