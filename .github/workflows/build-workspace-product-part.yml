@@ -9,12 +9,6 @@ on:
         required: false
       DV_BOT_USER:
         required: false
-      DV_AWS_ECR_ROLE:
-        required: false
-      DV_AWS_REGION:
-        required: false
-      DV_AWS_ECR_REGISTRY:
-        required: false
       NODE_VERSION:
         required: false
       PYTHON_VERSION:

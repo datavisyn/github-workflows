@@ -5,17 +5,7 @@ on:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: true
-      DV_DEVOPS:
-        required: true
-      DV_QMS:
-        required: true
-      DV_AWS_ECR_REGISTRY:
-        required: false
       DV_BOT_USER:
-        required: false
-      DV_AWS_ECR_ROLE:
-        required: false
-      DV_AWS_REGION:
         required: false
 
     inputs:
