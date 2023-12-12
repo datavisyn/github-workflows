@@ -17,7 +17,7 @@ on:
         required: false
       CHECKOUT_TOKEN:
         required: false
-        description: Token to pass to the build-single and build-workspace jobs. Use this to allow the checkout actions to access private repositories.
+        description: Token to pass to the build-single job. Use this to allow the checkout actions to access private repositories.
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}"
