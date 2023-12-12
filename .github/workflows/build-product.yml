@@ -15,9 +15,7 @@ on:
         required: false
       GITLAB_HOST:
         required: false
-    inputs:
-      token:
-        type: string
+      TOKEN:
         required: false
         description: Token to pass to the build-single and build-workspace jobs. Use this to allow the checkout actions to access private repositories.
 
@@ -99,7 +97,6 @@ jobs:
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
       stage: ${{ needs.prepare-build.outputs.stage }}
-      token: ${{ inputs.token }}
     secrets: inherit
   build-workspace:
     needs: prepare-build
