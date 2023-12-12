@@ -15,6 +15,11 @@ on:
         required: false
       GITLAB_HOST:
         required: false
+    inputs:
+      token:
+        type: string
+        required: false
+        description: Token to pass to the build-single and build-workspace jobs. Use this to allow the checkout actions to access private repositories.
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}"
@@ -87,13 +92,14 @@ jobs:
       fail-fast: true
       matrix:
         component: ${{fromJson(needs.prepare-build.outputs.components)}}
-    uses: datavisyn/github-workflows/.github/workflows/build-single-product-part.yml@new_deployment
+    uses: datavisyn/github-workflows/.github/workflows/build-single-product-part.yml@new_deployment-product_token
     with:
       component: ${{ matrix.component }}
       image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
       stage: ${{ needs.prepare-build.outputs.stage }}
+      token: ${{ inputs.token }}
     secrets: inherit
   build-workspace:
     needs: prepare-build
