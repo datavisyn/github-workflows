@@ -15,7 +15,7 @@ on:
         required: false
       GITLAB_HOST:
         required: false
-      TOKEN:
+      CHECKOUT_TOKEN:
         required: false
         description: Token to pass to the build-single and build-workspace jobs. Use this to allow the checkout actions to access private repositories.
 
