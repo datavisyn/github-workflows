@@ -161,14 +161,14 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          --name postgres_${{ github.run_id }}_${{ github.job }}
+          --name postgres_${{ inputs.branch }}_${{ github.run_id }}
 
     steps:
       - name: check env 2
         run: echo gh_actions_self_hosted_network_name = $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME
       - name: Connect service to default network
         if: startsWith(runner.name, 'GitHub Actions') == false
-        run: docker network connect runner_v2_default postgres_${{ github.run_id }}_${{ github.job }}
+        run: docker network connect runner_v2_default postgres_${{ inputs.branch }}_${{ github.run_id }}
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
@@ -261,12 +261,12 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          --name postgres_${{ github.run_id }}_${{ github.job }}
+          --name postgres_${{ inputs.branch }}_${{ github.job }}
 
     steps:
       - name: Connect service to default network
         if: startsWith(runner.name, 'GitHub Actions') == false
-        run: docker network connect runner_v2_default postgres_${{ github.run_id }}_${{ github.job }}
+        run: docker network connect runner_v2_default postgres_${{ inputs.branch }}_${{ github.run_id }}
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
