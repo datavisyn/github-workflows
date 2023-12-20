@@ -164,6 +164,8 @@ jobs:
           --name postgres_${{ github.run_id }}_${{ github.job }}
 
     steps:
+      - name: check env 2
+        run: echo gh_actions_self_hosted_network_name = $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME
       - name: Connect service to default network
         if: startsWith(runner.name, 'GitHub Actions') == false
         run: docker network connect $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME postgres_${{ github.run_id }}_${{ github.job }}
