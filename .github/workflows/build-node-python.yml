@@ -163,10 +163,8 @@ jobs:
           --name postgres_${{ inputs.branch }}_${{ github.run_id }}
 
     steps:
-      - name: check env 2
-        run: echo gh_actions_self_hosted_network_name = $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME
       - name: Connect service to default network
-        if: startsWith(runner.name, 'GitHub Actions') == false
+        if: startsWith(runner.name, 'GitHub Actions') == false #self-hosted runner have random name, unlike default name: Github Actions*
         run: docker network connect $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME postgres_${{ inputs.branch }}_${{ github.run_id }}
       - name: Checkout source repository
         uses: actions/checkout@v4
