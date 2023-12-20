@@ -161,12 +161,12 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          --name postgres
+          --name postgres_${{ github.run_id }}
 
     steps:
       - name: Connect service to default network
         if: ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }}
-        run: docker network connect $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME postgres
+        run: docker network connect $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME postgres_$GITHUB_RUN_ID
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
@@ -259,9 +259,12 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          --name postgres
+          --name postgres_${{ github.run_id }}
 
     steps:
+      - name: Connect service to default network
+        if: ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }}
+        run: docker network connect $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME postgres_$GITHUB_RUN_ID
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
