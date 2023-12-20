@@ -3,8 +3,6 @@ name: publish-node
 on:
   workflow_call:
     secrets:
-      DV_DEVOPS:
-        required: true
       NPM_TOKEN:
         required: true
       DATAVISYN_BOT_REPO_TOKEN:
@@ -14,7 +12,7 @@ on:
 
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
-  NODE_VERSION: "16.16"
+  NODE_VERSION: "20.9"
   WORKFLOW_BRANCH: "new_deployment"
 
 permissions:
@@ -29,7 +27,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: check branch
         if: ${{ github.ref_name != 'main' }}
@@ -48,7 +46,7 @@ jobs:
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/check-actor
         with:
-          dv_devops: ${{ secrets.DV_DEVOPS }}
+          dv_devops: ${{ vars.DV_DEVOPS }}
           actor: ${{ github.actor }}
           qms_are_allowed: "false"
       - uses: ./tmp/github-workflows/.github/actions/build-node

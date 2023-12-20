@@ -70,7 +70,7 @@ on:
 
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
-  NODE_VERSION: "16.16"
+  NODE_VERSION: "20.9"
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
   PYTHON_VERSION: "3.10"
@@ -197,7 +197,7 @@ jobs:
         run: npm run webpack:dev
         shell: bash
       - name: Run cypress e2e tests
-        uses: cypress-io/github-action@v4
+        uses: cypress-io/github-action@v6
         with:
           # Currently, the videos are buggy because of low-cpu/electron environment: https://github.com/cypress-io/cypress/issues/8210
           config: video=false,modifyObstructiveCode=false
@@ -210,7 +210,7 @@ jobs:
           wait-on: "http://localhost:8080, http://localhost:9000/health"
           env: ${{ secrets.CYPRESS_ENV }}
       - name: Run cypress component tests
-        uses: cypress-io/github-action@v4
+        uses: cypress-io/github-action@v6
         with:
           # Currently, the videos are buggy because of low-cpu/electron environment: https://github.com/cypress-io/cypress/issues/8210
           config: video=false,modifyObstructiveCode=false

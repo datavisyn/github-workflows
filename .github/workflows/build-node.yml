@@ -15,7 +15,7 @@ on:
 
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
-  NODE_VERSION: "16.16"
+  NODE_VERSION: "20.9"
   WORKFLOW_BRANCH: "new_deployment"
 
 permissions:
@@ -34,7 +34,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       # checkout specific source repository
       - uses: actions/checkout@v4

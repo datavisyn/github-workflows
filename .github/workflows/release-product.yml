@@ -5,10 +5,6 @@ on:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: true
-      DV_DEVOPS:
-        required: true
-      DV_QMS:
-        required: true
 
 permissions:
   contents: write
@@ -28,7 +24,7 @@ jobs:
   ###############################################################################################################
   create-release-candidate:
     if: ${{ github.event_name != 'pull_request' }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: check branch
         if: ${{ github.ref_name != 'develop' && !startsWith(github.ref_name, 'develop') }}
@@ -48,8 +44,8 @@ jobs:
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/check-actor
         with:
-          dv_devops: ${{ secrets.DV_DEVOPS }}
-          dv_qms: ${{ secrets.DV_QMS }}
+          dv_devops: ${{ vars.DV_DEVOPS }}
+          dv_qms: ${{ vars.DV_QMS }}
           actor: ${{ github.actor }}
           qms_are_allowed: "true"
       - name: read known repositories
@@ -177,7 +173,7 @@ jobs:
   ###############################################################################################################
   create-release:
     if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && startsWith(github.head_ref, 'rc_') }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: check branch
         if: ${{ github.ref_name != 'main' && !startsWith(github.ref_name, 'main') }}
@@ -194,7 +190,7 @@ jobs:
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/check-actor
         with:
-          dv_devops: ${{ secrets.DV_DEVOPS }}
+          dv_devops: ${{ vars.DV_DEVOPS }}
           actor: ${{ github.actor }}
           qms_are_allowed: "false"
       - name: get release version

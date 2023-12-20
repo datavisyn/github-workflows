@@ -3,12 +3,6 @@ name: build-push-docker
 on:
   workflow_call:
     secrets:
-      DV_AWS_ECR_ROLE:
-        required: true
-      DV_AWS_REGION:
-        required: true
-      DV_AWS_ECR_REGISTRY:
-        required: true
       DV_ECR_REPOSITORY:
         required: false
     inputs:
@@ -41,7 +35,7 @@ jobs:
     concurrency:
       group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.ecr_repository }}'
       cancel-in-progress: true
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       # checkout specific source repository
       - uses: actions/checkout@v4
@@ -53,9 +47,9 @@ jobs:
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/build-push-image
         with:
-          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
-          aws_region: ${{ secrets.DV_AWS_REGION }}
-          ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
+          aws_role: ${{ vars.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ vars.DV_AWS_REGION }}
+          ecr_registry: ${{ vars.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ inputs.ecr_repository || secrets.DV_ECR_REPOSITORY }}
           docker_file: ${{ inputs.docker_file }}
           current_directory: ${{ inputs.current_directory }}
