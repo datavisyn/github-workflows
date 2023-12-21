@@ -75,6 +75,7 @@ env:
   PYPI_USERNAME: "datavisyn"
   PYTHON_VERSION: "3.10"
   WORKFLOW_BRANCH: "new_deployment_no_ports"
+  POSTGRES_HOSTNAME: postgres_${{ inputs.branch }}_${{ github.run_id }}
 
 permissions:
   contents: read
@@ -211,6 +212,8 @@ jobs:
             make start
           wait-on: "http://localhost:8080, http://localhost:9000/health"
           env: ${{ secrets.CYPRESS_ENV }}
+        env:
+          POSTGRES_HOSTNAME: ${{ env.POSTGRES_HOSTNAME }}
       - name: Run cypress component tests
         uses: cypress-io/github-action@v6
         with:
@@ -221,6 +224,8 @@ jobs:
           component: true
           # TODO: Do component tests need the frontend/backend?
           env: ${{ secrets.CYPRESS_ENV }}
+        env:
+          POSTGRES_HOSTNAME: ${{ env.POSTGRES_HOSTNAME }}
       - name: Upload cypress screenshots
         uses: actions/upload-artifact@v3
         if: failure()
