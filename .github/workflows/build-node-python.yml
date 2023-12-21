@@ -217,10 +217,11 @@ jobs:
           # TODO: Create customizable variables for these?
           start: |
             yarn start dev_server_only=true
-            export POSTGRES_HOSTNAME=${{ env.POSTGRES_HOSTNAME }}
             make start
           wait-on: "http://localhost:8080, http://localhost:9000/health"
           env: ${{ secrets.CYPRESS_ENV }}
+        env:
+          POSTGRES_HOSTNAME: ${{ env.POSTGRES_HOSTNAME }}
       - name: Run cypress component tests
         uses: cypress-io/github-action@v6
         with:
