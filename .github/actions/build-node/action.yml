@@ -78,7 +78,6 @@ runs:
     - name: Save yarn cache
       if: inputs.disable_cache == 'false' && steps.install.outcome == 'success'
       uses: actions/cache/save@v3
-      if: steps.install.outcome == 'success'
       with:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
         path: ~/.yarn/berry/cache/
