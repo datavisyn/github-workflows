@@ -275,7 +275,9 @@ jobs:
 
     steps:
       - name: Set system env variable to github env
-        run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
+        run: |
+          echo var: ${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}
+          echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
       - name: Connect service to default network
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
         run: docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
