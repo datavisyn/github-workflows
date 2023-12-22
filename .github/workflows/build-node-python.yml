@@ -81,7 +81,6 @@ env:
   PYTHON_VERSION: "3.10"
   WORKFLOW_BRANCH: "new_deployment_no_ports"
   POSTGRES_HOSTNAME: postgres_${{ inputs.branch }}_${{ github.run_id }}
-  GH_ACTIONS_SELF_HOSTED_NETWORK_NAME: $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME
 
 permissions:
   contents: read
@@ -171,6 +170,8 @@ jobs:
           --name postgres_${{ inputs.branch }}_${{ github.run_id }}
 
     steps:
+      - name: Set system env variable to github env
+        run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> $GITHUB_ENV
       - name: Connect service to default network
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
         run: docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
@@ -273,6 +274,8 @@ jobs:
           --name postgres_${{ inputs.branch }}_${{ github.job }}
 
     steps:
+      - name: Set system env variable to github env
+        run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> $GITHUB_ENV
       - name: Connect service to default network
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
         run: docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
