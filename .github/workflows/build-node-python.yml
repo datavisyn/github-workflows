@@ -271,11 +271,9 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          --name postgres_${{ inputs.branch }}_${{ github.job }}
+          --name postgres_${{ inputs.branch }}_${{ github.run_id }}
 
     steps:
-      - name: Check Docker Containers
-        run: docker ps
       - name: Set system env variable to github env
         run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
       - name: Connect service to default network
