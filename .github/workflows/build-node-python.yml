@@ -81,6 +81,7 @@ env:
   PYTHON_VERSION: "3.10"
   WORKFLOW_BRANCH: "new_deployment_no_ports"
   POSTGRES_HOSTNAME: postgres_${{ inputs.branch }}_${{ github.run_id }}
+  GH_ACTIONS_SELF_HOSTED_NETWORK_NAME: $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME
 
 permissions:
   contents: read
@@ -171,8 +172,8 @@ jobs:
 
     steps:
       - name: Connect service to default network
-        if: startsWith(runner.name, 'GitHub Actions') == false #self-hosted runner have random name, unlike default name: Github Actions*
-        run: docker network connect $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME ${{ env.POSTGRES_HOSTNAME }}
+        if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
+        run: docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
@@ -273,8 +274,8 @@ jobs:
 
     steps:
       - name: Connect service to default network
-        if: startsWith(runner.name, 'GitHub Actions') == false
-        run: docker network connect $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME ${{ env.POSTGRES_HOSTNAME }}
+        if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
+        run: docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
