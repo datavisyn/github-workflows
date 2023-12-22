@@ -172,7 +172,7 @@ jobs:
     steps:
       - name: Connect service to default network
         if: startsWith(runner.name, 'GitHub Actions') == false #self-hosted runner have random name, unlike default name: Github Actions*
-        run: docker network connect $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME postgres_${{ inputs.branch }}_${{ github.run_id }}
+        run: docker network connect $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME ${{ env.POSTGRES_HOSTNAME }}
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
@@ -274,7 +274,7 @@ jobs:
     steps:
       - name: Connect service to default network
         if: startsWith(runner.name, 'GitHub Actions') == false
-        run: docker network connect $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME postgres_${{ inputs.branch }}_${{ github.run_id }}
+        run: docker network connect $GH_ACTIONS_SELF_HOSTED_NETWORK_NAME ${{ env.POSTGRES_HOSTNAME }}
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
