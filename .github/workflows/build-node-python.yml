@@ -56,11 +56,11 @@ on:
         type: string
         required: false
         default: "ubuntu-22.04-large"
-      disable_cache:
-        description: "Set to true to disable caching"
-        required: false
-        type: boolean
-        default: false
+      #disable_cache:
+      #  description: "Set to true to disable caching"
+      #  required: false
+      #  type: boolean
+      #  default: false
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -117,7 +117,7 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: ${{ inputs.node_run_webpack }}
-          disable_cache: ${{ inputs.disable_cache }}
+          #disable_cache: ${{ inputs.disable_cache }}
 
   build-python:
     name: Python
@@ -143,7 +143,7 @@ jobs:
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-          disable_cache: ${{ inputs.disable_cache }}
+          #disable_cache: ${{ inputs.disable_cache }}
   # If cypress is used, build node and python sequentially as it is avoiding the duplicate install overhead
   build-node-python-cypress:
     name: Node, Python, Cypress
@@ -192,13 +192,13 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
-          disable_cache: ${{ inputs.disable_cache }}
+          #disable_cache: ${{ inputs.disable_cache }}
       - name: Build python
         uses: ./tmp/github-workflows/.github/actions/build-python
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-          disable_cache: ${{ inputs.disable_cache }}
+          #disable_cache: ${{ inputs.disable_cache }}
       - name: Decrypt .env.enc and <app>/.env.enc
         run: |
           yarn run env:decrypt -pass env:ENV_PASSWORD || true
@@ -294,13 +294,13 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
-          disable_cache: ${{ inputs.disable_cache }}
+          #disable_cache: ${{ inputs.disable_cache }}
       - name: Build python
         uses: ./tmp/github-workflows/.github/actions/build-python
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-          disable_cache: ${{ inputs.disable_cache }}
+          #disable_cache: ${{ inputs.disable_cache }}
       - name: Decrypt .env.enc and <app>/.env.enc
         run: |
           yarn run env:decrypt -pass env:ENV_PASSWORD || true
