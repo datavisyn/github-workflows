@@ -34,7 +34,7 @@ runs:
   using: "composite"
   steps:
     - name: Set up node version
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node_version }}
         registry-url: ${{ inputs.npm_registry }}
@@ -52,7 +52,7 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       # TODO: Remove the variable whenever we can ensure that build-node was called before
       if: inputs.download_yarn_lock == 'true'
       with:
@@ -84,7 +84,7 @@ runs:
       if: inputs.run_dist == 'true'
       run: npm run dist
       shell: bash
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: inputs.upload_yarn_lock == 'true'
       with:
         name: node-yarn-lock
@@ -93,7 +93,7 @@ runs:
       if: inputs.run_webpack == 'true'
       run: npm run webpack:prod
       shell: bash
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: inputs.run_webpack == 'true'
       with:
         name: node-bundle
