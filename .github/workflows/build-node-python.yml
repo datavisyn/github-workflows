@@ -80,13 +80,20 @@ env:
   PYPI_USERNAME: "datavisyn"
   PYTHON_VERSION: "3.10"
   WORKFLOW_BRANCH: "new_deployment_no_ports"
-  POSTGRES_HOSTNAME: postgres_${{ inputs.branch }}_${{ github.run_id }}
+  POSTGRES_HOSTNAME: postgres_${{ env.BRANCH_SAFE }}_${{ github.run_id }}
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
+  setup:
+    runs-on: ${{ inputs.runs_on }}
+    steps:
+      - name: Generate safe branch name for unique hostname
+        run: echo "BRANCH_SAFE=$(echo ${{ inputs.branch }} | sed 's/[^a-zA-Z0-9]/-/g' | head -c 20)" >> "$GITHUB_ENV"
+      - name: Set POSTGRES_HOSTNAME
+        run: echo "POSTGRES_HOSTNAME=postgres_${{ env.BRANCH_SAFE }}_${{ github.run_id }}" >> "$GITHUB_ENV"
   build-node:
     name: Node
     if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
@@ -167,8 +174,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          --name postgres_${{ inputs.branch }}_${{ github.run_id }}
-
+          --name postgres_${{ env.BRANCH_SAFE }}_${{ github.run_id }}
+          
     steps:
       - name: Set system env variable to github env
         run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
@@ -271,7 +278,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          --name postgres_${{ inputs.branch }}_${{ github.run_id }}
+          --name postgres_${{ env.BRANCH_SAFE }}_${{ github.run_id }}
 
     steps:
       - name: Set system env variable to github env
