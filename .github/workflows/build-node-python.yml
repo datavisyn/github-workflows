@@ -80,7 +80,7 @@ env:
   PYPI_USERNAME: "datavisyn"
   PYTHON_VERSION: "3.10"
   WORKFLOW_BRANCH: "new_deployment_no_ports"
-  POSTGRES_HOSTNAME: postgres_${{ env.BRANCH_SAFE }}_${{ github.run_id }}
+  #POSTGRES_HOSTNAME: postgres_${{ env.BRANCH_SAFE }}_${{ github.run_id }}
 
 permissions:
   contents: read
