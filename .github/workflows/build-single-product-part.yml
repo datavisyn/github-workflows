@@ -263,6 +263,7 @@ jobs:
           ecr_repository: ${{ steps.get-parameters.outputs.ecr_repo }}
           image_tag: ${{ inputs.image_tag1 }}
       - name: check scan results
+        if: ${{ steps.get-parameters.outputs.skip_image_check != 'true' }}
         run: |
           if [ "${{ steps.get-ecr-scan-result.outputs.critical }}" != "null" ] || [ "${{ steps.get-ecr-scan-result.outputs.high }}" != "null" ]; then
             echo "Docker image contains vulnerabilities at critical or high level"
