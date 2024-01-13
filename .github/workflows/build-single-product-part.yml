@@ -74,6 +74,7 @@ jobs:
           type=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.type' ./visyn_product.json)
           directory=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.directory' ./visyn_product.json)
           ecr_repo=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.ecr_repo' ./visyn_product.json)
+          dockerfile_in_app=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.dockerfile_in_app' ./visyn_product.json)
           app=$(jq  -rc '.app' ./visyn_product.json)
           repo=$(jq  -rc '.repo' ./visyn_product.json)
           branch=$(jq  -rc '.branch' ./visyn_product.json)
@@ -87,6 +88,7 @@ jobs:
           echo "type=$type"
           echo "directory=$directory"
           echo "ecr_repo=$ecr_repo"
+          echo "dockerfile_in_app=$dockerfile_in_app"
           echo "app=$app"
           echo "repo=$repo"
           echo "branch=$branch"
@@ -97,6 +99,7 @@ jobs:
           echo "type=$type" >> "$GITHUB_OUTPUT"
           echo "directory=$directory" >> "$GITHUB_OUTPUT"
           echo "ecr_repo=$ecr_repo" >> "$GITHUB_OUTPUT"
+          echo "dockerfile_in_app=$dockerfile_in_app" >> "$GITHUB_OUTPUT"
           echo "app=$app" >> "$GITHUB_OUTPUT"
           echo "repo=$repo" >> "$GITHUB_OUTPUT"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
@@ -224,7 +227,7 @@ jobs:
           aws_region: ${{ vars.DV_AWS_REGION }}
           ecr_registry: ${{ vars.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ steps.get-parameters.outputs.ecr_repo }}
-          docker_file: ./tmp/${{ inputs.component }}/${{ steps.get-parameters.outputs.app }}/docker/Dockerfile
+          docker_file: ./tmp/${{ inputs.component }}/${{ steps.get-parameters.outputs.app }}/${{ steps.get-parameters.outputs.dockerfile_in_app || 'docker/Dockerfile' }}
           current_directory: ./tmp/${{ inputs.component }}/${{ steps.get-parameters.outputs.app }}
           image_tag: ${{ inputs.image_tag1 }}
           build_args: |
