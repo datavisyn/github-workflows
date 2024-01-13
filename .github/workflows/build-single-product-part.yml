@@ -74,6 +74,7 @@ jobs:
           type=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.type' ./visyn_product.json)
           directory=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.directory' ./visyn_product.json)
           ecr_repo=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.ecr_repo' ./visyn_product.json)
+          skip_image_check=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.skip_image_check' ./visyn_product.json)
           dockerfile_in_app=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.dockerfile_in_app' ./visyn_product.json)
           if [ "$dockerfile_in_app" == "null" ]; then
             dockerfile_in_app=docker/Dockerfile
@@ -92,6 +93,7 @@ jobs:
           echo "directory=$directory"
           echo "ecr_repo=$ecr_repo"
           echo "dockerfile_in_app=$dockerfile_in_app"
+          echo "skip_image_check=$skip_image_check"
           echo "app=$app"
           echo "repo=$repo"
           echo "branch=$branch"
@@ -103,6 +105,7 @@ jobs:
           echo "directory=$directory" >> "$GITHUB_OUTPUT"
           echo "ecr_repo=$ecr_repo" >> "$GITHUB_OUTPUT"
           echo "dockerfile_in_app=$dockerfile_in_app" >> "$GITHUB_OUTPUT"
+          echo "skip_image_check=$skip_image_check" >> "$GITHUB_OUTPUT"
           echo "app=$app" >> "$GITHUB_OUTPUT"
           echo "repo=$repo" >> "$GITHUB_OUTPUT"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
@@ -250,6 +253,7 @@ jobs:
             org.opencontainers.image.created=${{ inputs.build_time }}
             org.opencontainers.image.revision=${{ github.sha }}
       - name: scan image
+        if: ${{ steps.get-parameters.outputs.skip_image_check != 'true' }}
         id: get-ecr-scan-result
         uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
         with:
