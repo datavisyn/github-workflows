@@ -22,7 +22,7 @@ permissions:
   contents: read
 
 env:
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "vstoiber-88-kubectl-amd64"
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'

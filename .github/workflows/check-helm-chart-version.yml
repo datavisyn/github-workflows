@@ -23,7 +23,7 @@ permissions:
   contents: read
 
 env:
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "vstoiber-88-kubectl-amd64"
 
 jobs:
   check-helm-chart-version:
