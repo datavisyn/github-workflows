@@ -6,7 +6,8 @@ on:
       branch:
         type: string
         required: false
-        default: ${{ github.ref || github.head_ref }}
+        # When using github.ref || github.head_ref, it would contain the full path, including /, which breaks the postgres hostname
+        default: ${{ github.sha }}
       cypress_enable:
         description: "Global enable for cypress"
         type: boolean
