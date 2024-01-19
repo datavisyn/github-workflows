@@ -56,6 +56,11 @@ on:
         type: string
         required: false
         default: "ubuntu-22.04-large"
+      #disable_cache:
+      #  description: "Set to true to disable caching"
+      #  required: false
+      #  type: boolean
+      #  default: false
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -74,7 +79,8 @@ env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "new_deployment_no_ports"
+  POSTGRES_HOSTNAME: postgres_${{ inputs.branch }}_${{ github.run_id }}
 
 permissions:
   contents: read
@@ -93,12 +99,12 @@ jobs:
     runs-on: ${{ inputs.runs_on }}
     steps:
       - name: Checkout source repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
       - name: Checkout github-workflows
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -110,6 +116,7 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: ${{ inputs.node_run_webpack }}
+          #disable_cache: ${{ inputs.disable_cache }}
 
   build-python:
     name: Python
@@ -120,12 +127,12 @@ jobs:
     runs-on: ${{ inputs.runs_on }}
     steps:
       - name: Checkout source repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
       - name: Checkout github-workflows
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -135,7 +142,7 @@ jobs:
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-
+          #disable_cache: ${{ inputs.disable_cache }}
   # If cypress is used, build node and python sequentially as it is avoiding the duplicate install overhead
   build-node-python-cypress:
     name: Node, Python, Cypress
@@ -160,17 +167,21 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        ports:
-          - 5432:5432
+          --name postgres_${{ inputs.branch }}_${{ github.run_id }}
 
     steps:
+      - name: Set system env variable to github env
+        run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
+      - name: Connect service to default network
+        if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
+        run: docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
       - name: Checkout source repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
       - name: Checkout github-workflows
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -182,11 +193,13 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
+          #disable_cache: ${{ inputs.disable_cache }}
       - name: Build python
         uses: ./tmp/github-workflows/.github/actions/build-python
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          #disable_cache: ${{ inputs.disable_cache }}
       - name: Decrypt .env.enc and <app>/.env.enc
         run: |
           yarn run env:decrypt -pass env:ENV_PASSWORD || true
@@ -209,6 +222,8 @@ jobs:
             make start
           wait-on: "http://localhost:8080, http://localhost:9000/health"
           env: ${{ secrets.CYPRESS_ENV }}
+        env:
+          POSTGRES_HOSTNAME: ${{ env.POSTGRES_HOSTNAME }}
       - name: Run cypress component tests
         uses: cypress-io/github-action@v6
         with:
@@ -256,17 +271,21 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        ports:
-          - 5432:5432
+          --name postgres_${{ inputs.branch }}_${{ github.run_id }}
 
     steps:
+      - name: Set system env variable to github env
+        run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
+      - name: Connect service to default network
+        if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
+        run: docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
       - name: Checkout source repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
       - name: Checkout github-workflows
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -278,11 +297,13 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
+          #disable_cache: ${{ inputs.disable_cache }}
       - name: Build python
         uses: ./tmp/github-workflows/.github/actions/build-python
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          #disable_cache: ${{ inputs.disable_cache }}
       - name: Decrypt .env.enc and <app>/.env.enc
         run: |
           yarn run env:decrypt -pass env:ENV_PASSWORD || true
