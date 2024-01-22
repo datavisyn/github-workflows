@@ -23,7 +23,7 @@ on:
         # TODO: actionlint is failing as it expects true/false as default value for boolean types
         type: string
         required: false
-        default: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || !!startsWith(github.ref, 'refs/heads/release-') }}
+        default: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || !!startsWith(github.ref, 'refs/heads/release-') || !!startsWith(github.ref, 'refs/heads/dependabot')}}
       playwright_enable:
         description: "Global enable for playwright"
         type: boolean
@@ -39,7 +39,7 @@ on:
         # TODO: actionlint is failing as it expects true/false as default value for boolean types
         type: string
         required: false
-        default: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || !!startsWith(github.ref, 'refs/heads/release-') }}  
+        default: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || !!startsWith(github.ref, 'refs/heads/release-') || !!startsWith(github.ref, 'refs/heads/dependabot')}}  
       node_run_webpack:
         description: "Flag to always run the webpack production build."
         type: boolean
