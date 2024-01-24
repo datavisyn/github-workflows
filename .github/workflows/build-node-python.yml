@@ -236,13 +236,13 @@ jobs:
           # TODO: Do component tests need the frontend/backend?
           env: ${{ secrets.CYPRESS_ENV }}
       - name: Upload cypress screenshots
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: cypress-screenshots
           path: cypress/screenshots
       # - name: Upload cypress videos
-      #   uses: actions/upload-artifact@v3
+      #   uses: actions/upload-artifact@v4
       #   if: always()
       #   with:
       #     name: cypress-videos
@@ -321,7 +321,7 @@ jobs:
         run: yarn run pw:run
         shell: bash
       - name: Upload playwright report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
