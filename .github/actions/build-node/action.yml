@@ -29,10 +29,6 @@ inputs:
   run_webpack:
     default: false
     required: false
-  disable_cache:
-    description: "Set to true to disable caching"
-    default: false
-    required: false
 
 runs:
   using: "composite"
@@ -63,7 +59,6 @@ runs:
         name: node-yarn-lock
     # Enable yarn download cache, @see https://github.com/actions/cache/tree/main/save#always-save-cache and https://github.com/actions/setup-node/issues/325
     - name: Restore yarn cache
-      if: inputs.disable_cache == 'false'
       uses: actions/cache/restore@v3
       with:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
@@ -76,8 +71,8 @@ runs:
       run: yarn install --no-immutable --inline-builds
       shell: bash
     - name: Save yarn cache
-      if: inputs.disable_cache == 'false' && steps.install.outcome == 'success'
       uses: actions/cache/save@v3
+      if: steps.install.outcome == 'success'
       with:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
         path: ~/.yarn/berry/cache/
