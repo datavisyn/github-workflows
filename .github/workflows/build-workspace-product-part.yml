@@ -116,7 +116,7 @@ jobs:
           registry-url: ${{ env.NPM_REGISTRY }}
       - name: setup python
         if: ${{ steps.get-parameters.outputs.type == 'api' }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           # TODO: This fails with Error: No file in ..._product matched to [**/requirements.txt]
