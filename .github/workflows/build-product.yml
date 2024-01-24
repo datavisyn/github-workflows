@@ -7,12 +7,6 @@ on:
         required: false
       DV_BOT_USER:
         required: false
-      DV_AWS_ECR_ROLE:
-        required: false
-      DV_AWS_REGION:
-        required: false
-      DV_AWS_ECR_REGISTRY:
-        required: false
       NODE_VERSION:
         required: false
       PYTHON_VERSION:
@@ -21,6 +15,9 @@ on:
         required: false
       GITLAB_HOST:
         required: false
+      CHECKOUT_TOKEN:
+        required: false
+        description: Token to pass to the build-single job. Use this to allow the checkout actions to access private repositories.
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}"
@@ -28,7 +25,7 @@ concurrency:
 
 env:
   TIME_ZONE: "Europe/Vienna"
-  NODE_VERSION: "16.16"
+  NODE_VERSION: "20.9"
   PYTHON_VERSION: "3.10"
   WORKFLOW_BRANCH: "new_deployment"
   PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
@@ -57,7 +54,7 @@ jobs:
       ecr_repository_keys: ${{ steps.get-parameters.outputs.ecr_repository_keys }}
       create_workspace: ${{ steps.get-parameters.outputs.create_workspace }}
       stage: ${{ steps.get-parameters.outputs.stage }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       # checkout specific repository
       - uses: actions/checkout@v4
@@ -119,7 +116,7 @@ jobs:
   post-build:
     needs: [prepare-build, build-single, build-workspace]
     if: ${{ always() && (needs.build-single.result == 'success' || needs.build-single.result == 'skipped') && (needs.build-workspace.result == 'success' || needs.build-workspace.result == 'skipped') && !(needs.build-workspace.result == 'skipped' && needs.build-single.result == 'skipped')}}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -129,8 +126,8 @@ jobs:
       - name: retag images
         uses: ./tmp/github-workflows/.github/actions/retag-image
         with:
-          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
-          aws_region: ${{ secrets.DV_AWS_REGION }}
+          aws_role: ${{ vars.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ vars.DV_AWS_REGION }}
           ecr_repositories: ${{ needs.prepare-build.outputs.ecr_repos }}
           current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
           additional_image_tag: ${{ needs.prepare-build.outputs.image_tag2 }}
@@ -138,7 +135,7 @@ jobs:
     needs: [prepare-build, post-build]
     # Add always() as otherwise the job is being skipped: https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions
     if: ${{ always() && needs.post-build.result == 'success' && fromJSON(needs.prepare-build.outputs.trigger_automatic_deployment) }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         customer: ${{ fromJSON(needs.prepare-build.outputs.customers) }}

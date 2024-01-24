@@ -9,12 +9,6 @@ on:
         required: false
       DV_BOT_USER:
         required: false
-      DV_AWS_ECR_ROLE:
-        required: false
-      DV_AWS_REGION:
-        required: false
-      DV_AWS_ECR_REGISTRY:
-        required: false
       NODE_VERSION:
         required: false
       PYTHON_VERSION:
@@ -23,6 +17,9 @@ on:
         required: false
       GITLAB_HOST:
         required: false
+      CHECKOUT_TOKEN:
+        required: false
+        description: "token to use for the checkout actions to access private repositories"
     inputs:
         component:
           description: "component that should be built"
@@ -46,7 +43,7 @@ on:
           type: string
 env:
   TIME_ZONE: "Europe/Vienna"
-  NODE_VERSION: "16.16"
+  NODE_VERSION: "20.9"
   PYTHON_VERSION: "3.10"
   WORKFLOW_BRANCH: "new_deployment"
   PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
@@ -59,12 +56,12 @@ permissions:
 
 jobs:
   build-components:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       # checkout specific repository
       - uses: actions/checkout@v4
         with:
-          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       # checkout this workflow repository to get actions
       - uses: actions/checkout@v4
         with:
@@ -77,6 +74,11 @@ jobs:
           type=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.type' ./visyn_product.json)
           directory=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.directory' ./visyn_product.json)
           ecr_repo=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.ecr_repo' ./visyn_product.json)
+          skip_image_check=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.skip_image_check' ./visyn_product.json)
+          dockerfile_in_app=$(jq --arg var "${COMPONENT}" -rc '.components | to_entries | .[] | select(.key==$var)| .value.dockerfile_in_app' ./visyn_product.json)
+          if [ "$dockerfile_in_app" == "null" ]; then
+            dockerfile_in_app=docker/Dockerfile
+          fi
           app=$(jq  -rc '.app' ./visyn_product.json)
           repo=$(jq  -rc '.repo' ./visyn_product.json)
           branch=$(jq  -rc '.branch' ./visyn_product.json)
@@ -90,6 +92,8 @@ jobs:
           echo "type=$type"
           echo "directory=$directory"
           echo "ecr_repo=$ecr_repo"
+          echo "dockerfile_in_app=$dockerfile_in_app"
+          echo "skip_image_check=$skip_image_check"
           echo "app=$app"
           echo "repo=$repo"
           echo "branch=$branch"
@@ -100,6 +104,8 @@ jobs:
           echo "type=$type" >> "$GITHUB_OUTPUT"
           echo "directory=$directory" >> "$GITHUB_OUTPUT"
           echo "ecr_repo=$ecr_repo" >> "$GITHUB_OUTPUT"
+          echo "dockerfile_in_app=$dockerfile_in_app" >> "$GITHUB_OUTPUT"
+          echo "skip_image_check=$skip_image_check" >> "$GITHUB_OUTPUT"
           echo "app=$app" >> "$GITHUB_OUTPUT"
           echo "repo=$repo" >> "$GITHUB_OUTPUT"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
@@ -127,7 +133,7 @@ jobs:
             git config --global url."git+https://$GITLAB_TOKEN@$GITLAB_HOST/".insteadOf "git+ssh://git@$GITLAB_HOST:"
           fi
         env:
-          _GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          _GITHUB_TOKEN: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
           GITLAB_HOST:  ${{ secrets.GITLAB_HOST }}
       - name: Git clone app
@@ -147,7 +153,7 @@ jobs:
           REPO: ${{ steps.get-parameters.outputs.repo }}
           BRANCH: ${{ steps.get-parameters.outputs.branch }}
           APP: ${{ steps.get-parameters.outputs.app }}
-          GH_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          GH_TOKEN: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           GITLAB_TOKEN:  ${{ secrets.GITLAB_TOKEN }}
           GITLAB_HOST:  ${{ secrets.GITLAB_HOST }}
       - name: Copy docker sources
@@ -223,11 +229,11 @@ jobs:
       # checkout this workflow repository to get actions
       - uses: ./tmp/github-workflows/.github/actions/build-push-image
         with:
-          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
-          aws_region: ${{ secrets.DV_AWS_REGION }}
-          ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
+          aws_role: ${{ vars.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ vars.DV_AWS_REGION }}
+          ecr_registry: ${{ vars.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ steps.get-parameters.outputs.ecr_repo }}
-          docker_file: ./tmp/${{ inputs.component }}/${{ steps.get-parameters.outputs.app }}/docker/Dockerfile
+          docker_file: ./tmp/${{ inputs.component }}/${{ steps.get-parameters.outputs.app }}/${{ steps.get-parameters.outputs.dockerfile_in_app }}
           current_directory: ./tmp/${{ inputs.component }}/${{ steps.get-parameters.outputs.app }}
           image_tag: ${{ inputs.image_tag1 }}
           build_args: |
@@ -247,15 +253,17 @@ jobs:
             org.opencontainers.image.created=${{ inputs.build_time }}
             org.opencontainers.image.revision=${{ github.sha }}
       - name: scan image
+        if: ${{ steps.get-parameters.outputs.skip_image_check != 'true' }}
         id: get-ecr-scan-result
         uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
         with:
-          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
-          aws_region: ${{ secrets.DV_AWS_REGION }}
-          ecr_registry: ${{ secrets.DV_AWS_ECR_REGISTRY }}
+          aws_role: ${{ vars.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ vars.DV_AWS_REGION }}
+          ecr_registry: ${{ vars.DV_AWS_ECR_REGISTRY }}
           ecr_repository: ${{ steps.get-parameters.outputs.ecr_repo }}
           image_tag: ${{ inputs.image_tag1 }}
       - name: check scan results
+        if: ${{ steps.get-parameters.outputs.skip_image_check != 'true' }}
         run: |
           if [ "${{ steps.get-ecr-scan-result.outputs.critical }}" != "null" ] || [ "${{ steps.get-ecr-scan-result.outputs.high }}" != "null" ]; then
             echo "Docker image contains vulnerabilities at critical or high level"

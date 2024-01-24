@@ -6,7 +6,8 @@ on:
       branch:
         type: string
         required: false
-        default: ${{ github.ref || github.head_ref }}
+        # When using github.ref || github.head_ref, it would contain the full path, including /, which breaks the postgres hostname
+        default: ${{ github.sha }}
       cypress_enable:
         description: "Global enable for cypress"
         type: boolean
@@ -22,12 +23,45 @@ on:
         # TODO: actionlint is failing as it expects true/false as default value for boolean types
         type: string
         required: false
-        default: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || !!startsWith(github.ref, 'refs/heads/release-') }}
+        default: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || !!startsWith(github.ref, 'refs/heads/release-') || !!startsWith(github.ref, 'refs/heads/dependabot')}}
+      playwright_enable:
+        description: "Global enable for playwright"
+        type: boolean
+        required: false
+        default: false
+      playwright_run_because_flag:
+        description: "Local flag to run playwright. Will only work if playwright_enable: true."
+        type: boolean
+        required: false
+        default: false
+      playwright_run_because_branch:
+        description: "Branch names to run playwright on. Will only work if playwright_enable: true."
+        # TODO: actionlint is failing as it expects true/false as default value for boolean types
+        type: string
+        required: false
+        default: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || !!startsWith(github.ref, 'refs/heads/release-') || !!startsWith(github.ref, 'refs/heads/dependabot')}}  
       node_run_webpack:
         description: "Flag to always run the webpack production build."
         type: boolean
         required: false
         default: false
+      runs_on:
+        type: string
+        required: false
+        default: "ubuntu-22.04"
+      cypress_runs_on:
+        type: string
+        required: false
+        default: "ubuntu-22.04-large"
+      playwright_runs_on:
+        type: string
+        required: false
+        default: "ubuntu-22.04-large"
+      #disable_cache:
+      #  description: "Set to true to disable caching"
+      #  required: false
+      #  type: boolean
+      #  default: false
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -42,11 +76,12 @@ on:
 
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
-  NODE_VERSION: "16.16"
+  NODE_VERSION: "20.9"
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "new_deployment_no_ports"
+  POSTGRES_HOSTNAME: postgres_${{ inputs.branch }}_${{ github.run_id }}
 
 permissions:
   contents: read
@@ -55,14 +90,14 @@ permissions:
 jobs:
   build-node:
     name: Node
-    if: ${{ !inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true') }}
+    if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
     concurrency:
       group: "node-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
       cancel-in-progress: true
     permissions:
       id-token: write
       contents: write
-    runs-on: ubuntu-20.04
+    runs-on: ${{ inputs.runs_on }}
     steps:
       - name: Checkout source repository
         uses: actions/checkout@v4
@@ -82,14 +117,15 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: ${{ inputs.node_run_webpack }}
+          #disable_cache: ${{ inputs.disable_cache }}
 
   build-python:
     name: Python
-    if: ${{ !inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true') }}
+    if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
     concurrency:
       group: "python-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
       cancel-in-progress: true
-    runs-on: ubuntu-20.04
+    runs-on: ${{ inputs.runs_on }}
     steps:
       - name: Checkout source repository
         uses: actions/checkout@v4
@@ -107,7 +143,7 @@ jobs:
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-
+          #disable_cache: ${{ inputs.disable_cache }}
   # If cypress is used, build node and python sequentially as it is avoiding the duplicate install overhead
   build-node-python-cypress:
     name: Node, Python, Cypress
@@ -118,7 +154,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    runs-on: ubuntu-20.04
+    runs-on: ${{ inputs.cypress_runs_on || inputs.runs_on }}
 
     services:
       postgres:
@@ -132,10 +168,14 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        ports:
-          - 5432:5432
+          --name postgres_${{ inputs.branch }}_${{ github.run_id }}
 
     steps:
+      - name: Set system env variable to github env
+        run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
+      - name: Connect service to default network
+        if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
+        run: docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
@@ -154,22 +194,24 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
+          #disable_cache: ${{ inputs.disable_cache }}
       - name: Build python
         uses: ./tmp/github-workflows/.github/actions/build-python
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          #disable_cache: ${{ inputs.disable_cache }}
       - name: Decrypt .env.enc and <app>/.env.enc
         run: |
           yarn run env:decrypt -pass env:ENV_PASSWORD || true
           make env_decrypt || true
         env:
           ENV_PASSWORD: ${{ secrets.ENV_PASSWORD }}
-      - name: Webpack build
-        run: npm run webpack:prod
+      - name: Webpack dev build
+        run: npm run webpack:dev
         shell: bash
       - name: Run cypress e2e tests
-        uses: cypress-io/github-action@v4
+        uses: cypress-io/github-action@v6
         with:
           # Currently, the videos are buggy because of low-cpu/electron environment: https://github.com/cypress-io/cypress/issues/8210
           config: video=false,modifyObstructiveCode=false
@@ -181,8 +223,10 @@ jobs:
             make start
           wait-on: "http://localhost:8080, http://localhost:9000/health"
           env: ${{ secrets.CYPRESS_ENV }}
+        env:
+          POSTGRES_HOSTNAME: ${{ env.POSTGRES_HOSTNAME }}
       - name: Run cypress component tests
-        uses: cypress-io/github-action@v4
+        uses: cypress-io/github-action@v6
         with:
           # Currently, the videos are buggy because of low-cpu/electron environment: https://github.com/cypress-io/cypress/issues/8210
           config: video=false,modifyObstructiveCode=false
@@ -203,3 +247,82 @@ jobs:
       #   with:
       #     name: cypress-videos
       #     path: cypress/videos
+
+  # If playwright is used, build node and python sequentially as it is avoiding the duplicate install overhead
+  build-node-python-playwright:
+    name: Node, Python, Playwright
+    if: ${{ inputs.playwright_enable && (inputs.playwright_run_because_flag || inputs.playwright_run_because_branch == 'true') }}
+    concurrency:
+      group: "node-python-playwright-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      cancel-in-progress: true
+    permissions:
+      id-token: write
+      contents: write
+    runs-on: ${{ inputs.playwright_runs_on || inputs.runs_on }}
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: admin
+          POSTGRES_DB: db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --name postgres_${{ inputs.branch }}_${{ github.run_id }}
+
+    steps:
+      - name: Set system env variable to github env
+        run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
+      - name: Connect service to default network
+        if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
+        run: docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
+      - name: Checkout github-workflows
+        uses: actions/checkout@v4
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+      - name: Build node
+        uses: ./tmp/github-workflows/.github/actions/build-node
+        with:
+          node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
+          npm_registry: ${{ env.NPM_REGISTRY }}
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
+          run_webpack: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
+          #disable_cache: ${{ inputs.disable_cache }}
+      - name: Build python
+        uses: ./tmp/github-workflows/.github/actions/build-python
+        with:
+          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          #disable_cache: ${{ inputs.disable_cache }}
+      - name: Decrypt .env.enc and <app>/.env.enc
+        run: |
+          yarn run env:decrypt -pass env:ENV_PASSWORD || true
+          make env_decrypt || true
+        env:
+          ENV_PASSWORD: ${{ secrets.ENV_PASSWORD }}
+      - name: Webpack dev build
+        run: npm run webpack:dev
+        shell: bash
+      - name: Install playwright browsers
+        run: yarn playwright install --with-deps chromium
+        shell: bash
+      - name: Run playwright e2e tests
+        run: yarn run pw:run
+        shell: bash
+      - name: Upload playwright report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/

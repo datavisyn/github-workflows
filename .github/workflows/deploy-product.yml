@@ -5,17 +5,7 @@ on:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: true
-      DV_DEVOPS:
-        required: true
-      DV_QMS:
-        required: true
-      DV_AWS_ECR_REGISTRY:
-        required: false
       DV_BOT_USER:
-        required: false
-      DV_AWS_ECR_ROLE:
-        required: false
-      DV_AWS_REGION:
         required: false
 
     inputs:
@@ -52,7 +42,7 @@ env:
 
 jobs:
   deploy:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       revision_label: ${{ steps.get-revision-label.outputs.revision_label }}
     steps:
@@ -66,8 +56,8 @@ jobs:
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/check-actor
         with:
-          dv_devops: ${{ secrets.DV_DEVOPS }}
-          dv_qms: ${{ secrets.DV_QMS }}
+          dv_devops: ${{ vars.DV_DEVOPS }}
+          dv_qms: ${{ vars.DV_QMS }}
           actor: ${{ github.actor }}
           qms_are_allowed: "true"
       - uses: ./tmp/github-workflows/.github/actions/get-product-parameters
@@ -90,9 +80,9 @@ jobs:
         if: ${{ inputs.add_revision_as_tag == true }}
         uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
-          role-to-assume: ${{ secrets.DV_AWS_ECR_ROLE }}
-          aws_role: ${{ secrets.DV_AWS_ECR_ROLE }}
-          aws-region: ${{ secrets.DV_AWS_REGION }}
+          role-to-assume: ${{ vars.DV_AWS_ECR_ROLE }}
+          aws_role: ${{ vars.DV_AWS_ECR_ROLE }}
+          aws-region: ${{ vars.DV_AWS_REGION }}
       - name: Login to Amazon ECR
         if: ${{ inputs.add_revision_as_tag == true }}
         id: login-ecr

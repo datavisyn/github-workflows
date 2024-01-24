@@ -3,8 +3,6 @@ name: build-push-helm-chart
 on:
   workflow_call:
     secrets:
-      DV_CHARTMUSEUM_URL:
-        required: false
       DV_CHARTMUSEUM_USER:
         required: true
       DV_CHARTMUSEUM_PASSWORD:
@@ -35,7 +33,7 @@ jobs:
     concurrency:
       group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.chart_repository_url }}"
       cancel-in-progress: true
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       # checkout specific source repository
       - uses: actions/checkout@v4
@@ -47,7 +45,7 @@ jobs:
           path: ./tmp/github-workflows
       - uses: ./tmp/github-workflows/.github/actions/build-push-helm-chart
         with:
-          chart_repository_url: ${{ inputs.chart_repository_url || secrets.DV_CHARTMUSEUM_URL }}
+          chart_repository_url: ${{ inputs.chart_repository_url || vars.DV_CHARTMUSEUM_URL }}
           chart_repository_username: ${{ secrets.DV_CHARTMUSEUM_USER }}
           chart_repository_password: ${{ secrets.DV_CHARTMUSEUM_PASSWORD }}
           current_directory: ${{ inputs.current_directory }}
