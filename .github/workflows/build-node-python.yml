@@ -177,7 +177,7 @@ jobs:
         run: docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
       - name: set postgres hostname localhost if not on self-hosted
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME == ''
-        run: echo "POSTGRES_HOSTNAME=postgres" >> "$GITHUB_ENV"
+        run: echo "POSTGRES_HOSTNAME=localhost" >> "$GITHUB_ENV"
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
