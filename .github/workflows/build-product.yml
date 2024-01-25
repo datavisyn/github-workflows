@@ -71,7 +71,7 @@ jobs:
           config: .github/linters/.hadolint.yaml
           recursive: true
       - name: show dockerfile lint error
-        if: ${{ steps.lint-docker.outcome == 'failure' }}
+        if: ${{ failure() && steps.lint-docker.outcome == 'failure' }}
         run: |
           echo ${{ steps.lint-docker.outcome }}
           echo -e "#### Docker Lint Result: ${{ steps.lint-docker.outputs.results }}"
