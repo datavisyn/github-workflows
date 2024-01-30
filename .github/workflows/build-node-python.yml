@@ -78,7 +78,9 @@ env:
   WORKFLOW_BRANCH: "new_deployment"
 
 permissions:
-  contents: read
+  contents: write
+  packages: write
+  actions: write
   id-token: write
 
 jobs:
