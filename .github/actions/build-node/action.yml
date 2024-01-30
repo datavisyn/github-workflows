@@ -49,6 +49,7 @@ runs:
         npm -v
       shell: bash
     - name: Debug SSH Configuration
+      continue-on-error: true
       run: |
         cat ~/.ssh/config
         echo "GITHUB_TOKEN: $GITHUB_TOKEN"
