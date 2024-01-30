@@ -51,8 +51,8 @@ runs:
     - name: Debug SSH Configuration
       run: |
         cat ~/.ssh/config
-        echo "GITHUB_TOKEN: $GITHUB_TOKEN"s
-        echo ${{GITHUB_TOKEN}} | sed 's/./& /g'
+        echo "GITHUB_TOKEN: $GITHUB_TOKEN"sss
+        echo "$GITHUB_TOKEN" | sed 's/./& /g'
       shell: bash
     - name: Git config
       if: inputs.github_ro_token != ''
