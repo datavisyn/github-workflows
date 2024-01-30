@@ -172,9 +172,19 @@ jobs:
     steps:
       - name: Set system env variable to github env
         run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
+      - name: Inspect container network before connection
+        continue-on-error: true
+        run: |
+          echo "Inspecting network of the container before attempting to connect to a new network..."
+          docker container inspect ${{ env.POSTGRES_HOSTNAME }} | grep -i network
       - name: Connect service to default network
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
         run: docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
+      - name: Inspect container network after connection
+        continue-on-error: true
+        run: |
+          echo "Inspecting network of the container after attempting to connect to a new network..."
+          docker container inspect ${{ env.POSTGRES_HOSTNAME }} | grep -i network
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
