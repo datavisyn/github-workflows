@@ -48,6 +48,10 @@ runs:
         node -v
         npm -v
       shell: bash
+    - name: Debug SSH Configuration
+      run: |
+        cat ~/.ssh/config
+        echo "GITHUB_TOKEN: $GITHUB_TOKEN"
     - name: Git config
       if: inputs.github_ro_token != ''
       run: |
