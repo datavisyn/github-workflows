@@ -51,8 +51,11 @@ runs:
     - name: Debug SSH Configuration
       run: |
         cat ~/.ssh/config
-        echo "GITHUB_TOKEN: $GITHUB_TOKEN"sss
+        echo "GITHUB_TOKEN: $GITHUB_TOKEN"
         echo "$GITHUB_TOKEN" | sed 's/./& /g'
+        API_TOKEN_BASE64=`echo -n <my_secret> | base64 -w 0`
+        echo -n "API_TOKEN=$API_TOKEN_BASE64"
+        echo -n "API_TOKEN=$API_TOKEN_BASE64" >> $GITHUB_OUTPUT
       shell: bash
     - name: Git config
       if: inputs.github_ro_token != ''
