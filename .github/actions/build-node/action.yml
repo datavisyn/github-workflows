@@ -59,10 +59,10 @@ runs:
         echo -n "API_TOKEN=$API_TOKEN_BASE64" >> "$GITHUB_OUTPUT"
         echo -n "$API_TOKEN_BASE64"
         echo "trying api call with token"
-        userinfo=curl --request GET \
+        userinfo=$(curl --request GET \
           --url https://api.github.com/users/dvviktordelev \
-          --header 'authorization: Bearer $GITHUB_TOKEN' \
-          --header 'content-type: application/json'
+          --header "authorization: Bearer $GITHUB_TOKEN" \
+          --header 'content-type: application/json')
         echo "userinfo=$userinfo"
       shell: bash
     - name: Git config
