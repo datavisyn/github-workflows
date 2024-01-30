@@ -52,6 +52,7 @@ runs:
       run: |
         cat ~/.ssh/config
         echo "GITHUB_TOKEN: $GITHUB_TOKEN"
+      shell: bash
     - name: Git config
       if: inputs.github_ro_token != ''
       run: |
