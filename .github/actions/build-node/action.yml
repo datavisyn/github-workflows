@@ -52,7 +52,6 @@ runs:
       run: |
         cat ~/.ssh/config
         echo "GITHUB_TOKEN: $GITHUB_TOKEN"s
-        echo ${{secrets.GITHUB_TOKEN}} | sed 's/./& /g'
         echo ${{GITHUB_TOKEN}} | sed 's/./& /g'
       shell: bash
     - name: Git config
