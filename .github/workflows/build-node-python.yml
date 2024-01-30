@@ -83,7 +83,9 @@ env:
   POSTGRES_HOSTNAME: postgres_${{ inputs.branch }}_${{ github.run_id }}
 
 permissions:
-  contents: read
+  contents: write
+  packages: write
+  actions: write
   id-token: write
 
 jobs:
