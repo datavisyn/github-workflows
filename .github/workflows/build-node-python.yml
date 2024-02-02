@@ -172,6 +172,8 @@ jobs:
           --name postgres_${{ inputs.branch }}_${{ github.run_id }}
 
     steps:
+      - name: set up github token
+        run: echo "GITHUB_TOKEN=${ACCESS_TOKEN}" >> "$GITHUB_ENV"
       - name: Set system env variable to github env
         run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
       - name: Inspect container network before connection
