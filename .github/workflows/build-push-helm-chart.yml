@@ -3,8 +3,6 @@ name: build-push-helm-chart
 on:
   workflow_call:
     secrets:
-      DV_CHARTMUSEUM_URL:
-        required: false
       DV_CHARTMUSEUM_USER:
         required: true
       DV_CHARTMUSEUM_PASSWORD:

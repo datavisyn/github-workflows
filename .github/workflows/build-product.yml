@@ -7,12 +7,6 @@ on:
         required: false
       DV_BOT_USER:
         required: false
-      DV_AWS_ECR_ROLE:
-        required: false
-      DV_AWS_REGION:
-        required: false
-      DV_AWS_ECR_REGISTRY:
-        required: false
       NODE_VERSION:
         required: false
       PYTHON_VERSION:
@@ -21,15 +15,9 @@ on:
         required: false
       GITLAB_HOST:
         required: false
-    inputs:
-      runs_on:
-        type: string
+      CHECKOUT_TOKEN:
         required: false
-        default: "ubuntu-22.04"
-      build_runs_on:
-        type: string
-        required: false
-        default: "ubuntu-22.04-large"
+        description: Token to pass to the build-single job. Use this to allow the checkout actions to access private repositories.
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}"
@@ -83,7 +71,7 @@ jobs:
           config: .github/linters/.hadolint.yaml
           recursive: true
       - name: show dockerfile lint error
-        if: ${{ steps.lint-docker.outcome == 'failure' }}
+        if: ${{ failure() && steps.lint-docker.outcome == 'failure' }}
         run: |
           echo ${{ steps.lint-docker.outcome }}
           echo -e "#### Docker Lint Result: ${{ steps.lint-docker.outputs.results }}"

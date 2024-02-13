@@ -3,8 +3,6 @@ name: publish-node
 on:
   workflow_call:
     secrets:
-      DV_DEVOPS:
-        required: true
       NPM_TOKEN:
         required: true
       DATAVISYN_BOT_REPO_TOKEN:

@@ -9,12 +9,6 @@ on:
         required: false
       DV_BOT_USER:
         required: false
-      DV_AWS_ECR_ROLE:
-        required: false
-      DV_AWS_REGION:
-        required: false
-      DV_AWS_ECR_REGISTRY:
-        required: false
       NODE_VERSION:
         required: false
       PYTHON_VERSION:
@@ -120,13 +114,13 @@ jobs:
           REPOSITORY_HTML: ${{ github.event.repository.html_url }}
       - name: setup node
         if: ${{ steps.get-parameters.outputs.type == 'web' }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           registry-url: ${{ env.NPM_REGISTRY }}
       - name: setup python
         if: ${{ steps.get-parameters.outputs.type == 'api' }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           # TODO: This fails with Error: No file in ..._product matched to [**/requirements.txt]

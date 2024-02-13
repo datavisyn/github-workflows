@@ -3,12 +3,6 @@ name: build-push-docker
 on:
   workflow_call:
     secrets:
-      DV_AWS_ECR_ROLE:
-        required: true
-      DV_AWS_REGION:
-        required: true
-      DV_AWS_ECR_REGISTRY:
-        required: true
       DV_ECR_REPOSITORY:
         required: false
     inputs:
