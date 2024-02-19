@@ -56,6 +56,11 @@ on:
         type: string
         required: false
         default: "ubuntu-22.04-large"
+      deduplication-id:
+        type: string
+        required: false
+        description: Unique id per workflow run. Must be set to unique value if dispatched multiple times for a single workflow.
+        default: ""
       #disable_cache:
       #  description: "Set to true to disable caching"
       #  required: false
@@ -169,26 +174,26 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          --name postgres_${{ inputs.branch }}_${{ github.run_id }}
+          --name postgres_${{ github.job }}_${{ inputs.deduplication-id }}_${{ github.run_id }}_${{ github.run_attempt }}
+        ports:
+          # will assign a random free host port
+          - 5432/tcp
 
     steps:
-      - name: set up github token
-        run: echo "GITHUB_TOKEN=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}" >> "$GITHUB_ENV"
-      - name: Set system env variable to github env
+      - name: Set self-hosted env variable to github env
         run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
-      - name: Inspect container network before connection
-        continue-on-error: true
-        run: |
-          echo "Inspecting network of the container before attempting to connect to a new network..."
-          docker container inspect ${{ env.POSTGRES_HOSTNAME }} | grep -i network
-      - name: Connect service to default network
+      - name: Set github token, hostname, port and docker network for self-hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
-        run: docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
-      - name: Inspect container network after connection
-        continue-on-error: true
+        run: | 
+          echo "GITHUB_TOKEN=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}" >> "$GITHUB_ENV"
+          echo "POSTGRES_HOSTNAME=postgres_${{ github.job }}_${{ inputs.deduplication-id }}_${{ github.run_id }}_${{ github.run_attempt }}" >> $GITHUB_ENV
+          echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
+          docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
+      - name: Set postgres connection details to hosted runner
+        if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME == ''
         run: |
-          echo "Inspecting network of the container after attempting to connect to a new network..."
-          docker container inspect ${{ env.POSTGRES_HOSTNAME }} | grep -i network
+          echo "POSTGRES_HOSTNAME=localhost" >> $GITHUB_ENV
+          echo "POSTGRES_PORT=${{ job.services.postgres.ports[5432] }}" >> $GITHUB_ENV
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
@@ -238,6 +243,7 @@ jobs:
           env: ${{ secrets.CYPRESS_ENV }}
         env:
           POSTGRES_HOSTNAME: ${{ env.POSTGRES_HOSTNAME }}
+          POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
       - name: Run cypress component tests
         uses: cypress-io/github-action@v6
         with:
@@ -285,14 +291,26 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          --name postgres_${{ inputs.branch }}_${{ github.run_id }}
+          --name postgres_${{ github.job }}_${{ inputs.deduplication-id }}_${{ github.run_id }}_${{ github.run_attempt }}
+        ports:
+          # will assign a random free host port
+          - 5432/tcp
 
     steps:
       - name: Set system env variable to github env
         run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
-      - name: Connect service to default network
+      - name: Set github token, hostname, port and docker network for self-hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
-        run: docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
+        run: | 
+          echo "GITHUB_TOKEN=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}" >> "$GITHUB_ENV"
+          echo "POSTGRES_HOSTNAME=postgres_${{ github.job }}_${{ inputs.deduplication-id }}_${{ github.run_id }}_${{ github.run_attempt }}" >> $GITHUB_ENV
+          echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
+          docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
+      - name: Set postgres connection details to hosted runner
+        if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME == ''
+        run: |
+          echo "POSTGRES_HOSTNAME=localhost" >> $GITHUB_ENV
+          echo "POSTGRES_PORT=${{ job.services.postgres.ports[5432] }}" >> $GITHUB_ENV
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
