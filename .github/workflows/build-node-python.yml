@@ -242,7 +242,7 @@ jobs:
             yarn start dev_server_only=true
             make start
           wait-on: "http://localhost:8080, http://localhost:9000/health"
-          env: ${{ secrets.CYPRESS_ENV }}
+          #env: ${{ secrets.CYPRESS_ENV }}
         env:
           POSTGRES_HOSTNAME: ${{ env.POSTGRES_HOSTNAME }}
           POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
