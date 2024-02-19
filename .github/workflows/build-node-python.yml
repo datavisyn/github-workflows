@@ -182,6 +182,8 @@ jobs:
     steps:
       - name: Set self-hosted env variable to github env
         run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
+      - name: Check Docker Containers
+        run: docker ps
       - name: Set github token, hostname, port and docker network for self-hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
         run: | 
