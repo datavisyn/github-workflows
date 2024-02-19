@@ -186,14 +186,14 @@ jobs:
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
         run: | 
           echo "GITHUB_TOKEN=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}" >> "$GITHUB_ENV"
-          echo "POSTGRES_HOSTNAME=postgres_${{ github.job }}_${{ inputs.deduplication-id }}_${{ github.run_id }}_${{ github.run_attempt }}" >> $GITHUB_ENV
-          echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
+          echo "POSTGRES_HOSTNAME=postgres_${{ github.job }}_${{ inputs.deduplication-id }}_${{ github.run_id }}_${{ github.run_attempt }}" >> "$GITHUB_ENV"
+          echo "POSTGRES_PORT=5432" >> "$GITHUB_ENV"
           docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
       - name: Set postgres connection details to hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME == ''
         run: |
-          echo "POSTGRES_HOSTNAME=localhost" >> $GITHUB_ENV
-          echo "POSTGRES_PORT=${{ job.services.postgres.ports[5432] }}" >> $GITHUB_ENV
+          echo "POSTGRES_HOSTNAME=localhost" >> "$GITHUB_ENV"
+          echo "POSTGRES_PORT=${{ job.services.postgres.ports[5432] }}" >> "$GITHUB_ENV"
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
@@ -303,14 +303,14 @@ jobs:
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
         run: | 
           echo "GITHUB_TOKEN=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}" >> "$GITHUB_ENV"
-          echo "POSTGRES_HOSTNAME=postgres_${{ github.job }}_${{ inputs.deduplication-id }}_${{ github.run_id }}_${{ github.run_attempt }}" >> $GITHUB_ENV
-          echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
+          echo "POSTGRES_HOSTNAME=postgres_${{ github.job }}_${{ inputs.deduplication-id }}_${{ github.run_id }}_${{ github.run_attempt }}" >> "$GITHUB_ENV"
+          echo "POSTGRES_PORT=5432" >> "$GITHUB_ENV"
           docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
       - name: Set postgres connection details to hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME == ''
         run: |
-          echo "POSTGRES_HOSTNAME=localhost" >> $GITHUB_ENV
-          echo "POSTGRES_PORT=${{ job.services.postgres.ports[5432] }}" >> $GITHUB_ENV
+          echo "POSTGRES_HOSTNAME=localhost" >> "$GITHUB_ENV"
+          echo "POSTGRES_PORT=${{ job.services.postgres.ports[5432] }}" >> "$GITHUB_ENV"
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
