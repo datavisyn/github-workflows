@@ -239,12 +239,12 @@ jobs:
           install: false
           # TODO: Create customizable variables for these?
           start: |
-            pg_isready -d db -h ${{ env.POSTGRES_HOSTNAME }} -p ${{ env.POSTGRES_PORT }} -U admin
             yarn start dev_server_only=true
             make start
           wait-on: "http://localhost:8080, http://localhost:9000/health"
           #env: ${{ secrets.CYPRESS_ENV }}
           #env: postgres_hostname=${{ env.POSTGRES_HOSTNAME }},postgres_port=${{ env.POSTGRES_PORT }}
+          #pg_isready -d db -h ${{ env.POSTGRES_HOSTNAME }} -p ${{ env.POSTGRES_PORT }} -U admin
         env:
           POSTGRES_HOSTNAME: "localhorst"
           POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
