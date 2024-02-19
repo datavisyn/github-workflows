@@ -195,7 +195,7 @@ jobs:
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME == ''
         run: |
           echo "POSTGRES_HOSTNAME=localhost" >> "$GITHUB_ENV"
-          echo "POSTGRES_PORT=${{ job.services.postgres.ports[5432] }}" >> "$GITHUB_ENV"
+          echo "POSTGRES_PORT=${{ job.services.postgres.ports['5432'] }}" >> "$GITHUB_ENV"
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
@@ -314,7 +314,7 @@ jobs:
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME == ''
         run: |
           echo "POSTGRES_HOSTNAME=localhost" >> "$GITHUB_ENV"
-          echo "POSTGRES_PORT=${{ job.services.postgres.ports[5432] }}" >> "$GITHUB_ENV"
+          echo "POSTGRES_PORT=${{ job.services.postgres.ports['5432'] }}" >> "$GITHUB_ENV"
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
