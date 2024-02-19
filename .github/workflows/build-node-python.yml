@@ -244,9 +244,10 @@ jobs:
             make start
           wait-on: "http://localhost:8080, http://localhost:9000/health"
           #env: ${{ secrets.CYPRESS_ENV }}
+          #env: postgres_hostname=${{ env.POSTGRES_HOSTNAME }},postgres_port=${{ env.POSTGRES_PORT }}
         env:
-          CYPRESS_POSTGRES_HOSTNAME: ${{ env.POSTGRES_HOSTNAME }}
-          CYPRESS_POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
+          POSTGRES_HOSTNAME: ${{ env.POSTGRES_HOSTNAME }}
+          POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
       - name: Run cypress component tests
         uses: cypress-io/github-action@v6
         with:
