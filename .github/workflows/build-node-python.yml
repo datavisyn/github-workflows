@@ -85,7 +85,7 @@ env:
   PYPI_USERNAME: "datavisyn"
   PYTHON_VERSION: "3.10"
   WORKFLOW_BRANCH: "new_deployment_no_ports"
-  POSTGRES_HOSTNAME: postgres_${{ inputs.branch }}_${{ github.run_id }}
+  POSTGRES_HOSTNAME: postgres_${{ github.job }}_${{ inputs.deduplication-id }}_${{ github.run_id }}_${{ github.run_attempt }}
 
 permissions:
   contents: write
@@ -182,14 +182,14 @@ jobs:
     steps:
       - name: Set self-hosted env variable to github env
         run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
-      - name: Check Docker Containers
-        run: docker ps
       - name: Set github token, hostname, port and docker network for self-hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
-        run: | 
-          echo "GITHUB_TOKEN=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}" >> "$GITHUB_ENV"
-          echo "POSTGRES_HOSTNAME=postgres_${{ github.job }}_${{ inputs.deduplication-id }}_${{ github.run_id }}_${{ github.run_attempt }}" >> "$GITHUB_ENV"
-          echo "POSTGRES_PORT=5432" >> "$GITHUB_ENV"
+        run: |
+          {
+            echo "GITHUB_TOKEN=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}"
+            echo "POSTGRES_HOSTNAME=postgres_${{ github.job }}_${{ inputs.deduplication-id }}_${{ github.run_id }}_${{ github.run_attempt }}"
+            echo "POSTGRES_PORT=5432"
+          } >> "$GITHUB_ENV"
           docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
       - name: Set postgres connection details to hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME == ''
@@ -304,9 +304,11 @@ jobs:
       - name: Set github token, hostname, port and docker network for self-hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
         run: | 
-          echo "GITHUB_TOKEN=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}" >> "$GITHUB_ENV"
-          echo "POSTGRES_HOSTNAME=postgres_${{ github.job }}_${{ inputs.deduplication-id }}_${{ github.run_id }}_${{ github.run_attempt }}" >> "$GITHUB_ENV"
-          echo "POSTGRES_PORT=5432" >> "$GITHUB_ENV"
+          {
+            echo "GITHUB_TOKEN=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}"
+            echo "POSTGRES_HOSTNAME=postgres_${{ github.job }}_${{ inputs.deduplication-id }}_${{ github.run_id }}_${{ github.run_attempt }}"
+            echo "POSTGRES_PORT=5432"
+          } >> "$GITHUB_ENV"
           docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
       - name: Set postgres connection details to hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME == ''
