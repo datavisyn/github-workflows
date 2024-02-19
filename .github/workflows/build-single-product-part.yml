@@ -209,7 +209,7 @@ jobs:
           STAGE: ${{ inputs.stage }}
       - name: setup python
         if: ${{ steps.get-parameters.outputs.type == 'api' }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           cache: 'pip'
