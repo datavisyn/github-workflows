@@ -239,6 +239,7 @@ jobs:
           install: false
           # TODO: Create customizable variables for these?
           start: |
+            pg_isready -d db -h ${{ env.POSTGRES_HOSTNAME }} -p ${{ env.POSTGRES_PORT }} -U admin
             yarn start dev_server_only=true
             make start
           wait-on: "http://localhost:8080, http://localhost:9000/health"
@@ -247,7 +248,7 @@ jobs:
           #pg_isready -d db -h ${{ env.POSTGRES_HOSTNAME }} -p ${{ env.POSTGRES_PORT }} -U admin
         env:
           POSTGRES_HOSTNAME: ${{ env.POSTGRES_HOSTNAME }}
-          POSTGRES_PORT: 5444
+          POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
       - name: Run cypress component tests
         uses: cypress-io/github-action@v6
         with:
