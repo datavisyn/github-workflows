@@ -38,11 +38,11 @@ jobs:
       contents: read
     runs-on: ubuntu-22.04
     steps:
-      # - name: check branch
-      #   if: ${{ github.ref_name != 'main' }}
-      #   run: |
-      #     echo "only the main branch can be published."
-      #     exit 1
+      - name: check branch
+        if: ${{ github.ref_name != 'main' }}
+        run: |
+          echo "only the main branch can be published."
+          exit 1
       # checkout specific source repository
       - uses: actions/checkout@v3
         with:
@@ -70,11 +70,11 @@ jobs:
   publish-python:
     runs-on: ubuntu-22.04
     steps:
-      # - name: check branch
-      #   if: ${{ github.ref_name != 'main' }}
-      #   run: |
-      #     echo "only the main branch can be published."
-      #     exit 1
+      - name: check branch
+        if: ${{ github.ref_name != 'main' }}
+        run: |
+          echo "only the main branch can be published."
+          exit 1
       # checkout specific source repository
       - uses: actions/checkout@v3
       # checkout this workflow repository to get actions
