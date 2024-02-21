@@ -36,7 +36,7 @@ runs:
     #    cache: 'pip'
     # needs wheel for make
     - name: Set up python (without cache)
-      #if: inputs.disable_cache == 'true'
+      if: inputs.disable_cache == 'true'
       uses: actions/setup-python@v3
       with:
         python-version: ${{ inputs.python_version }}
