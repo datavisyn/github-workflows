@@ -201,7 +201,7 @@ jobs:
           touch ./yarn.lock
           yarn install --no-immutable
           yarn info --name-only
-          yarn run webpack:prod
+          yarn run bundle:prod || yarn run webpack:prod
         env:
           COMPONENT: ${{ inputs.component }}
           APP: ${{ steps.get-parameters.outputs.app }}

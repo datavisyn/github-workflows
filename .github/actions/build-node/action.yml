@@ -91,7 +91,7 @@ runs:
         path: ./yarn.lock
     - name: Webpack build
       if: inputs.run_webpack == 'true'
-      run: npm run webpack:prod
+      run: npm run bundle:prod || npm run webpack:prod
       shell: bash
     - uses: actions/upload-artifact@v3
       if: inputs.run_webpack == 'true'
