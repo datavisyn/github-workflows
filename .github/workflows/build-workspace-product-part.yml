@@ -39,7 +39,7 @@ on:
           required: true
           type: string
 env:
-  VISYN_SCRIPTS_VERSION: "develop"
+  VISYN_SCRIPTS_VERSION: "v7" # visyn_scripts@v7 is the last version with workspace support
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: "20.9"
   PYTHON_VERSION: "3.10"
