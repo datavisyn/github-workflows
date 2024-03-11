@@ -16,7 +16,7 @@ concurrency:
 env:
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "main"
 
 jobs:
   ###############################################################################################################

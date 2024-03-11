@@ -23,7 +23,7 @@ permissions:
   contents: read
 
 env:
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "main"
 
 jobs:
   check-helm-chart-version:
