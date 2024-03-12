@@ -24,6 +24,11 @@ on:
         type: string
         required: false
         default: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || !!startsWith(github.ref, 'refs/heads/release-') || !!startsWith(github.ref, 'refs/heads/dependabot')}}
+      cypress_spec_param:
+        description: "Value for the `--spec` parameter. Example: `cypress/e2e/your_spec.cy.ts`. Will only work if cypress_enable: true."
+        type: string
+        required: false
+        default: ''
       playwright_enable:
         description: "Global enable for playwright"
         type: boolean
@@ -212,6 +217,7 @@ jobs:
             make start
           wait-on: "http://localhost:8080, http://localhost:9000/health"
           env: ${{ secrets.CYPRESS_ENV }}
+          spec: ${{ inputs.cypress_spec_param }}
       # rspack currently does not support Cypress component tests
       # - name: Run cypress component tests
       #   uses: cypress-io/github-action@v6
