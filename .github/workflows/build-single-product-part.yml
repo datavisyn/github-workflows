@@ -170,7 +170,7 @@ jobs:
       # Enable yarn download cache, @see https://github.com/actions/setup-node/issues/325
       - name: Restore yarn cache
         if: ${{ steps.get-parameters.outputs.type == 'web' }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
           path: ~/.yarn/berry/cache/
