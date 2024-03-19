@@ -62,6 +62,11 @@ on:
         type: string
         required: false
         default: "ubuntu-22.04-large"
+      yarnCommand:
+        type: string
+        description: 'The yarn command to run'
+        required: false
+        default: 'run pw:run'
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -306,7 +311,7 @@ jobs:
         run: yarn playwright install --with-deps chromium
         shell: bash
       - name: Run playwright e2e tests
-        run: yarn run pw:run
+        run: yarn ${{ inputs.yarnCommand }}
         shell: bash
       - name: Upload playwright report
         uses: actions/upload-artifact@v4
