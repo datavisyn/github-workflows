@@ -76,7 +76,7 @@ jobs:
           draft: false
       - name: print pull request data
         run: |
-          echo ${{ steps.create-pr.outputs.data }}
+          echo ${{ steps.create-pr.outputs.data.url }}
       - name: print pull request data
         run: |
           echo ${{ steps.create-pr.outputs.data.number }}
