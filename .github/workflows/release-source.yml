@@ -48,7 +48,12 @@ jobs:
           release_version=$(jq -r '.version' package.json | cut -d '-' -f 1)
           echo $release_version
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
-      - name: Use the output in another step
+      - name: create release branch
         run: |
-          echo "The output is $RELEASE_VERSION"
+          if git rev-parse --verify release/$RELEASE_VERSION >/dev/null 2>&1; then
+            echo "Release branch already exists."
+          else
+            git checkout -b release/$RELEASE_VERSION
+            git push origin release/$RELEASE_VERSION
+          fi
             
