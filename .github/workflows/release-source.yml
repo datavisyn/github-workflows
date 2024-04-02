@@ -75,7 +75,7 @@ jobs:
           base: "main"
           draft: false
       - name: Get PR number
-        run: echo "PR Number is ${{ steps.create-pr.outputs.data.number }}"
+        run: echo "PR Number is ${{ steps.create-pr.outputs.data }}"
       
  
         
