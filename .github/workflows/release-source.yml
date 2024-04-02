@@ -74,22 +74,9 @@ jobs:
           head: "release/${{ env.RELEASE_VERSION }}"
           base: "main"
           draft: false
-      - name: print pull request data
-        run: |
-          echo ${{ steps.create-pr.outputs }}
-      - name: print pull request data
-        run: |
-          echo ${{ steps.create-pr.outputs.data.number }}
-      # - name: add assignees to pull request
-      #   if: ${{ steps.create-pr.outputs.status == 201 }}
-      #   uses: octokit/request-action@v2.x
-      #   with:
-      #     route: POST /repos/{owner}/{repo}/issues/{issue_number}/assignees
-      #     owner: ${{ github.repository_owner }}
-      #     repo: ${{ github.event.repository.name }}
-      #     issue_number: ${{ steps.create-pr.outputs.data.number }}
-      #     assignees: dv-hossam-radwan
-
+      - name: Get PR number
+        run: echo "PR Number is ${{ steps.create-pr.outputs.number }}"
+      
  
         
 
