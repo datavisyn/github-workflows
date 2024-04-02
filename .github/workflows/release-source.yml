@@ -74,6 +74,7 @@ jobs:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
           title: "Release ${{ env.RELEASE_VERSION }}"
+          body: "Release ${{ env.RELEASE_VERSION }}"
           head: "release/${{ env.RELEASE_VERSION }}"
           base: "main"
           draft: false
