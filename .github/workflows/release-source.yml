@@ -14,7 +14,7 @@ env:
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
   WORKFLOW_BRANCH: "main"
-  RELEASE_VERSION: "0.0.0"
+  # RELEASE_VERSION: "0.0.0"
 
 jobs:
   release-repository:
