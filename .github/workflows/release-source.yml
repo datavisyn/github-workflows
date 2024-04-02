@@ -74,9 +74,26 @@ jobs:
           head: "release/${{ env.RELEASE_VERSION }}"
           base: "main"
           draft: false
-      - name: Get PR number
+          labels: "release"
+      # - name: add assignees to pull request
+      #   uses: octokit/request-action@v2.x
+      #   with:
+      #     route: GET /repos/{owner}/{repo}/issues
+      #     owner: ${{ github.repository_owner }}
+      #     repo: ${{ github.event.repository.name }}
+      - name: get issues data
+        id: get-issues-data
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /repos/{owner}/{repo}/issues
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          state: open
+          labels: "release"
+      - name: print issues data
         run: |
-          pr="$(echo ${{ steps.create-pr.outputs.data }} | head -n 12)"
+          echo "issue is: ${{ steps.get-issues-data.outputs }}"
+
 
       
  
