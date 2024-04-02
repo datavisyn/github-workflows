@@ -56,4 +56,12 @@ jobs:
             git checkout -b release/$RELEASE_VERSION
             git push origin release/$RELEASE_VERSION
           fi
+      - name: Update package.json
+        run: |
+          jq '.version = env.RELEASE_VERSION' package.json > package.json.tmp
+          mv package.json.tmp package.json
+          git add package.json
+          git commit -m "Update package.json version to $RELEASE_VERSION"
+          git push origin release/$RELEASE_VERSION
+
             
