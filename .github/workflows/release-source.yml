@@ -48,4 +48,7 @@ jobs:
           release_version=$(jq -r '.version' package.json)
           echo $release_version
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
-          
+      - name: Use the output in another step
+        run: |
+          echo "The output is $RELEASE_VERSION"
+            
