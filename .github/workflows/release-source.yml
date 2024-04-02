@@ -69,6 +69,7 @@ jobs:
         id: create-pr
         uses: octokit/request-action@v2.x
         with:
+          token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
           route: POST /repos/{owner}/{repo}/pulls
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
