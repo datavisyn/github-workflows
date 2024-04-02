@@ -14,6 +14,7 @@ env:
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
   WORKFLOW_BRANCH: "main"
+  RELEASE_VERSION: "0.0.0"
 
 jobs:
   release-repository:
@@ -45,6 +46,6 @@ jobs:
       - name: get release version
         id: get-release-version
         run: |
-          echo "VERSION=$(jq -r '.version' package.json)"
-          echo "VERSION=$(jq -r '.version' package.json)" >> "$GITHUB_OUTPUT"
+          echo "jq -r '.version' package.json"
+          echo "jq -r '.version' package.json" >> {{ env.RELEASE_VERSION }}
           
