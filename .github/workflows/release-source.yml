@@ -77,8 +77,7 @@ jobs:
       - name: Get PR number
         run: |
           echo "PR is ${{ steps.create-pr.outputs.data }}"
-          pr_number=$(echo ${{ steps.create-pr.outputs.data }} | jq -r '.number')
-          echo "PR Number is $pr_number"
+
       
  
         
