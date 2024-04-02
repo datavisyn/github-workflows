@@ -73,6 +73,7 @@ jobs:
           body: "Release ${{ env.RELEASE_VERSION }}"
           head: "release/${{ env.RELEASE_VERSION }}"
           base: "main"
+          assignees: dv-hossam-radwan
           draft: false
           
 
