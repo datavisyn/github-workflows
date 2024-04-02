@@ -73,8 +73,8 @@ jobs:
           route: POST /repos/{owner}/{repo}/pulls
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
-          title: "Release $RELEASE_VERSION"
-          head: "release/$RELEASE_VERSION"
+          title: "Release ${{RELEASE_VERSION}}"
+          head: "release/${{RELEASE_VERSION}}"
           base: "main"
           draft: false
           
