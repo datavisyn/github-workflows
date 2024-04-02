@@ -64,7 +64,17 @@ jobs:
           git config --global user.name "dv-hossam-radwan"
           git add package.json
           git commit -m "Update package.json version to $RELEASE_VERSION"
-          git pull origin release/$RELEASE_VERSION  --rebase
           git push origin release/$RELEASE_VERSION
+      - name: create pull request 
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Update package.json version to $RELEASE_VERSION"
+          title: "Update package.json version to $RELEASE_VERSION"
+          body: "This PR updates the package.json version to $RELEASE_VERSION"
+          branch: release/$RELEASE_VERSION
+          base: main
+ 
+        
 
             
