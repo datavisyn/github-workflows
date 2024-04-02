@@ -73,9 +73,16 @@ jobs:
           body: "Release ${{ env.RELEASE_VERSION }}"
           head: "release/${{ env.RELEASE_VERSION }}"
           base: "main"
-          assignees: dv-hossam-radwan
           draft: false
-          
+      - name: add assignees to pull request
+        if: ${{ steps.create-pr.outputs.status == 201 }}
+        uses: octokit/request-action@v2.x
+        with:
+          route: POST /repos/{owner}/{repo}/issues/{issue_number}/assignees
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          issue_number: ${{ steps.create-pr.outputs.data.number }}
+          assignees: dv-hossam-radwan
 
  
         
