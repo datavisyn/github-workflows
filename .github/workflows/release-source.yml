@@ -65,15 +65,17 @@ jobs:
           git add package.json
           git commit -m "Update package.json version to $RELEASE_VERSION"
           git push origin release/$RELEASE_VERSION
-      - name: create pull request 
-        uses: peter-evans/create-pull-request@v6
+      - name: create pull request
+        id: create-pr
+        uses: octokit/request-action@v2.x
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Update package.json version to $RELEASE_VERSION"
-          title: "Update package.json version to $RELEASE_VERSION"
-          body: "This PR updates the package.json version to $RELEASE_VERSION"
-          branch: release/$RELEASE_VERSION
-          base: main
+          route: POST /repos/{owner}/{repo}/pulls
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          title: "Release $RELEASE_VERSION"
+          head: "release/$RELEASE_VERSION"
+          base: "main"
+          draft: false
  
         
 
