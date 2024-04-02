@@ -62,38 +62,46 @@ jobs:
           git add package.json
           git commit -m "Update package.json version to $RELEASE_VERSION"
           git push origin release/$RELEASE_VERSION
-      - name: create pull request
-        id: create-pr
-        uses: octokit/request-action@v2.x
-        with:
-          route: POST /repos/{owner}/{repo}/pulls
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          title: "Release ${{ env.RELEASE_VERSION }}"
-          body: "Release ${{ env.RELEASE_VERSION }}"
-          head: "release/${{ env.RELEASE_VERSION }}"
-          base: "main"
-          draft: false
-          labels: "release"
+      # - name: create pull request
+      #   id: create-pr
+      #   uses: octokit/request-action@v2.x
+      #   with:
+      #     route: POST /repos/{owner}/{repo}/pulls
+      #     owner: ${{ github.repository_owner }}
+      #     repo: ${{ github.event.repository.name }}
+      #     title: "Release ${{ env.RELEASE_VERSION }}"
+      #     body: "Release ${{ env.RELEASE_VERSION }}"
+      #     head: "release/${{ env.RELEASE_VERSION }}"
+      #     base: "main"
+      #     draft: false
+      #     labels: "release"
       # - name: add assignees to pull request
       #   uses: octokit/request-action@v2.x
       #   with:
       #     route: GET /repos/{owner}/{repo}/issues
       #     owner: ${{ github.repository_owner }}
       #     repo: ${{ github.event.repository.name }}
-      - name: get issues data
-        id: get-issues-data
-        uses: octokit/request-action@v2.x
-        with:
-          route: GET /repos/{owner}/{repo}/issues
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          state: open
-          labels: "release"
-      - name: print issues data
+      # - name: get issues data
+      #   id: get-issues-data
+      #   uses: octokit/request-action@v2.x
+      #   with:
+      #     route: GET /repos/{owner}/{repo}/issues
+      #     owner: ${{ github.repository_owner }}
+      #     repo: ${{ github.event.repository.name }}
+      #     state: open
+      #     labels: "release"
+      # - name: print issues data
+      #   run: |
+      #     echo "issue is: ${{ steps.get-issues-data.outputs.data }}"
+      - name: create pr
         run: |
-          echo "issue is: ${{ steps.get-issues-data.outputs.data }}"
-
+          curl -L \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ env.GITHUB_TOKEN}}" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/OWNER/REPO/pulls \
+          -d '{"title":"${{ env.RELEASE_VERSION }}","body":"${{ env.RELEASE_VERSION }}","head":"${{ env.RELEASE_VERSION }}","base":"main","draft":false}'
 
       
  
