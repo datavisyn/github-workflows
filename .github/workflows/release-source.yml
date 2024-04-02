@@ -45,5 +45,6 @@ jobs:
       - name: get release version
         id: get-release-version
         run: |
-          echo "VERSION=$(jq -r '.version' package.json)" >> $RELEASE_VERSION
-          echo $RELEASE_VERSION
+          echo "VERSION=$(jq -r '.version' package.json)"
+          echo "VERSION=$(jq -r '.version' package.json)" >> "$GITHUB_OUTPUT"
+          
