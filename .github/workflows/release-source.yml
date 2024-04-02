@@ -62,6 +62,7 @@ jobs:
           mv package.json.tmp package.json
           git config --global user.email "hossam.radwan@datavisyn.io"
           git config --global user.name "dv-hossam-radwan"
+          git pull origin release/$RELEASE_VERSION  
           git add package.json
           git commit -m "Update package.json version to $RELEASE_VERSION"
           git push origin release/$RELEASE_VERSION
