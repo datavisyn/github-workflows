@@ -92,7 +92,7 @@ jobs:
           labels: "release"
       - name: print issues data
         run: |
-          echo "issue is: ${{ steps.get-issues-data.outputs }}"
+          echo "issue is: ${{ steps.get-issues-data.outputs.data }}"
 
 
       
