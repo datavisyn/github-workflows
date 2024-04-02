@@ -94,6 +94,7 @@ jobs:
       #   run: |
       #     echo "issue is: ${{ steps.get-issues-data.outputs.data }}"
       - name: create pr
+        id: create-pr
         run: |
           curl -L \
             -X POST \
