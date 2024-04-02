@@ -76,10 +76,10 @@ jobs:
           draft: false
       - name: print pull request data
         run: |
-          echo ${{ steps.create-pr.outputs.data.url }}
+          echo ${{ steps.create-pr.outputs.url }}
       - name: print pull request data
         run: |
-          echo ${{ steps.create-pr.outputs.data.number }}
+          echo ${{ steps.create-pr.outputs.number }}
       # - name: add assignees to pull request
       #   if: ${{ steps.create-pr.outputs.status == 201 }}
       #   uses: octokit/request-action@v2.x
