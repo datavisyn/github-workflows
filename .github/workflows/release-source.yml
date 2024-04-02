@@ -77,7 +77,7 @@ jobs:
           base: "main"
           draft: false
         with:
-          token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
 
  
         
