@@ -76,7 +76,8 @@ jobs:
           draft: false
       - name: Get PR number
         run: |
-          echo "PR is ${{ steps.create-pr.outputs.data }}"
+          pr=$(echo ${{ steps.create-pr.outputs.data }} )
+          echo "PR is $pr"
 
       
  
