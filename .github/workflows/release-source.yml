@@ -76,6 +76,7 @@ jobs:
           head: "release/$RELEASE_VERSION"
           base: "main"
           draft: false
+        env:
           GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
 
  
