@@ -69,7 +69,9 @@ jobs:
           version=8.0.3
           ls_result=$(ls)
           for dir in $(ls_result); do sed -i "s/^version.*/version: $version/" $dir/chart.yaml; sed -i "s/^appVersion.*/appVersion: \"$version\"/" $dir/chart.yaml; done
-               
+          for dir in $(ls_result); do cat $dir/chart.yaml; done
+          
+             
       # - name: create pr
       #   id: create-pr
       #   run: |
