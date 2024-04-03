@@ -65,8 +65,13 @@ jobs:
       - name: check repo name
         if: ${{ github.repository }} == 'datavisyn/testapp' || ${{ github.repository }} == 'datavisyn/testapp2'
         run: |
-          ls
-          git branch    
+          cd deploy/helm
+          version=8.0.3
+          ls_result=$(ls)
+          for dir in $(ls_result); do sed -i "s/^version.*/version: $version/" $dir/chart.yaml; sed -i "s/^appVersion.*/appVersion: \"$version\"/" $dir/chart.yaml; done
+          git add .   
+          git commit -m "Update Helm charts to version $version"  
+          git push origin release/$RELEASE_VERSION      
       # - name: create pr
       #   id: create-pr
       #   run: |
