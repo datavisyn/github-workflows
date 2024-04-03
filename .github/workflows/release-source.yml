@@ -49,23 +49,24 @@ jobs:
           release_version=$(jq -r '.version' package.json | cut -d '-' -f 1)
           echo $release_version
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
-      # - name: create release branch
-      #   run: |
-      #     git config user.name "$GITHUB_ACTOR"
-      #     git config user.email "<>"
-      #     git checkout -b release/$RELEASE_VERSION
-      #     git push origin release/$RELEASE_VERSION
-      # - name: Update package.json
-      #   run: |
-      #     jq '.version = env.RELEASE_VERSION' package.json > package.json.tmp
-      #     mv package.json.tmp package.json
-      #     git add package.json
-      #     git commit -m "Update package.json version to $RELEASE_VERSION"
-      #     git push origin release/$RELEASE_VERSION
+      - name: create release branch
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "<>"
+          git checkout -b release/$RELEASE_VERSION
+          git push origin release/$RELEASE_VERSION
+      - name: Update package.json
+        run: |
+          jq '.version = env.RELEASE_VERSION' package.json > package.json.tmp
+          mv package.json.tmp package.json
+          git add package.json
+          git commit -m "Update package.json version to $RELEASE_VERSION"
+          git push origin release/$RELEASE_VERSION
       - name: check repo name
         if: ${{ github.repository }} == 'datavisyn/testapp' || ${{ github.repository }} == 'datavisyn/testapp2'
         run: |
-          ls    
+          ls
+          git branch    
       # - name: create pr
       #   id: create-pr
       #   run: |
