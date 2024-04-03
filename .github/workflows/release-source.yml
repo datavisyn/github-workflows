@@ -62,19 +62,30 @@ jobs:
           git add package.json
           git commit -m "Update package.json version to $RELEASE_VERSION"
           git push origin release/$RELEASE_VERSION
-      - name: change chart version
+      - name: change charts and subcharts version
         if: ${{ github.repository }} == 'datavisyn/testapp' || ${{ github.repository }} == 'datavisyn/testapp2'
         run: |
           cd deploy/helm
-          version=8.0.3
           ls_result=$(ls)
-          echo $ls_result
-          for dir in $ls_result; do sed -i "s/^version.*/version: $version/" $dir/chart.yaml; sed -i "s/^appVersion.*/appVersion: \"$version\"/" $dir/chart.yaml; done
-          for dir in $ls_result; do cat $dir/chart.yaml; done
+
+          # update chart version
+          for dir in $ls_result; do \
+           sed -i "s/^version.*/version: $RELEASE_VERSION/" $dir/chart.yaml;\
+           sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" $dir/chart.yaml;\
+          done
+
+          # update subchart version
+          for folder in ./*; do \
+            if [ -d "$folder/subcharts" ]; then \
+                sed -i "s/^version.*/version: $version/" $folder/subcharts/*/chart.yaml \
+                sed -i "s/^appVersion.*/appVersion: $version/" $folder/subcharts/*/chart.yaml \
+            fi \
+          done
+
           git add .
           git commit -m "Update chart version to $version"
           git push origin release/$RELEASE_VERSION
-          
+  
              
       # - name: create pr
       #   id: create-pr
