@@ -77,8 +77,8 @@ jobs:
           # update subchart version
           for folder in ./*; do \
             if [ -d "$folder/subcharts" ]; then \
-                sed -i "s/^version.*/version: $version/" $folder/subcharts/*/chart.yaml \
-                sed -i "s/^appVersion.*/appVersion: $version/" $folder/subcharts/*/chart.yaml \
+                sed -i "s/^version.*/version: $RELEASE_VERSION/" $folder/subcharts/*/chart.yaml \
+                sed -i "s/^appVersion.*/appVersion: $RELEASE_VERSION/" $folder/subcharts/*/chart.yaml \
             fi \
           done
 
