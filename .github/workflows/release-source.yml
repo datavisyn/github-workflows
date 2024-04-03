@@ -74,13 +74,13 @@ jobs:
            sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" $dir/chart.yaml;\
           done
 
-          # # update subchart version
-          # for folder in ./*; do \
-          #   if [ -d "$folder/subcharts" ]; then \
-          #       sed -i "s/^version.*/version: $RELEASE_VERSION/" $folder/subcharts/*/chart.yaml \
-          #       sed -i "s/^appVersion.*/appVersion: $RELEASE_VERSION/" $folder/subcharts/*/chart.yaml \
-          #   fi \
-          # done
+          # update subchart version
+          for folder in ./*; do \
+            if [ -d "$folder/subcharts" ]; then \
+                sed -i "s/^version.*/version: $RELEASE_VERSION/" $folder/subcharts/*/chart.yaml; \
+                sed -i "s/^appVersion.*/appVersion: $RELEASE_VERSION/" $folder/subcharts/*/chart.yaml; \
+            fi; \
+          done
 
           git add .
           git commit -m "Update chart version to $version"
