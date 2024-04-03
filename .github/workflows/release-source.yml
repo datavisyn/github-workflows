@@ -63,8 +63,9 @@ jobs:
       #     git commit -m "Update package.json version to $RELEASE_VERSION"
       #     git push origin release/$RELEASE_VERSION
       - name: check repo name
+        if: ${{ github.repository == 'datavisyn/testapp' }}
         run: |
-          echo "repo name: ${{ github.repository }}"    
+          echo "hello"    
       # - name: create pr
       #   id: create-pr
       #   run: |
