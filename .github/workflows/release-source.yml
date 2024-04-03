@@ -62,13 +62,14 @@ jobs:
           git add package.json
           git commit -m "Update package.json version to $RELEASE_VERSION"
           git push origin release/$RELEASE_VERSION
-      - name: check repo name
+      - name: change chart version
         if: ${{ github.repository }} == 'datavisyn/testapp' || ${{ github.repository }} == 'datavisyn/testapp2'
         run: |
           cd deploy/helm
           version=8.0.3
           ls_result=$(ls)
-              
+          for dir in $(ls_result); do sed -i "s/^version.*/version: $version/" $dir/chart.yaml; sed -i "s/^appVersion.*/appVersion: \"$version\"/" $dir/chart.yaml; done
+               
       # - name: create pr
       #   id: create-pr
       #   run: |
