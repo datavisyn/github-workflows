@@ -14,6 +14,7 @@ env:
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
   WORKFLOW_BRANCH: "main"
+  GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
 
 jobs:
   release-repository:
@@ -25,283 +26,122 @@ jobs:
           echo 'only the develop branch can be released.'
           exit 1
       # checkout specific repository
-      - uses: actions/checkout@v3
+      - name: checkout repository
+        uses: actions/checkout@v3
         with:
           token: ${{ github.token }}
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
+      - name: checkout github-workflows repository
+        uses: actions/checkout@v3
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
-      - uses: ./tmp/github-workflows/.github/actions/check-actor
+      - name: check actor
+        uses: ./tmp/github-workflows/.github/actions/check-actor
         with:
           dv_devops: ${{ vars.DV_DEVOPS }}
           actor: ${{ github.actor }}
           qms_are_allowed: "false"
-      - name: read known repositories
-        id: get-known-repositories
-        run: |
-          if [[ $REPO_IS_PRIVATE = true ]]; then
-            echo "download private known repositories. "
-            curl -H "Authorization: token $GITHUB_TOKEN" \
-              -H 'Accept: application/vnd.github.v4.raw' \
-              -o known_repositories.json \
-              -L https://raw.githubusercontent.com/datavisyn/github-maintenance/main/release/next_repositories_sources.json
-          else
-            echo "download public known repositories. "
-            curl -H "Authorization: token $GITHUB_TOKEN" \
-              -H 'Accept: application/vnd.github.v4.raw' \
-              -o known_repositories.json \
-              -L https://raw.githubusercontent.com/datavisyn/github-maintenance/main/release/next_repositories_sources_public.json
-          fi
-          known_repositories=$( jq -c '.' ./known_repositories.json | jq -R '.')
-          echo "known_repositories=${known_repositories}"
-          rm ./known_repositories.json
-          echo "known_repositories=$known_repositories" >> "$GITHUB_OUTPUT"
-        env:
-          REPO_IS_PRIVATE: ${{github.event.repository.private}}
-          GITHUB_TOKEN: ${{ github.token }}
       - name: get release version
         id: get-release-version
         run: |
-          known_repositories=$KNOWN_REPOS
-          repository=$REPOSITORY_NAME
-          echo "repository: ${repository}"
-          echo "$known_repositories" | jq -r '.'
-          checked_repository="$(echo "$known_repositories" | jq -r '.' | jq --arg var "$repository" '.[$var]')"
-          release_version="$(echo "$checked_repository" | jq -r '.version')"
-          new_branch_name=release/$release_version
-          next_dev_version=$(echo "$checked_repository" | jq -r '.next_dev_version')
-          private=$(echo "$checked_repository" | jq -r '.private')
-          echo "release_version=$release_version"
-          echo "next_dev_version=$next_dev_version"
-          echo "new_branch_name=$new_branch_name"
-          echo "main_branch_name=$main_branch_name"
-          echo "private=$private"
-          # shellcheck disable=SC2129
-          echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
-          echo "new_branch_name=$new_branch_name" >> "$GITHUB_OUTPUT"
-          echo "next_dev_version=$next_dev_version" >> "$GITHUB_OUTPUT"
-          echo "private=$private" >> "$GITHUB_OUTPUT"
-        env:
-          KNOWN_REPOS: ${{ steps.get-known-repositories.outputs.known_repositories }}
-          REPOSITORY_NAME: ${{ github.event.repository.name }}
-      - uses: octokit/request-action@v2.x
-        id: get-latest-release
-        continue-on-error: true
-        name: get latest release
-        with:
-          route: GET /repos/{owner}/{repo}/releases/latest
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: error handling if latest release was not callable
-        if: ${{ steps.get-latest-release.outputs.status != 404 && steps.get-latest-release.outputs.status != 200 }}
-        run: exit 1
-      - name: check release version
-        if: ${{ steps.get-latest-release.outputs.status == 200 }}
-        run: |
-          if [ "$RELEASE_VERSION" == "$LATEST_RELEASE" ]; then
-            echo "nothing todo!"
-            exit 1
-            # check if exit 1 is really the best solution
-          fi
-          # TODO: semver - check if version is lower than given version
-        env:
-          LATEST_RELEASE: ${{ fromJson(steps.get-latest-release.outputs.data).tag_name }}
-          RELEASE_VERSION: ${{ steps.get-release-version.outputs.release_version }}
-      - name: create/get release branch
-        run: |
-          echo "create/get release branch"
-          if git rev-parse --verify --quiet "origin/$BRANCH_NAME"; then
-            echo "branch exists!"
-            git checkout "$BRANCH_NAME"
-          else
-            echo "create branch"
-            git checkout -b "$BRANCH_NAME"
-          fi
-        env:
-          BRANCH_NAME: ${{ steps.get-release-version.outputs.new_branch_name }}
-      - name: prepare release
-        uses: ./tmp/github-workflows/.github/actions/release-source-changes
-        with:
-          known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
-          repository_version: ${{ steps.get-release-version.outputs.release_version }}
-          ga_version:  ${{ env.GA_VERSION }}
-          prepare_release: true
-      - name: delete tmp files
-        run: |
-          rm -rf ./tmp/github-workflows
-      - name: create release notes
-        id: release-notes
-        run: |
-          echo "create release notes"
-          readarray -t my_array < <(git log 'origin/main..develop'  --pretty=format:%s)
-          readme="## Release notes\n"
-          commit_titles=""
-          for logs in "${my_array[@]}"; do
-            if [[ ${logs,,} != merge* && ${logs,,} != "prepare next dev"* ]];
-            then
-              commit_titles="$commit_titles\n* $logs"
-            fi
-            echo "test"
-          done
-          readme="$readme$commit_titles\n\n### Release dependencies first\n\nIn case of dependent visyn repositories follow dependency tree from the top.\n\n"
-          readme="$readme### 🏁 Finish line\n\n"
-          readme="$readme* [ ] Inform colleagues and customers about the release\n"
-          readme="$readme* [ ] Celebrate the new release 🥳"
-          echo -e "$readme"
-          echo "commits=$commit_titles"
-          echo "readme=$readme" >> "$GITHUB_OUTPUT"
-          echo "commits=$commit_titles" >> "$GITHUB_OUTPUT"
-      - name: setup git config
+          release_version="$(jq -r '.version' package.json | cut -d '-' -f 1)"
+          echo "RELEASE_VERSION=$release_version" >> "$GITHUB_ENV"
+      - name: create release branch
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "<>"
-        env:
-          GITHUB_ACTOR: ${{ github.actor }}
-      - name: push branch
+          git checkout -b release/"$RELEASE_VERSION"
+          git push origin release/"$RELEASE_VERSION"
+      - name: Update package.json
         run: |
-          echo "push branch"
-          git commit -am "[skip ci]Prepare release v$RELEASE_VERSION"
-          git push origin "$BRANCH_NAME"
-        env:
-          RELEASE_VERSION: ${{ steps.get-release-version.outputs.release_version }}
-          BRANCH_NAME: ${{ steps.get-release-version.outputs.new_branch_name }}
-      - name: trigger build
-        uses: datavisyn/github-action-trigger-workflow@v1
-        with:
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          github_token: ${{ github.token }}
-          workflow_file_name: "build.yml"
-          ref: "${{ steps.get-release-version.outputs.new_branch_name }}"
-          github_user: ${{ env.GITHUB_USER }}
-      - name: create pull request
-        id: create-pr
-        uses: octokit/request-action@v2.x
-        with:
-          route: POST /repos/{owner}/{repo}/pulls
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          title: "Release v${{ steps.get-release-version.outputs.release_version }}"
-          body: '"${{ steps.release-notes.outputs.readme }}"'
-          head: "${{ steps.get-release-version.outputs.new_branch_name }}"
-          base: "main"
-          draft: false
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: check pr status
-        if: ${{ steps.create-pr.outputs.status != 201 }}
+          sed -i "s/.*version.*/    \"version\": \"$RELEASE_VERSION\",/" package.json
+          git add package.json
+          git commit -m "Update package.json version to $RELEASE_VERSION"
+          git push origin release/"$RELEASE_VERSION"
+      - name: change charts and subcharts version
+        if: ${{ github.repository  == 'datavisyn/reprovisyn' ||  github.repository == 'datavisyn/aelixir' }}
         run: |
-          echo "something went wrong with the pr"
-          echo "data: $DATA"
-          echo "status: $STATUS"
-          exit 1
-        env:
-          DATA: ${{ steps.create-pr.outputs.data }}
-          STATUS: ${{ steps.create-pr.outputs.status }}
-      - name: merge pull request
-        id: merge-pr
-        uses: octokit/request-action@v2.x
-        with:
-          route: PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          pull_number: ${{ fromJson(steps.create-pr.outputs.data).number }}
-          commit_title: "Release v${{ steps.get-release-version.outputs.release_version }}"
-          merge_method: "squash"
-          base: "main"
-          draft: false
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: check merge status
-        if: ${{ steps.merge-pr.outputs.status != 200 }}
-        run: |
-          echo "something went wrong with the merge of the pr"
-          echo "data: $DATA"
-          echo "status: $STATUS"
-          exit 1
-        env:
-          DATA: ${{ steps.merge-pr.outputs.data }}
-          STATUS: ${{ steps.merge-pr.outputs.status }}
-      - name: trigger publish
-        uses: datavisyn/github-action-trigger-workflow@v1
-        if: ${{ !steps.get-release-version.outputs.private || steps.get-release-version.outputs.private == 'false' }}
-        with:
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          github_token: ${{ github.token }}
-          workflow_file_name: "publish.yml"
-          ref: "main"
-          github_user: ${{ env.GITHUB_USER }}
-      - name: delete release branch
-        run: |
-          echo "delete release branch"
-          git fetch
-          git status
-          git checkout develop
-          git pull
-          git branch -D "$BRANCH_NAME"
-          git push origin --delete "$BRANCH_NAME"
-          git status
-        env:
-          BRANCH_NAME: ${{ steps.get-release-version.outputs.new_branch_name }}
-      - name: create release
-        id: create-release
-        uses: octokit/request-action@v2.x
-        with:
-          route: POST /repos/{owner}/{repo}/releases
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          tag_name: "v${{ steps.get-release-version.outputs.release_version }}"
-          target_commitish: main
-          name: "v${{ steps.get-release-version.outputs.release_version }}"
-          body: '"${{ steps.release-notes.outputs.commits }}"'
-          draft: false
-          prerelease: false
-          generate_release_notes: false
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: check release status
-        if: ${{ steps.create-release.outputs.status != 201 }}
-        run: |
-          echo "something went wrong with the creation of the release"
-          echo "data: $DATA"
-          echo "status: $STATUS"
-          exit 1
-        env:
-          DATA: ${{ steps.create-release.outputs.data }}
-          STATUS: ${{ steps.create-release.outputs.status }}
-      - name: git fetch
-        run: |
-          git status
-          echo "git fetch"
-          git fetch
-          git checkout main
-          git pull --rebase
-          git checkout develop
-          git pull --rebase
-          git status
-      - name: merge main to develop
-        run: |
-          echo "merge main to develop"
-          git merge -X theirs main --allow-unrelated-histories
-      - name: prepare develop
-        uses: ./tmp/github-workflows/.github/actions/release-source-changes
-        with:
-          known_repositories: ${{ steps.get-known-repositories.outputs.known_repositories }}
-          repository_version: ${{ steps.get-release-version.outputs.next_dev_version }}
-          ga_version:  main
-          prepare_release: false
-      - name: delete tmp files
-        run: |
-          rm -rf ./tmp/github-workflows
-      - name: push develop
-        run: |
-          echo "push develop"
+          cd deploy/helm
+          ls_result="$(ls)"
+          # update chart version
+          for dir in $ls_result; do \
+           sed -i "s/^version.*/version: $RELEASE_VERSION/" "$dir"/Chart.yaml;\
+           sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" "$dir"/Chart.yaml;\
+          done
+          # update subchart version
+          for folder in ./*; do \
+            if [ -d "$folder/subcharts" ]; then \
+                sed -i "s/^version.*/version: $RELEASE_VERSION/" "$folder"/subcharts/*/Chart.yaml; \
+                sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" "$folder"/subcharts/*/Chart.yaml; \
+            fi; \
+          done
+          # commit and push changes
           git add .
-          git commit --allow-empty -am "Prepare next development"
-          git push origin develop
+          git commit -m "Update chart version to $RELEASE_VERSION"
+          git push origin release/"$RELEASE_VERSION"
+      - name: update imageTag and repository_tag in values files
+        if: ${{ github.repository  == 'datavisyn/reprovisyn' ||  github.repository == 'datavisyn/aelixir' }}
+        run: |
+          cd deploy/helm
+          ls_result="$(ls)"
+          for dir in $ls_result; do \
+            echo "Processing $dir"; \
+            if [ -e "$dir/values.yaml" ]; then \
+                if grep -q "imageTag" "$dir/values.yaml"; then \
+                    sed -i "s/^imageTag.*/imageTag: \&imageTag \"v$RELEASE_VERSION\"/" "$dir"/values.yaml; \
+                fi; \
+                if grep -q "repository_tag" "$dir/values.yaml"; then \
+                  sed -i "s/.*repository_tag.*/        repository_tag: v$RELEASE_VERSION/" "$dir"/values.yaml; \
+                fi; \
+            fi; \
+            if [ -e "$dir/values/values.yaml" ]; then
+                if grep -q "imageTag" "$dir/values/values.yaml"; then \
+                  sed -i "s/^imageTag.*/imageTag: \&imageTag \"v$RELEASE_VERSION\"/" "$dir"/values/values.yaml; \
+                fi; \
+                if grep -q "repository_tag" "$dir/values/values.yaml"; then \
+                  sed -i "s/.*repository_tag.*/        repository_tag: v$RELEASE_VERSION/" "$dir"/values/values.yaml; \
+                fi; \
+            fi; \
+          done  
+          # commit and push changes
+          git add .
+          git commit -m "Update imageTag & repository_tag if exists in values files to v$RELEASE_VERSION"
+          git push origin release/"$RELEASE_VERSION"
+      - name: update readme files
+        if: ${{ github.repository  == 'datavisyn/reprovisyn' ||  github.repository  == 'datavisyn/aelixir' }}
+        run: |
+          # install homebrew package manager
+          yes | /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          (echo; echo "eval \"$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\"") >> /home/runner/.bashrc
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          sudo apt-get install build-essential
+          # install helm-docs
+          brew install norwoodj/tap/helm-docs
+          # update readme files
+          cd deploy/helm
+          helm-docs .
+          # commit and push changes
+          git add .
+          git commit -m "Update Helm documentation"
+          git push origin release/"$RELEASE_VERSION"
+      - name: create pr
+        id: create-pr
+        run: |
+          # create a pull request
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ env.GITHUB_TOKEN}}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/pulls \
+            -d '{"title":"Release ${{ env.RELEASE_VERSION }}","body":"release ${{ env.RELEASE_VERSION }}","head":"release/${{ env.RELEASE_VERSION }}","base":"main","draft":false}'
+      
+
+
+      
+ 
+        
+
+            
