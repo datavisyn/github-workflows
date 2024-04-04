@@ -52,8 +52,8 @@ jobs:
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "<>"
-          git checkout -b release/$RELEASE_VERSION
-          git push origin release/$RELEASE_VERSION
+          git checkout -b release/"$RELEASE_VERSION"
+          git push origin release/"$RELEASE_VERSION"
       - name: Update package.json
         run: |
           jq '.version = env.RELEASE_VERSION' package.json > package.json.tmp
