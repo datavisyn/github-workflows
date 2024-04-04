@@ -14,7 +14,7 @@ env:
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
   WORKFLOW_BRANCH: "main"
-  GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
 
 jobs:
   release-repository:
