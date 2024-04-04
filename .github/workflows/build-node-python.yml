@@ -186,7 +186,7 @@ jobs:
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
         run: |
           {
-            echo "GITHUB_TOKEN=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}"
+            #echo "GITHUB_TOKEN=${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}"
             echo "POSTGRES_HOSTNAME=postgres_${{ github.job }}_${{ inputs.deduplication-id }}_${{ github.run_id }}_${{ github.run_attempt }}"
             echo "POSTGRES_PORT=5432"
           } >> "$GITHUB_ENV"

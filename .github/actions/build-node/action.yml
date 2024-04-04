@@ -51,6 +51,10 @@ runs:
     - name: Git config
       if: inputs.github_ro_token != ''
       run: |
+        if [ -f ~/.gitconfig ]; then
+          rm ~/.gitconfig
+          touch ~/.gitconfig
+        fi
         git config --global --replace-all url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
         git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
       env:
