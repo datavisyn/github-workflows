@@ -85,6 +85,10 @@ jobs:
           git add .
           git commit -m "Update chart version to $RELEASE_VERSION"
           git push origin release/$RELEASE_VERSION
+
+      - name: update readme
+        run: |
+          pwd
   
              
       # - name: create pr
