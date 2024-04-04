@@ -60,31 +60,56 @@ jobs:
           mv package.json.tmp package.json
           git add package.json
           git commit -m "Update package.json version to $RELEASE_VERSION"
-          git push origin release/$RELEASE_VERSION
+          git push origin release/"$RELEASE_VERSION"
       - name: change charts and subcharts version
         if: ${{ github.repository }} == 'datavisyn/reprovisyn' || ${{ github.repository }} == 'datavisyn/aelixir'
         run: |
           cd deploy/helm
-          ls_result=$(ls)
-
+          ls_result="$(ls)"
           # update chart version
           for dir in $ls_result; do \
-           sed -i "s/^version.*/version: $RELEASE_VERSION/" $dir/Chart.yaml;\
-           sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" $dir/Chart.yaml;\
+           sed -i "s/^version.*/version: $RELEASE_VERSION/" "$dir"/Chart.yaml;\
+           sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" "$dir"/Chart.yaml;\
           done
-
           # update subchart version
           for folder in ./*; do \
             if [ -d "$folder/subcharts" ]; then \
-                sed -i "s/^version.*/version: $RELEASE_VERSION/" $folder/subcharts/*/Chart.yaml; \
-                sed -i "s/^appVersion.*/appVersion: $RELEASE_VERSION/" $folder/subcharts/*/Chart.yaml; \
+                sed -i "s/^version.*/version: $RELEASE_VERSION/" "$folder"/subcharts/*/Chart.yaml; \
+                sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" "$folder"/subcharts/*/Chart.yaml; \
             fi; \
           done
-
+          # commit and push changes
           git add .
           git commit -m "Update chart version to $RELEASE_VERSION"
-          git push origin release/$RELEASE_VERSION
-
+          git push origin release/"$RELEASE_VERSION"
+      - name: update imageTag and repository_tag in values files
+        if: ${{ github.repository }} == 'datavisyn/reprovisyn' || ${{ github.repository }} == 'datavisyn/aelixir'
+        run: |
+          cd deploy/helm
+          ls_result="$(ls)"
+          for dir in $ls_result; do \
+            echo "Processing $dir"; \
+            if [ -e "$dir/values.yaml" ]; then \
+                if grep -q "imageTag" "$dir/values.yaml"; then \
+                    sed -i "s/^imageTag.*/imageTag: \&imageTag \"v$RELEASE_VERSION\"/" "$dir"/values.yaml; \
+                fi; \
+                if grep -q "repository_tag" "$dir/values.yaml"; then \
+                  sed -i "s/.*repository_tag.*/        repository_tag: v$RELEASE_VERSION/" "$dir"/values.yaml; \
+                fi; \
+            fi; \
+            if [ -e "$dir/values/values.yaml" ]; then
+                if grep -q "imageTag" "$dir/values/values.yaml"; then \
+                  sed -i "s/^imageTag.*/imageTag: \&imageTag \"v$RELEASE_VERSION\"/" "$dir"/values/values.yaml; \
+                fi; \
+                if grep -q "repository_tag" "$dir/values/values.yaml"; then \
+                  sed -i "s/.*repository_tag.*/        repository_tag: v$RELEASE_VERSION/" "$dir"/values/values.yaml; \
+                fi; \
+            fi; \
+          done  
+          # commit and push changes
+          git add .
+          git commit -m "Update imageTag & repository_tag if exists in values files to v$RELEASE_VERSION"
+          git push origin release/"$RELEASE_VERSION"
       - name: update readme files
         if: ${{ github.repository }} == 'datavisyn/reprovisyn' || ${{ github.repository }} == 'datavisyn/aelixir'
         run: |
@@ -93,45 +118,15 @@ jobs:
           (echo; echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"') >> /home/runner/.bashrc
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           sudo apt-get install build-essential
-
           # install helm-docs
           brew install norwoodj/tap/helm-docs
-
+          # update readme files
           cd deploy/helm
           helm-docs .
+          # commit and push changes
           git add .
           git commit -m "Update Helm documentation"
-          git push origin release/$RELEASE_VERSION
-  
-      - name: update imageTag and repository_tag in values files
-        if: ${{ github.repository }} == 'datavisyn/reprovisyn' || ${{ github.repository }} == 'datavisyn/aelixir'
-        run: |
-          cd deploy/helm
-          ls_result=$(ls)
-          for dir in $ls_result; do \
-            echo "Processing $dir"; \
-            if [ -e "$dir/values.yaml" ]; then \
-                if grep -q "imageTag" "$dir/values.yaml"; then \
-                    sed -i "s/^imageTag.*/imageTag: \&imageTag \"v$RELEASE_VERSION\"/" $dir/values.yaml; \
-                fi; \
-                if grep -q "repository_tag" "$dir/values.yaml"; then \
-                  sed -i "s/.*repository_tag.*/        repository_tag: v$RELEASE_VERSION/" $dir/values.yaml; \
-                fi; \
-            fi; \
-            if [ -e "$dir/values/values.yaml" ]; then
-                if grep -q "imageTag" "$dir/values/values.yaml"; then \
-                  sed -i "s/^imageTag.*/imageTag: \&imageTag \"v$RELEASE_VERSION\"/" $dir/values/values.yaml; \
-                fi; \
-                if grep -q "repository_tag" "$dir/values/values.yaml"; then \
-                  sed -i "s/.*repository_tag.*/        repository_tag: v$RELEASE_VERSION/" $dir/values/values.yaml; \
-                fi; \
-            fi; \
-          done  
-          
-          git add .
-          git commit -m "Update imageTag & repository_tag if exists in values files to v$RELEASE_VERSION"
-          git push origin release/$RELEASE_VERSION
-      
+          git push origin release/"$RELEASE_VERSION"
       - name: create pr
         id: create-pr
         run: |
