@@ -86,18 +86,22 @@ jobs:
           git commit -m "Update chart version to $RELEASE_VERSION"
           git push origin release/$RELEASE_VERSION
 
-      - name: update readme
+      - name: update readme files
         run: |
+          # install homebrew package manager
           yes | /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           (echo; echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"') >> /home/runner/.bashrc
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           sudo apt-get install build-essential
-          brew help 
+
+          # install helm-docs
+          brew install norwoodj/tap/helm-docs
+
           cd deploy/helm
-          # helm-docs .
-          # git add .
-          # git commit -m "Update Helm documentation"
-          # git push origin release/$RELEASE_VERSION
+          helm-docs .
+          git add .
+          git commit -m "Update Helm documentation"
+          git push origin release/$RELEASE_VERSION
   
              
       # - name: create pr
