@@ -103,7 +103,25 @@ jobs:
           git commit -m "Update Helm documentation"
           git push origin release/$RELEASE_VERSION
   
-             
+      - name: update imageTag in values files
+        run: |
+          for dir in $ls_result; do \
+            echo "Processing $dir"; \
+            if [ -e "$dir/values.yaml" ]; then \
+                if grep -q "imageTag" "$dir/values.yaml"; then \
+                    sed -i "s/^imageTag.*/imageTag: \&imageTag \"v$RELEASE_VERSION\"/" $dir/values.yaml; \
+                fi; \
+            fi; \
+            if [ -e "$dir/values/values.yaml" ]; then
+                if grep -q "imageTag" "$dir/values/values.yaml"; then \
+                    sed -i "s/^imageTag.*/imageTag: \&imageTag \"v$RELEASE_VERSION\"/" $dir/values/values.yaml; \
+                fi; \
+            fi; \
+          done  
+          
+          git add .
+          git commit -m "Update imageTag in values files to v$RELEASE_VERSION"
+          git push origin release/$RELEASE_VERSION
       # - name: create pr
       #   id: create-pr
       #   run: |
