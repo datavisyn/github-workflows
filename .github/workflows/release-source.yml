@@ -46,9 +46,8 @@ jobs:
       - name: get release version
         id: get-release-version
         run: |
-          release_version=$(jq -r '.version' package.json | cut -d '-' -f 1)
-          echo $release_version
-          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+          release_version="{$(jq -r '.version' package.json | cut -d '-' -f 1)}"
+          echo "RELEASE_VERSION=$release_version" >> "$GITHUB_ENV"
       - name: create release branch
         run: |
           git config user.name "$GITHUB_ACTOR"
