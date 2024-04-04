@@ -70,20 +70,20 @@ jobs:
 
           # update chart version
           for dir in $ls_result; do \
-           sed -i "s/^version.*/version: $RELEASE_VERSION/" $dir/chart.yaml;\
-           sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" $dir/chart.yaml;\
+           sed -i "s/^version.*/version: $RELEASE_VERSION/" $dir/Chart.yaml;\
+           sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" $dir/Chart.yaml;\
           done
 
           # update subchart version
           for folder in ./*; do \
             if [ -d "$folder/subcharts" ]; then \
-                sed -i "s/^version.*/version: $RELEASE_VERSION/" $folder/subcharts/*/chart.yaml; \
-                sed -i "s/^appVersion.*/appVersion: $RELEASE_VERSION/" $folder/subcharts/*/chart.yaml; \
+                sed -i "s/^version.*/version: $RELEASE_VERSION/" $folder/subcharts/*/Chart.yaml; \
+                sed -i "s/^appVersion.*/appVersion: $RELEASE_VERSION/" $folder/subcharts/*/Chart.yaml; \
             fi; \
           done
 
           git add .
-          git commit -m "Update chart version to $version"
+          git commit -m "Update chart version to $RELEASE_VERSION"
           git push origin release/$RELEASE_VERSION
   
              
