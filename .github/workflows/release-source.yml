@@ -105,6 +105,8 @@ jobs:
   
       - name: update imageTag in values files
         run: |
+          cd deploy/helm
+          ls_result=$(ls)
           for dir in $ls_result; do \
             echo "Processing $dir"; \
             if [ -e "$dir/values.yaml" ]; then \
