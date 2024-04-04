@@ -89,6 +89,11 @@ jobs:
       - name: update readme
         run: |
           pwd
+          cd deploy/helm
+          helm-docs .
+          git add .
+          git commit -m "Update Helm documentation"
+          git push origin release/$RELEASE_VERSION
   
              
       # - name: create pr
