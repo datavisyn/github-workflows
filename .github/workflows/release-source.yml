@@ -62,7 +62,7 @@ jobs:
           git commit -m "Update package.json version to $RELEASE_VERSION"
           git push origin release/"$RELEASE_VERSION"
       - name: change charts and subcharts version
-        if: ${{ github.repository  == 'datavisyn/reprovisyn' ||  github.repository }} == 'datavisyn/aelixir'
+        if: ${{ github.repository  == 'datavisyn/reprovisyn'}} ||  ${{ github.repository == 'datavisyn/aelixir' }}
         run: |
           cd deploy/helm
           ls_result="$(ls)"
@@ -83,7 +83,7 @@ jobs:
           git commit -m "Update chart version to $RELEASE_VERSION"
           git push origin release/"$RELEASE_VERSION"
       - name: update imageTag and repository_tag in values files
-        if: ${{ github.repository  == 'datavisyn/reprovisyn' ||  github.repository }} == 'datavisyn/aelixir'
+        if: ${{ github.repository  == 'datavisyn/reprovisyn'}} ||  ${{ github.repository == 'datavisyn/aelixir' }}
         run: |
           cd deploy/helm
           ls_result="$(ls)"
@@ -111,7 +111,7 @@ jobs:
           git commit -m "Update imageTag & repository_tag if exists in values files to v$RELEASE_VERSION"
           git push origin release/"$RELEASE_VERSION"
       - name: update readme files
-        if: ${{ github.repository  == 'datavisyn/reprovisyn' ||  github.repository }} == 'datavisyn/aelixir'
+        if: ${{ github.repository  == 'datavisyn/reprovisyn' ||  github.repository  == 'datavisyn/aelixir' }}
         run: |
           # install homebrew package manager
           yes | /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
