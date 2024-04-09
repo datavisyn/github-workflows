@@ -82,6 +82,6 @@ runs:
     - name: Build wheel
       if: inputs.run_build == 'true'
       run: |
-        source .venv/bin/activate
+        #source .venv/bin/activate
         make build
       shell: bash
