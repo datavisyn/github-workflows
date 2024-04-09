@@ -350,7 +350,7 @@ jobs:
         env:
           ENV_PASSWORD: ${{ secrets.ENV_PASSWORD }}
       - name: Webpack dev build
-        run: npm run webpack:dev
+        run: npm run bundle:prod || npm run webpack:dev
         shell: bash
       - name: Install playwright browsers
         run: yarn playwright install --with-deps chromium
