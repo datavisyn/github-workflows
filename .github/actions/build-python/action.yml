@@ -75,9 +75,13 @@ runs:
       shell: bash
     - name: Run tests
       if: inputs.run_test == 'true'
-      run: make test
+      run: |
+        source .venv/bin/activate
+        make test
       shell: bash
     - name: Build wheel
       if: inputs.run_build == 'true'
-      run: make build
+      run: |
+        source .venv/bin/activate
+        make build
       shell: bash
