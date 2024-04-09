@@ -55,15 +55,23 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
+    - name: Create virtual environment
+      run: python -m venv .venv
+      shell: bash
     - name: Install python dependencies
-      run: make develop
+      run: |
+        source .venv/bin/activate
+        pip install setuptools wheel
+        make develop
       shell: bash
     - name: Show installed pip packages
       run: pip list || true
       shell: bash
     - name: Linting
       if: inputs.run_lint == 'true'
-      run: make lint check-format
+      run: |
+        source .venv/bin/activate
+        make lint check-format
       shell: bash
     - name: Run tests
       if: inputs.run_test == 'true'
