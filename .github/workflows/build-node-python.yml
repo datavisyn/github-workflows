@@ -47,7 +47,7 @@ on:
         default: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || !!startsWith(github.ref, 'refs/heads/release-') || !!startsWith(github.ref, 'refs/heads/dependabot')}}  
       playwright_run_custom:
         type: string
-        description: "Run custom playwright command. Example: `disease` or `apps/genome/genome.spec.ts`"
+        description: "Run specific test(s). Example: `landing-page.spec.ts`"
         required: false
       node_run_webpack:
         description: "Flag to always run the webpack production build."
