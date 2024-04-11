@@ -45,7 +45,7 @@ on:
         type: string
         required: false
         default: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || !!startsWith(github.ref, 'refs/heads/release-') || !!startsWith(github.ref, 'refs/heads/dependabot')}}  
-      playwright_run_custom:
+      playwright_spec_param:
         type: string
         description: "Run specific test(s). Example: `landing-page.spec.ts`"
         required: false
@@ -310,7 +310,7 @@ jobs:
         run: yarn playwright install --with-deps chromium
         shell: bash
       - name: Run playwright e2e tests
-        run: yarn run pw:run ${{ inputs.playwright_run_custom }}
+        run: yarn run pw:run ${{ inputs.playwright_spec_param }}
         shell: bash
       - name: Upload playwright report
         uses: actions/upload-artifact@v4
