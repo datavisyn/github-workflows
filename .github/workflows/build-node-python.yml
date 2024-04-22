@@ -375,7 +375,7 @@ jobs:
         shell: bash
       - name: Run playwright e2e tests
         run: |
-          source .venv/bin/activate
+          #source .venv/bin/activate
           yarn run pw:run
         shell: bash
       - name: Upload playwright report
