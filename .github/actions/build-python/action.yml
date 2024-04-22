@@ -40,11 +40,10 @@ runs:
     #  uses: actions/setup-python@v3
     #  with:
     #    python-version: ${{ inputs.python_version }}
-    - name: install additional requirements
-      run: |
-        #pip install setuptools wheel
-        pip install --upgrade pip
-      shell: bash
+    #- name: install additional requirements
+    #  run: |
+    #    pip install setuptools wheel
+    #  shell: bash
     - name: Show python and pip version
       run: |
         python --version
@@ -62,7 +61,7 @@ runs:
     - name: Install python dependencies
       run: |
         source .venv/bin/activate
-        pip install setuptools wheel
+        pip install --upgrade pip setuptools wheel
         make develop
       shell: bash
     - name: Show installed pip packages
