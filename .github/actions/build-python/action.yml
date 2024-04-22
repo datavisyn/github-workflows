@@ -28,18 +28,18 @@ inputs:
 runs:
   using: "composite"
   steps:
-    #- name: Set up python (with cache)
-    #  if: inputs.disable_cache == 'false'
-    #  uses: actions/setup-python@v3
-    #  with:
-    #    python-version: ${{ inputs.python_version }}
-    #    cache: 'pip'
-    # needs wheel for make
-    - name: Set up python (without cache)
-      if: inputs.disable_cache == 'true'
+    - name: Set up python (with cache)
+      if: inputs.disable_cache == 'false'
       uses: actions/setup-python@v3
       with:
         python-version: ${{ inputs.python_version }}
+        cache: 'pip'
+    # needs wheel for make
+    #- name: Set up python (without cache)
+    #  if: inputs.disable_cache == 'true'
+    #  uses: actions/setup-python@v3
+    #  with:
+    #    python-version: ${{ inputs.python_version }}
     - name: install additional requirements
       run: |
         #pip install setuptools wheel
