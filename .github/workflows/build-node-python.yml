@@ -190,7 +190,6 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
-          fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
       - name: Checkout github-workflows
         uses: actions/checkout@v4
         with:
@@ -204,11 +203,6 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
-      - name: Run Chromatic
-        if: ${{ inputs.chromatic_enable }}
-        uses: chromaui/action@v11.3.0
-        with:
-            projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       - name: Build python
         uses: ./tmp/github-workflows/.github/actions/build-python
         with:
@@ -294,7 +288,6 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
-          fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
       - name: Checkout github-workflows
         uses: actions/checkout@v4
         with:
@@ -308,11 +301,6 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
-      - name: Run Chromatic
-        if: ${{ inputs.chromatic_enable }}
-        uses: chromaui/action@v11.3.0
-        with:
-            projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       - name: Build python
         uses: ./tmp/github-workflows/.github/actions/build-python
         with:
