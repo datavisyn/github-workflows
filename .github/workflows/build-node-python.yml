@@ -246,7 +246,6 @@ jobs:
           # TODO: Create customizable variables for these?
           start: |
             pg_isready -d db -h ${{ env.POSTGRES_HOSTNAME }} -p ${{ env.POSTGRES_PORT }} -U admin
-            source .venv/bin/activate
             yarn start dev_server_only=true
             make start
           wait-on: "http://localhost:8080, http://localhost:9000/health"
