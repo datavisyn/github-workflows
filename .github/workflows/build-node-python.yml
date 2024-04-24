@@ -113,8 +113,8 @@ jobs:
           ref: ${{ inputs.branch }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
           # chromatic needs fetch-depth: 0
-          #fetch-depth: ${{ (github.event_name == 'push' && (startsWith(github.event.head_commit.modified, 'src/design/stories/') || endsWith(github.event.head_commit.modified, '.stories.')) || inputs.chromatic_enable) && '0' || '1' }}
-          fetch-depth: 0
+          fetch-depth: ${{ (github.event_name == 'push' && (startsWith(github.event.head_commit.modified, 'src/design/stories/') || endsWith(github.event.head_commit.modified, '.stories.')) || inputs.chromatic_enable) && '0' || '1' }}
+          #fetch-depth: 0
       - name: Checkout github-workflows
         uses: actions/checkout@v4
         with:
@@ -128,7 +128,6 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: ${{ inputs.node_run_webpack }}
-
       - name: Run Chromatic
         if: ${{ github.event_name == 'push' && (startsWith(github.event.head_commit.modified, 'src/design/stories/') || endsWith(github.event.head_commit.modified, '.stories.')) || inputs.chromatic_enable }}
         uses: chromaui/action@v11.3.0
