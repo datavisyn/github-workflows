@@ -56,14 +56,14 @@ jobs:
         run: |
           input_release_version="${{ github.event.inputs.release_version }}"
           if echo "$input_release_version" | grep -q '^[0-9.]*$'; then
-            echo "valind input"
+            echo "Valind input"
           else
             echo "Error: invaled input version."
             exit 1
           fi
 
           file_release_version="$(jq -r '.version' package.json | cut -d '-' -f 1)"
-          file_release_version="$(echo $file_release_version | sed 's/[^0-9.]*//g')"
+          file_release_version="${file_release_version//[^0-9.]}"
           echo "file_release_version=$file_release_version"
           file_major=$(echo "$file_release_version" | cut -d'.' -f1)
           file_minor=$(echo "$file_release_version" | cut -d'.' -f2)
@@ -95,24 +95,23 @@ jobs:
             exit 1
           elif [ "$input_minor" -lt "$file_minor" ]; then
             if [ "$input_major" -eq "$max_major" ] && [ "$input_minor" -eq 0 ] && [ "$input_patch" -eq 0 ]; then
-              echo "New version is $input_major.$input_minor.$input_patch"
+              echo "Valid version input"
             else
               echo "Error: Minor version cannot be less than the current version."
               exit 1
             fi
           elif [ "$input_patch" -lt "$file_patch" ]; then
             if [ "$input_major" -eq "$max_major" ] && [ "$input_minor" -eq 0 ] && [ "$input_patch" -eq 0 ]; then
-              echo "New version is $input_major.$input_minor.$input_patch"
+              echo "Valid version input"
             elif [ "$input_major" -eq "$file_major" ] && [ "$input_minor" -eq "$max_minor" ] && [ "$input_patch" -eq 0 ]; then
-              echo "New version is $input_major.$input_minor.$input_patch"
+              echo "Valid version input"
             else
               echo "Error: Patch version cannot be less than the current version."
               exit 1
             fi
           fi
-          
-          release_version=$input_release_version
-          echo "RELEASE_VERSION=$release_version" >> "$GITHUB_ENV"
+          echo "New version is $input_major.$input_minor.$input_patch"
+          echo "RELEASE_VERSION=$input_release_version" >> "$GITHUB_ENV"
           
       - name: create release branch
         run: |
