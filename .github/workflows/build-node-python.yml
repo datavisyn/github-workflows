@@ -78,6 +78,8 @@ on:
         required: false
       CYPRESS_ENV:
         required: false
+      CHROMATIC_PROJECT_TOKEN:
+        required: false
 
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
@@ -124,11 +126,7 @@ jobs:
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: ${{ inputs.node_run_webpack }}
       - name: Run Chromatic
-        if: >
-          github.event_name == 'push' && (
-          startsWith(github.event.head_commit.modified, 'src/design/stories/') ||
-          endsWith(github.event.head_commit.modified, '.stories.')) ||
-          ${{ inputs.chromatic_enable }}
+        if: ${{ github.event_name == 'push' && (startsWith(github.event.head_commit.modified, 'src/design/stories/') || endsWith(github.event.head_commit.modified, '.stories.')) || inputs.chromatic_enable }}
         uses: chromaui/action@v11.3.0
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
