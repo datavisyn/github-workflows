@@ -62,6 +62,11 @@ on:
         type: string
         required: false
         default: "ubuntu-22.04-large"
+      chromatic_enable:
+        description: 'Enable Chromatic Tests'
+        required: false
+        type: boolean
+        default: false
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -118,6 +123,15 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: ${{ inputs.node_run_webpack }}
+      - name: Run Chromatic
+        if: >
+          github.event_name == 'push' && (
+          startsWith(github.event.head_commit.modified, 'src/design/stories/') ||
+          endsWith(github.event.head_commit.modified, '.stories.')) ||
+          ${{ inputs.chromatic_enable }}
+        uses: chromaui/action@v11.3.0
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
 
   build-python:
     name: Python
@@ -190,6 +204,11 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
+      - name: Run Chromatic
+        if: ${{ inputs.chromatic_enable }}
+        uses: chromaui/action@v11.3.0
+        with:
+            projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       - name: Build python
         uses: ./tmp/github-workflows/.github/actions/build-python
         with:
@@ -288,6 +307,11 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
+      - name: Run Chromatic
+        if: ${{ inputs.chromatic_enable }}
+        uses: chromaui/action@v11.3.0
+        with:
+            projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       - name: Build python
         uses: ./tmp/github-workflows/.github/actions/build-python
         with:
