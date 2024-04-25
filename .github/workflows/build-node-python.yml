@@ -245,7 +245,6 @@ jobs:
           install: false
           # TODO: Create customizable variables for these?
           start: |
-            . .venv/bin/activate
             pg_isready -d db -h ${{ env.POSTGRES_HOSTNAME }} -p ${{ env.POSTGRES_PORT }} -U admin
             yarn start dev_server_only=true
             make start
@@ -376,7 +375,7 @@ jobs:
         shell: bash
       - name: Run playwright e2e tests
         run: |
-          source .venv/bin/activate
+          #source .venv/bin/activate
           yarn run pw:run
         shell: bash
       - name: Upload playwright report
