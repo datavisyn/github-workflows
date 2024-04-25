@@ -245,6 +245,7 @@ jobs:
           install: false
           # TODO: Create customizable variables for these?
           start: |
+            . .venv/bin/activate
             pg_isready -d db -h ${{ env.POSTGRES_HOSTNAME }} -p ${{ env.POSTGRES_PORT }} -U admin
             yarn start dev_server_only=true
             make start
