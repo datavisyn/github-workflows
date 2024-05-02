@@ -27,7 +27,7 @@ env:
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: "20.9"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "deploy-with-argocd"
   PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
@@ -129,45 +129,44 @@ jobs:
           echo "Image Tag 2: ${{ needs.prepare-build.outputs.image_tag2 }}"
           echo "Stage: ${{ needs.prepare-build.outputs.stage }}"
           echo "Components: ${{ needs.prepare-build.outputs.components }}"
+          echo "app: ${{ needs.prepare-build.outputs.app }}"
 
-
-
-  # deploy:
-  #   needs: [prepare-build, post-build]
-  #   # Add always() as otherwise the job is being skipped: https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions
-  #   if: ${{ always() && needs.post-build.result == 'success' && fromJSON(needs.prepare-build.outputs.trigger_automatic_deployment) }}
-  #   runs-on: ubuntu-22.04
-  #   strategy:
-  #     matrix:
-  #       customer: ${{ fromJSON(needs.prepare-build.outputs.customers) }}
-  #   steps:
-  #     - name: determine stage to be deployed to
-  #       id: get-parameters
-  #       run: |
-  #         # Try to split the customer from the format customer:stage
-  #         customer="$(echo "$CUSTOMER_FULL" | cut -d ":" -s -f 1)"
-  #         stage="$(echo "$CUSTOMER_FULL" | cut -d ":" -s -f 2)"
-  #         # If nothing is found, we assume we just got the customer
-  #         if [ -z "$customer" ]; then
-  #           customer="$CUSTOMER_FULL"
-  #         fi
-  #         # And will deploy to develop if no stage is defined
-  #         if [ -z "$stage" ]; then
-  #           echo "customer $CUSTOMER_FULL does not include stage, using develop instead"
-  #           stage="develop"
-  #         fi
-  #         echo "customer=$customer" >> "$GITHUB_OUTPUT"
-  #         echo "stage=$stage" >> "$GITHUB_OUTPUT"
-  #       env:
-  #         CUSTOMER_FULL: ${{ matrix.customer }}
-  #       shell: bash
-  #     - name: trigger deployment
-  #       uses: datavisyn/github-action-trigger-workflow@v1
-  #       with:
-  #         owner: "datavisyn"
-  #         repo: "infrastructure-k8s"
-  #         github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-  #         workflow_file_name: "deploy-app.yml"
-  #         ref: ${{ env.WORKFLOW_BRANCH }}
-  #         github_user: ${{ secrets.DV_BOT_USER }}
-  #         client_payload: '{ "app": "${{ needs.prepare-build.outputs.app }}", "customer": "${{ steps.get-parameters.outputs.customer }}", "stage": "${{ steps.get-parameters.outputs.stage }}", "sub_app": "${{ needs.prepare-build.outputs.sub_app }}", "branch": "${{ needs.prepare-build.outputs.image_tag2 }}" }'
+  deploy:
+    needs: [prepare-build, post-build]
+    # Add always() as otherwise the job is being skipped: https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions
+    if: ${{ always() && needs.post-build.result == 'success' && fromJSON(needs.prepare-build.outputs.trigger_automatic_deployment) }}
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        customer: ${{ fromJSON(needs.prepare-build.outputs.customers) }}
+    steps:
+      - name: determine stage to be deployed to
+        id: get-parameters
+        run: |
+          # Try to split the customer from the format customer:stage
+          customer="$(echo "$CUSTOMER_FULL" | cut -d ":" -s -f 1)"
+          stage="$(echo "$CUSTOMER_FULL" | cut -d ":" -s -f 2)"
+          # If nothing is found, we assume we just got the customer
+          if [ -z "$customer" ]; then
+            customer="$CUSTOMER_FULL"
+          fi
+          # And will deploy to develop if no stage is defined
+          if [ -z "$stage" ]; then
+            echo "customer $CUSTOMER_FULL does not include stage, using develop instead"
+            stage="develop"
+          fi
+          echo "customer=$customer" >> "$GITHUB_OUTPUT"
+          echo "stage=$stage" >> "$GITHUB_OUTPUT"
+        env:
+          CUSTOMER_FULL: ${{ matrix.customer }}
+        shell: bash
+      - name: trigger deployment
+        uses: datavisyn/github-action-trigger-workflow@v1
+        with:
+          owner: "datavisyn"
+          repo: "infrastructure-k8s"
+          github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+          workflow_file_name: "deploy-app.yml"
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          github_user: ${{ secrets.DV_BOT_USER }}
+          client_payload: '{ "app": "${{ needs.prepare-build.outputs.app }}", "customer": "${{ steps.get-parameters.outputs.customer }}", "stage": "${{ steps.get-parameters.outputs.stage }}", "sub_app": "${{ needs.prepare-build.outputs.sub_app }}", "branch": "${{ needs.prepare-build.outputs.image_tag1 }}" }'
