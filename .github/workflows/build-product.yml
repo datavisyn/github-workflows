@@ -124,13 +124,14 @@ jobs:
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
       - name: retag images
-        uses: ./tmp/github-workflows/.github/actions/retag-image
-        with:
-          aws_role: ${{ vars.DV_AWS_ECR_ROLE }}
-          aws_region: ${{ vars.DV_AWS_REGION }}
-          ecr_repositories: ${{ needs.prepare-build.outputs.ecr_repos }}
-          current_image_tag: ${{ needs.prepare-build.outputs.image_tag1 }}
-          additional_image_tag: ${{ needs.prepare-build.outputs.image_tag2 }}
+        run: |
+          echo "Image Tag 1: ${{ needs.prepare-build.outputs.image_tag1 }}"
+          echo "Image Tag 2: ${{ needs.prepare-build.outputs.image_tag2 }}"
+          echo "Stage: ${{ needs.prepare-build.outputs.stage }}"
+          echo "Components: ${{ needs.prepare-build.outputs.components }}"
+
+
+
   # deploy:
   #   needs: [prepare-build, post-build]
   #   # Add always() as otherwise the job is being skipped: https://docs.github.com/en/actions/learn-github-actions/expressions#status-check-functions
