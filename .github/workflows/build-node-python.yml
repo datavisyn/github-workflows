@@ -255,17 +255,6 @@ jobs:
         env:
           POSTGRES_HOSTNAME: ${{ env.POSTGRES_HOSTNAME }}
           POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
-      - name: Run cypress component tests
-        uses: cypress-io/github-action@v6
-        with:
-          # Currently, the videos are buggy because of low-cpu/electron environment: https://github.com/cypress-io/cypress/issues/8210
-          config: video=false,modifyObstructiveCode=false
-          browser: chrome
-          install: false
-          component: true
-          # TODO: Do component tests need the frontend/backend?
-          env: ${{ secrets.CYPRESS_ENV }}
-          spec: ${{ inputs.cypress_spec_param }}
       # rspack currently does not support Cypress component tests
       # - name: Run cypress component tests
       #   uses: cypress-io/github-action@v6
