@@ -371,7 +371,7 @@ jobs:
           make env_decrypt || true
         env:
           ENV_PASSWORD: ${{ secrets.ENV_PASSWORD }}
-      - name: Webpack dev build
+      - name: Bundle build
         run: npm run bundle:prod || npm run webpack:dev
         shell: bash
       - name: Install playwright browsers
