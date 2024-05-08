@@ -16,6 +16,7 @@ env:
   GITHUB_USER: "datavisyn-bot"
   WORKFLOW_BRANCH: "main"
   GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+  CHARTMUSEUM_TOKEN: ${{ secrets.CHARTMUSEUM_TOKEN }}
 
 jobs:
   release-repository:
@@ -125,6 +126,8 @@ jobs:
           git add package.json
           git commit -m "Update package.json version to $RELEASE_VERSION"
           git push origin release-"$RELEASE_VERSION"
+      - name: Add Helm repository
+        run: helm repo add datavisyn --username admin --password ${{ env.CHARTMUSEUM_TOKEN }} https://chartmuseum.app.datavisyn.io
       - name: change charts and subcharts version
         if: ${{ github.repository  == 'datavisyn/reprovisyn' ||  github.repository == 'datavisyn/aelixir' || github.repository == 'datavisyn/test-app' }}
         run: |
@@ -134,12 +137,15 @@ jobs:
           for dir in $ls_result; do \
            sed -i "s/^version.*/version: $RELEASE_VERSION/" "$dir"/Chart.yaml;\
            sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" "$dir"/Chart.yaml;\
+           sed -i "/  - name: marvinjs/{n; s/    version.*/    version: $RELEASE_VERSION/}" "$dir"/Chart.yaml;\
           done
           # update subchart version
           for folder in ./*; do \
             if [ -d "$folder/subcharts" ]; then \
                 sed -i "s/^version.*/version: $RELEASE_VERSION/" "$folder"/subcharts/*/Chart.yaml; \
                 sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" "$folder"/subcharts/*/Chart.yaml; \
+                helm dep build "$folder"/subcharts/*;             
+                helm dep update "$folder"/subcharts/*; \
             fi; \
           done
           # commit and push changes
@@ -169,11 +175,15 @@ jobs:
                   sed -i "s/.*repository_tag.*/        repository_tag: v$RELEASE_VERSION/" "$dir"/values/values.yaml; \
                 fi; \
             fi; \
+            helm dep build "$dir"; \
+            helm dep update "$dir";  
           done  
           # commit and push changes
           git add .
           git commit -m "Update imageTag & repository_tag if exists in values files to v$RELEASE_VERSION"
           git push origin release-"$RELEASE_VERSION"
+        env:
+          CHARTMUSEUM_TOKEN: ${{ secrets.CHARTMUSEUM_TOKEN }}
       - name: update readme files
         if: ${{ github.repository  == 'datavisyn/reprovisyn' ||  github.repository  == 'datavisyn/aelixir' || github.repository == 'datavisyn/test-app' }}
         run: |
@@ -186,8 +196,6 @@ jobs:
           brew install norwoodj/tap/helm-docs
           # update readme files
           cd deploy/helm
-          helm dep update
-          helm dep build
           helm-docs --document-dependency-values 
           # commit and push changes
           git add .
