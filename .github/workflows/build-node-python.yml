@@ -371,6 +371,15 @@ jobs:
       - name: Install playwright browsers
         run: yarn playwright install --with-deps chromium
         shell: bash
+      
+      - name: Inspect network
+        run: docker network inspect actions_default
+      - name: Test network connection to PostgreSQL
+        run: |
+          docker run --network actions_default alpine ping -c 3 ${{ env.POSTGRES_HOSTNAME }}
+      - name: Log PostgreSQL output
+        run: docker logs ${{ env.POSTGRES_HOSTNAME }}
+        
       - name: Run playwright e2e tests
         run: |
           pg_isready -h ${{ env.POSTGRES_HOSTNAME }} -p ${{ env.POSTGRES_PORT }}
