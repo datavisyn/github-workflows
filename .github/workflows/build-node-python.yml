@@ -328,6 +328,7 @@ jobs:
             echo "POSTGRES_PORT=5432"
           } >> "$GITHUB_ENV"
           docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
+          docker ps
       - name: Set postgres connection details to hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME == ''
         run: |
@@ -371,7 +372,9 @@ jobs:
         run: yarn playwright install --with-deps chromium
         shell: bash
       - name: Run playwright e2e tests
-        run: yarn run pw:run ${{ inputs.playwright_spec_param }}
+        run: |
+          pg_isready -h ${{ env.POSTGRES_HOSTNAME }} -p ${{ env.POSTGRES_PORT }}
+          yarn run pw:run ${{ inputs.playwright_spec_param }}
         shell: bash
       - name: Upload playwright report
         uses: actions/upload-artifact@v4
