@@ -45,7 +45,12 @@ runs:
       shell: bash
     - name: Git config
       if: ${{ inputs.github_ro_token != '' }}
-      run: git config --global url."https://$GITHUB_TOKEN@github".insteadOf https://github
+      run: |
+        if [ -f ~/.gitconfig ]; then
+          rm ~/.gitconfig
+          touch ~/.gitconfig
+        fi
+        git config --global url."https://$GITHUB_TOKEN@github".insteadOf https://github
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
