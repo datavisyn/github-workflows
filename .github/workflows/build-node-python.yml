@@ -136,7 +136,7 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: ${{ inputs.node_run_webpack }}
-          #enable_cache: ${{ inputs.runs_on != 'self-hosted' }}
+          enable_cache: ${{ inputs.runs_on != 'self-hosted' }}
       - name: Run Chromatic
         if: ${{ inputs.chromatic_enable }}
         uses: chromaui/action@v11.3.0
@@ -144,6 +144,7 @@ jobs:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
 
   build-python:
+    needs: build-node
     name: Python
     if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
     concurrency:
@@ -167,7 +168,7 @@ jobs:
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-          #enable_cache: ${{ inputs.runs_on != 'self-hosted' }}
+          enable_cache: ${{ inputs.runs_on != 'self-hosted' }}
 
   # If cypress is used, build node and python sequentially as it is avoiding the duplicate install overhead
   build-node-python-cypress:
