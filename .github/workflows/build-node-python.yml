@@ -167,7 +167,7 @@ jobs:
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-          #enable_cache: ${{ inputs.runs_on != 'self-hosted' }}
+          enable_cache: ${{ inputs.runs_on != 'self-hosted' }}
 
   # If cypress is used, build node and python sequentially as it is avoiding the duplicate install overhead
   build-node-python-cypress:
