@@ -96,7 +96,7 @@ env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "vdelev_self_hosted"
   POSTGRES_HOSTNAME: postgres_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}
 
 permissions:
@@ -136,7 +136,7 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: ${{ inputs.node_run_webpack }}
-          enable_cache: ${{ inputs.runs_on != 'self-hosted' }}
+          #enable_cache: ${{ inputs.runs_on != 'self-hosted' }}
       - name: Run Chromatic
         if: ${{ inputs.chromatic_enable }}
         uses: chromaui/action@v11.3.0
@@ -167,7 +167,7 @@ jobs:
         with:
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-          enable_cache: ${{ inputs.runs_on != 'self-hosted' }}
+          #enable_cache: ${{ inputs.runs_on != 'self-hosted' }}
 
   # If cypress is used, build node and python sequentially as it is avoiding the duplicate install overhead
   build-node-python-cypress:
