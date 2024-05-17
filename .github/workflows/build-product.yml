@@ -31,7 +31,6 @@ env:
   PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
-  ARGOCD_DEPLOYED_APP: false
 
 permissions:
   id-token: write
@@ -84,15 +83,6 @@ jobs:
         with:
           branch_name: ${{ github.ref_name }}
           time_zone: ${{ env.TIME_ZONE }}
-      - name: Check if app deployed by ArgoCD
-        id: argocd-deployed-app
-        run: |
-          result=$(jq '.apps | index("${{ steps.get-parameters.outputs.app }}") != null' ./tmp/github-workflows/.github/argocd-deployed-apps.json)
-          if [ "$result" = "true" ]; then
-            echo "ARGOCD_DEPLOYED_APP=true" >> $GITHUB_ENV
-          else
-            echo "ARGOCD_DEPLOYED_APP=false" >> $GITHUB_ENV
-          fi
   build-single:
     needs: prepare-build
     if: ${{ needs.prepare-build.outputs.create_workspace != 'true' && needs.prepare-build.outputs.components != '[]' && needs.prepare-build.outputs.components != ''}}
@@ -134,7 +124,6 @@ jobs:
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
       - name: retag images
-        if: ${{ env.ARGOCD_DEPLOYED_APP == 'false' }}
         uses: ./tmp/github-workflows/.github/actions/retag-image
         with:
           aws_role: ${{ vars.DV_AWS_ECR_ROLE }}
