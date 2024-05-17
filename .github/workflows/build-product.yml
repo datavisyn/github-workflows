@@ -87,9 +87,7 @@ jobs:
       - name: Check if app deployed by ArgoCD
         id: argocd-deployed-app
         run: |
-          pwd
-          ls
-          result=$(jq '.apps | index("${{ steps.get-parameters.outputs.app }}") != null' ./.github/argocd-deployed-apps.json)
+          result=$(jq '.apps | index("${{ steps.get-parameters.outputs.app }}") != null' ./tmp/github-workflows/.github/argocd-deployed-apps.json)
           if [ "$result" = "true" ]; then
             echo "ARGOCD_DEPLOYED_APP=true" >> $GITHUB_ENV
           else
