@@ -75,7 +75,7 @@ jobs:
           workflow_file_name: "deploy-app.yml"
           ref: ${{ env.WORKFLOW_BRANCH }}
           github_user: ${{ secrets.DV_BOT_USER }}
-          client_payload: '{ "app": "${{ steps.get-parameters.outputs.app }}", "customer": "${{ inputs.customer }}", "stage": "${{ inputs.stage }}", "sub_app": "${{ steps.get-parameters.outputs.sub_app }}", "branch": "${{ steps.get-parameters.outputs.image_tag2 }}", "add_revision_as_tag": "${{ inputs.add_revision_as_tag }}" }'
+          client_payload: '{ "app": "${{ steps.get-parameters.outputs.app }}", "customer": "${{ inputs.customer }}", "stage": "${{ inputs.stage }}", "sub_app": "${{ steps.get-parameters.outputs.sub_app }}", "branch": "${{ steps.get-parameters.outputs.image_tag2 }}", "add_revision_as_tag": "${{ inputs.add_revision_as_tag }}", "ecr_repos": "${{ steps.get-parameters.outputs.ecr_repos }}" }'
       - name: Configure AWS Credentials
         if: ${{ inputs.add_revision_as_tag == true }}
         uses: aws-actions/configure-aws-credentials@v1.7.0
