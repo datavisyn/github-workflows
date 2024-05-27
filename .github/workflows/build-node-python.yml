@@ -139,7 +139,7 @@ jobs:
           enable_cache: ${{ inputs.runs_on != 'self-hosted' }}
       - name: Run Chromatic
         if: ${{ inputs.chromatic_enable }}
-        uses: chromaui/action@v11.3.0
+        uses: chromaui/action@v11.4.0
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
 
