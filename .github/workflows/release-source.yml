@@ -243,7 +243,7 @@ jobs:
         id: create-pr
         run: |
           PR_NOTES=$(cat pr_notes.txt)
-          PR_NOTES="What's changed \ <br /> $PR_NOTES"
+          PR_NOTES="What's changed <br /><br />$PR_NOTES"
           # Create a pull request with release notes
           curl -L \
             -X POST \
