@@ -248,11 +248,14 @@ jobs:
           fi
           
           # Set the PR_NOTES output
-          echo "PR_NOTES=$PR_NOTES" >> "$GITHUB_ENV"
+          #echo "PR_NOTES=$PR_NOTES" >> "$GITHUB_ENV"
+          echo "$PR_NOTES" > pr_notes.txt
+
           
       - name: create pr
         id: create-pr
         run: |
+          PR_NOTES=$(cat pr_notes.txt)
           # Create a pull request with release notes
           curl -L \
             -X POST \
