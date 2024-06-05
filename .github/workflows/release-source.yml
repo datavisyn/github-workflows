@@ -216,46 +216,34 @@ jobs:
       - name: get latest release date
         id: get-release-date
         run: |
-          # Fetch the latest release information
           LATEST_RELEASE=$(curl -s -H "Accept: application/vnd.github+json" \
                                       -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                                       "https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/releases/latest")
 
-          # Extract the published date of the latest release
           LATEST_RELEASE_DATE=$(echo "$LATEST_RELEASE" | jq -r '.published_at')
           
-          # Export the date
           echo "RELEASE_DATE=$LATEST_RELEASE_DATE" >> "$GITHUB_ENV"
 
       - name: fetch merged PRs since last release
         id: fetch-prs
         run: |
-          # Fetch merged PRs from the develop branch since the last release date
           PRS=$(curl -s -H "Accept: application/vnd.github+json" \
                           -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                           -H "X-GitHub-Api-Version: 2022-11-28" \
                           "https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/pulls?state=closed&base=develop&sort=updated&direction=desc")
 
-          # Debugging: Print retrieved PRs
-          echo "PRS: $PRS"
-
-          # Ensure we only process if PRS is a JSON array
           if echo "$PRS" | jq -e . > /dev/null 2>&1; then
-            # Filter PRs merged after the last release date and format them
             PR_NOTES=$(echo "$PRS" | jq -r --arg since "$RELEASE_DATE" '.[] | select(.merged_at != null and .merged_at > $since) | "* [#\(.number)](\(.html_url)) \(.title)"')
           else
             PR_NOTES="could not fetch release notes"
           fi
-          
-          # Set the PR_NOTES output
-          #echo "PR_NOTES=$PR_NOTES" >> "$GITHUB_ENV"
           echo "$PR_NOTES" > pr_notes.txt
 
-          
       - name: create pr
         id: create-pr
         run: |
-          PR_NOTES="## What's changed\n\$(cat pr_notes.txt | sed ':a;N;$!ba;s/\n/\\n/g')"
+          #PR_NOTES=$(cat pr_notes.txt)
+          PR_NOTES=$(cat pr_notes.txt | tr -d '\r')
           # Create a pull request with release notes
           curl -L \
             -X POST \
@@ -265,7 +253,7 @@ jobs:
             https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/pulls \
             -d "$(jq -n \
                   --arg title "Release ${{ env.RELEASE_VERSION }}" \
-                  --arg body "$PR_NOTES" \
+                  --arg body "## What's changed\n\n$PR_NOTES" \
                   --arg head "release-${{ env.RELEASE_VERSION }}" \
                   --arg base "main" \
                   --argjson draft false \
