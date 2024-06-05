@@ -255,7 +255,7 @@ jobs:
       - name: create pr
         id: create-pr
         run: |
-          PR_NOTES=$(cat pr_notes.txt)
+          PR_NOTES="## What's changed\n\n$(cat pr_notes.txt)"
           # Create a pull request with release notes
           curl -L \
             -X POST \
@@ -265,7 +265,7 @@ jobs:
             https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/pulls \
             -d "$(jq -n \
                   --arg title "Release ${{ env.RELEASE_VERSION }}" \
-                  --arg body "## What's changed \\n\\n $PR_NOTES" \
+                  --arg body "$PR_NOTES" \
                   --arg head "release-${{ env.RELEASE_VERSION }}" \
                   --arg base "main" \
                   --argjson draft false \
