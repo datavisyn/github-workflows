@@ -265,7 +265,7 @@ jobs:
             https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/pulls \
             -d "$(jq -n \
                   --arg title "Release ${{ env.RELEASE_VERSION }}" \
-                  --arg body "## What's changed \n\n $PR_NOTES" \
+                  --arg body "## What's changed \\n\\n $PR_NOTES" \
                   --arg head "release-${{ env.RELEASE_VERSION }}" \
                   --arg base "main" \
                   --argjson draft false \
