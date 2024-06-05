@@ -255,7 +255,7 @@ jobs:
       - name: create pr
         id: create-pr
         run: |
-          PR_NOTES="## What's changed\n\n$(cat pr_notes.txt)"
+          PR_NOTES="## What's changed\n\”$(cat pr_notes.txt | sed ':a;N;$!ba;s/\n/\\n/g')""
           # Create a pull request with release notes
           curl -L \
             -X POST \
