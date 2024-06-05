@@ -233,7 +233,8 @@ jobs:
                           "https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/pulls?state=closed&base=develop&sort=updated&direction=desc")
 
           if echo "$PRS" | jq -e . > /dev/null 2>&1; then
-            PR_NOTES=$(echo "$PRS" | jq -r --arg since "$RELEASE_DATE" '.[] | select(.merged_at != null and .merged_at > $since) | "* [#\(.number)](\(.html_url)) \(.title)"')
+            #PR_NOTES=$(echo "$PRS" | jq -r --arg since "$RELEASE_DATE" '.[] | select(.merged_at != null and .merged_at > $since) | "* [#\(.number)](\(.html_url)) \(.title)"')
+            PR_NOTES=$(echo "$PRS" | jq -r --arg since "$RELEASE_DATE" '.[] | select(.merged_at != null and .merged_at > $since) | "* [#\(.number)](\(.html_url)) \(.title)"' | tr '\n' '\\n')
           else
             PR_NOTES="could not fetch release notes"
           fi
