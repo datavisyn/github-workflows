@@ -76,6 +76,19 @@ on:
         required: false
         type: boolean
         default: false
+
+      original_event:
+        description: "The GitHub event that triggered the workflow"
+        required: true
+        type: string
+      review_state:
+        description: "State of the review for pull request review events"
+        required: false
+        type: string
+      base_ref:
+        description: "Base reference of the pull request"
+        required: false
+        type: string
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -172,7 +185,14 @@ jobs:
   # If cypress is used, build node and python sequentially as it is avoiding the duplicate install overhead
   build-node-python-cypress:
     name: Node, Python, Cypress
-    if: ${{ inputs.cypress_enable && (inputs.cypress_run_because_flag || inputs.cypress_run_because_branch == 'true') }}
+    if: |
+      (inputs.cypress_enable && (inputs.cypress_run_because_flag || inputs.cypress_run_because_branch == 'true')) ||
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      (github.event_name == 'pull_request_review' &&
+      github.event.review.state == 'approved' &&
+      github.base_ref == 'refs/heads/develop')
     concurrency:
       group: "node-python-cypress-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
       cancel-in-progress: true
@@ -291,7 +311,23 @@ jobs:
   # If playwright is used, build node and python sequentially as it is avoiding the duplicate install overhead
   build-node-python-playwright:
     name: Node, Python, Playwright
-    if: ${{ inputs.playwright_enable && (inputs.playwright_run_because_flag || inputs.playwright_run_because_branch == 'true') }}
+    if: |
+      (inputs.playwright_enable && (inputs.playwright_run_because_flag || inputs.playwright_run_because_branch == 'true')) ||
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      (github.event_name == 'pull_request_review' &&
+      github.event.review.state == 'approved' &&
+      github.base_ref == 'refs/heads/develop')
+    #
+      #|
+      #inputs.original_event == 'push' ||
+      #inputs.original_event == 'workflow_dispatch' ||
+      #inputs.original_event == 'schedule' ||
+      #(inputs.original_event == 'pull_request_review' && 
+      # inputs.review_state == 'approved' && 
+      # inputs.base_ref == 'refs/heads/develop')
+
     concurrency:
       group: "node-python-playwright-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
       cancel-in-progress: true
