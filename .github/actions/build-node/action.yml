@@ -15,6 +15,10 @@ inputs:
     description: "npm registry"
     default: "https://registry.npmjs.org/"
     required: true
+  enable_cache:
+    description: "enables the yarn cache download and upload"
+    required: false
+    default: true
   download_yarn_lock:
     description: "downloads the node-yarn-lock artifact (only available when build-node was called before)"
     required: false
@@ -47,6 +51,10 @@ runs:
     - name: Git config
       if: inputs.github_ro_token != ''
       run: |
+        if [ -f ~/.gitconfig ]; then
+          rm ~/.gitconfig
+          touch ~/.gitconfig
+        fi
         git config --global --replace-all url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
         git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
       env:
@@ -60,6 +68,7 @@ runs:
     # Enable yarn download cache, @see https://github.com/actions/cache/tree/main/save#always-save-cache and https://github.com/actions/setup-node/issues/325
     - name: Restore yarn cache
       uses: actions/cache/restore@v3
+      if: inputs.enable_cache == 'true'
       with:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
         path: ~/.yarn/berry/cache/
@@ -72,7 +81,7 @@ runs:
       shell: bash
     - name: Save yarn cache
       uses: actions/cache/save@v3
-      if: steps.install.outcome == 'success'
+      if: steps.install.outcome == 'success' && inputs.enable_cache == 'true'
       with:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
         path: ~/.yarn/berry/cache/

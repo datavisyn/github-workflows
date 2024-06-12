@@ -11,6 +11,10 @@ inputs:
     description: "github read-only token"
     default: "admin"
     required: true
+  enable_cache:
+    description: "enables the pip cache download and upload"
+    required: false
+    default: true
   run_lint:
     default: true
     required: false
@@ -25,10 +29,10 @@ runs:
   using: "composite"
   steps:
     - name: Set up python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python_version }}
-        cache: 'pip'
+        cache: ${{ inputs.enable_cache == 'true' && 'pip' || null }}
     # needs wheel for make
     - name: install additional requirements
       run: |
