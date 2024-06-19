@@ -116,8 +116,8 @@ runs:
         name: node-bundle
         path: ./bundles
     - name: Run Chromatic
-      if: ${{ inputs.chromatic_enable }}
-      uses: chromaui/action@v11.3.0
+      if: inputs.chromatic_enable == 'true'
+      uses: chromaui/action@v11.5.4
       with:
         projectToken: ${{ inputs.chromatic_project_token }}
 
