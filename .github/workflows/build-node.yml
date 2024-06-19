@@ -8,7 +8,7 @@ on:
         required: false
         default: ${{ github.ref || github.head_ref }}
       chromatic_enable:
-        description: 'Enable Chromatic Tests'
+        description: 'Enable Chromatic tests'
         required: false
         type: boolean
         default: false
@@ -25,6 +25,8 @@ on:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
       NODE_VERSION:
+        required: false
+      CHROMATIC_PROJECT_TOKEN:
         required: false
 
 env:
@@ -70,8 +72,5 @@ jobs:
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: ${{ inputs.node_run_webpack }}
           enable_cache: ${{ inputs.runs_on != 'self-hosted' }}
-      - name: Run Chromatic
-        if: ${{ inputs.chromatic_enable }}
-        uses: chromaui/action@v11.3.0
-        with:
-          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          chromatic_enable: ${{ inputs.chromatic_enable }}
+          chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
