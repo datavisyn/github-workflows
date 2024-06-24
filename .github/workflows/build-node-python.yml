@@ -72,7 +72,7 @@ on:
         description: Unique id per workflow run. Must be set to unique value if dispatched multiple times for a single workflow.
         default: ""
       chromatic_enable:
-        description: 'Enable Chromatic Tests'
+        description: 'Enable Chromatic tests'
         required: false
         type: boolean
         default: false
@@ -137,11 +137,8 @@ jobs:
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: ${{ inputs.node_run_webpack }}
           enable_cache: ${{ inputs.runs_on != 'self-hosted' }}
-      - name: Run Chromatic
-        if: ${{ inputs.chromatic_enable }}
-        uses: chromaui/action@v11.3.0
-        with:
-          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          chromatic_enable: ${{ inputs.chromatic_enable }}
+          chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
 
   build-python:
     name: Python
@@ -219,6 +216,7 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
+          fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
       - name: Checkout github-workflows
         uses: actions/checkout@v4
         with:
@@ -233,6 +231,8 @@ jobs:
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
           enable_cache: ${{ inputs.cypress_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
+          chromatic_enable: ${{ inputs.chromatic_enable }}
+          chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       - name: Build python
         uses: ./tmp/github-workflows/.github/actions/build-python
         with:
@@ -338,6 +338,7 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
+          fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
       - name: Checkout github-workflows
         uses: actions/checkout@v4
         with:
@@ -352,6 +353,8 @@ jobs:
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_webpack: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
           enable_cache: ${{ inputs.playwright_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
+          chromatic_enable: ${{ inputs.chromatic_enable }}
+          chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       - name: Build python
         uses: ./tmp/github-workflows/.github/actions/build-python
         with:

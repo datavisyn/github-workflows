@@ -33,6 +33,14 @@ inputs:
   run_webpack:
     default: false
     required: false
+  chromatic_enable:
+    description: 'Enable Chromatic tests'
+    required: false
+    type: boolean
+    default: false
+  chromatic_project_token:
+    description: 'Chromatic project token'
+    required: false
 
 runs:
   using: "composite"
@@ -107,3 +115,9 @@ runs:
       with:
         name: node-bundle
         path: ./bundles
+    - name: Run Chromatic
+      if: inputs.chromatic_enable == 'true'
+      uses: chromaui/action@v11.5.4
+      with:
+        projectToken: ${{ inputs.chromatic_project_token }}
+
