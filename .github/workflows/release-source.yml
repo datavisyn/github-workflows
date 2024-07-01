@@ -15,7 +15,7 @@ concurrency:
 env:
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "feat-automate-releases-releasenotes"
   GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
   CHARTMUSEUM_TOKEN: ${{ secrets.CHARTMUSEUM_TOKEN }}
 
