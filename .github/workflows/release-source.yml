@@ -17,7 +17,8 @@ env:
   GITHUB_USER: "datavisyn-bot"
   WORKFLOW_BRANCH: "feat-automate-releases-releasenotes"
   GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-  CHARTMUSEUM_TOKEN: ${{ secrets.DV_CHARTMUSEUM_TOKEN }}
+  CHARTMUSEUM_USER: ${{ secrets.DV_CHARTMUSEUM_USER }}
+  CHARTMUSEUM_PASSWORD: ${{ secrets.DV_CHARTMUSEUM_PASSWORD }}
 
 jobs:
   release-repository:
@@ -128,7 +129,7 @@ jobs:
           git commit -m "Update package.json version to $RELEASE_VERSION"
           git push origin release-"$RELEASE_VERSION"
       - name: Add Helm repository
-        run: helm repo add datavisyn https://chartmuseum.app.datavisyn.io --username admin --password ${{ env.CHARTMUSEUM_TOKEN }}
+        run: helm repo add datavisyn https://chartmuseum.app.datavisyn.io --username ${{ env.CHARTMUSEUM_USER }} --password ${{ env.CHARTMUSEUM_PASSWORD }}
       - name: change charts and subcharts version
         if: ${{ github.repository  == 'datavisyn/reprovisyn' ||  github.repository == 'datavisyn/aelixir' || github.repository == 'datavisyn/test-app' }}
         run: |
@@ -187,7 +188,7 @@ jobs:
           git commit -m "Update imageTag & repository_tag if exists in values files to v$RELEASE_VERSION"
           git push origin release-"$RELEASE_VERSION"
         env:
-          CHARTMUSEUM_TOKEN: ${{ secrets.CHARTMUSEUM_TOKEN }}
+          CHARTMUSEUM_PASSWORD: ${{ secrets.DV_CHARTMUSEUM_PASSWORD }}
       - name: update readme files
         if: ${{ github.repository  == 'datavisyn/reprovisyn' ||  github.repository  == 'datavisyn/aelixir' }}
         run: |
