@@ -124,7 +124,7 @@ jobs:
           git push origin release-"$RELEASE_VERSION"
       - name: Update package.json
         run: |
-          sed -i "s/.*version.*/    \"version\": \"$RELEASE_VERSION\",/" package.json
+          sed -i "s/^\(\s*\)\"version\".*/\1\"version\": \"$RELEASE_VERSION\",/" package.json
           git add package.json
           git commit -m "Update package.json version to $RELEASE_VERSION"
           git push origin release-"$RELEASE_VERSION"
