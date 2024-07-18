@@ -49,12 +49,12 @@ inputs:
     default: false
     required: false
   chromatic_enable:
-    description: 'Enable Chromatic tests'
+    description: "Enable Chromatic tests"
     required: false
     type: boolean
     default: false
   chromatic_project_token:
-    description: 'Chromatic project token'
+    description: "Chromatic project token"
     required: false
   # Python
   enable_python:
@@ -156,14 +156,41 @@ runs:
         node_job() {
           set -e
           yarn install --no-immutable --inline-builds
-          parallel --jobs $1 --lb --halt-on-error 2 --verbose ::: "'$RUN_NODE_LINT' != 'true' || yarn run lint" "'$RUN_NODE_TEST' != 'true' || yarn run test" "'$RUN_NODE_BUILD' != 'true' || yarn run build" "'$RUN_NODE_BUNDLE' != 'true' || yarn run bundle:prod || yarn run webpack:prod"
+
+          parallel_jobs=()
+          if [ "$RUN_NODE_LINT" = "true" ]; then
+            parallel_jobs+=("yarn run lint")
+          fi
+          if [ "$RUN_NODE_TEST" = "true" ]; then
+            parallel_jobs+=("yarn run test")
+          fi
+          if [ "$RUN_NODE_BUILD" = "true" ]; then
+            parallel_jobs+=("yarn run build")
+          fi
+          if [ "$RUN_NODE_BUNDLE" = "true" ]; then
+            parallel_jobs+=("yarn run bundle:prod || yarn
+          fi
+
+          parallel --jobs $1 --lb --halt-on-error 2 --verbose ::: "${parallel_jobs[@]}"
         }
 
         # Define the python sequence of commands
         python_job() {
           set -e
           make develop
-          parallel --jobs $1 --lb --halt-on-error 2 --verbose ::: "'$RUN_PYTHON_LINT' != 'true' || make lint check-format" "'$RUN_PYTHON_TEST' != 'true' || make test" "'$RUN_PYTHON_BUILD' != 'true' || make build"
+
+          parallel_jobs=()
+          if [ "$RUN_PYTHON_LINT" = "true" ]; then
+            parallel_jobs+=("make lint check-format")
+          fi
+          if [ "$RUN_PYTHON_TEST" = "true" ]; then
+            parallel_jobs+=("make test")
+          fi
+          if [ "$RUN_PYTHON_BUILD" = "true" ]; then
+            parallel_jobs+=("make build")
+          fi
+
+          parallel --jobs $1 --lb --halt-on-error 2 --verbose ::: "${parallel_jobs[@]}"
         }
 
         # Export the functions so they can be used by GNU parallel
