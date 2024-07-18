@@ -15,6 +15,9 @@ inputs:
     description: "enables the pip cache download and upload"
     required: false
     default: true
+  run_install:
+    default: true
+    required: false
   run_lint:
     default: true
     required: false
@@ -50,20 +53,22 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
     - name: Install python dependencies
+      if: inputs.run_install == 'true'
       run: make develop
       shell: bash
     - name: Show installed pip packages
+      if: inputs.run_install == 'true'
       run: pip list || true
       shell: bash
     - name: Linting
-      if: inputs.run_lint == 'true'
+      if: inputs.run_install == 'true' && inputs.run_lint == 'true'
       run: make lint check-format
       shell: bash
     - name: Run tests
-      if: inputs.run_test == 'true'
+      if: inputs.run_install == 'true' && inputs.run_test == 'true'
       run: make test
       shell: bash
     - name: Build wheel
-      if: inputs.run_build == 'true'
+      if: inputs.run_install == 'true' && inputs.run_build == 'true'
       run: make build
       shell: bash

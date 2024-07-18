@@ -27,6 +27,9 @@ inputs:
     description: "uploads the node-yarn-lock artifact"
     required: false
     default: true
+  run_install:
+    default: true
+    required: false
   run_dist:
     default: true
     required: false
@@ -76,7 +79,7 @@ runs:
     # Enable yarn download cache, @see https://github.com/actions/cache/tree/main/save#always-save-cache and https://github.com/actions/setup-node/issues/325
     - name: Restore yarn cache
       uses: actions/cache/restore@v3
-      if: inputs.enable_cache == 'true'
+      if: inputs.run_install == 'true' && inputs.enable_cache == 'true'
       with:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
         path: ~/.yarn/berry/cache/
@@ -84,6 +87,7 @@ runs:
         restore-keys: |
           yarn-download-cache-
     - name: Install dependencies
+      if: inputs.run_install == 'true'
       id: install
       run: yarn install --no-immutable --inline-builds
       shell: bash
@@ -94,20 +98,20 @@ runs:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
         path: ~/.yarn/berry/cache/
         key: yarn-download-cache-${{ hashFiles('package.json') }}
-    - name: Show installed dependencies
-      run: yarn info --name-only
-      shell: bash
+    # - name: Show installed dependencies
+    #   run: yarn info --name-only
+    #   shell: bash
     - name: Build
-      if: inputs.run_dist == 'true'
+      if: inputs.run_install == 'true' && inputs.run_dist == 'true'
       run: npm run dist
       shell: bash
     - uses: actions/upload-artifact@v3
-      if: inputs.upload_yarn_lock == 'true'
+      if: inputs.run_install == 'true' && inputs.upload_yarn_lock == 'true'
       with:
         name: node-yarn-lock
         path: ./yarn.lock
     - name: Webpack build
-      if: inputs.run_webpack == 'true'
+      if: inputs.run_install == 'true' && inputs.run_webpack == 'true'
       run: npm run bundle:prod || npm run webpack:prod
       shell: bash
     - uses: actions/upload-artifact@v3
@@ -116,7 +120,7 @@ runs:
         name: node-bundle
         path: ./bundles
     - name: Run Chromatic
-      if: inputs.chromatic_enable == 'true'
+      if: inputs.run_install == 'true' && inputs.chromatic_enable == 'true'
       uses: chromaui/action@v11.5.4
       with:
         projectToken: ${{ inputs.chromatic_project_token }}
