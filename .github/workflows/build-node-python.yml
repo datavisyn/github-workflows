@@ -121,7 +121,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    runs-on: ${{ inputs.runs_on || "ubuntu-22.04" }}
+    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
     steps:
       - name: Checkout source repository
         uses: actions/checkout@v4
