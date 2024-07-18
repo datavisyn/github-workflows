@@ -372,10 +372,7 @@ jobs:
       - name: Build node and python in parallel
         if: ${{ inputs.run_parallel }}
         run: |
-          parallel --halt-on-error 2 --verbose ::: << EOF
-          yarn install --no-immutable --inline-builds
-          make develop \
-          EOF
+          parallel --lb --halt-on-error 2 --verbose ::: 'yarn install --no-immutable --inline-builds' 'make develop'
         shell: bash
       - name: Decrypt .env.enc and <app>/.env.enc
         run: |
