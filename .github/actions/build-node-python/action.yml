@@ -156,14 +156,14 @@ runs:
         node_job() {
           set -e
           yarn install --no-immutable --inline-builds
-          parallel --jobs $1 --lb --halt-on-error 2 --verbose ::: "$RUN_NODE_LINT != 'true' || yarn run lint" "$RUN_NODE_TEST != 'true' || yarn run test" "$RUN_NODE_BUILD != 'true' || yarn run build" "$RUN_NODE_BUNDLE != 'true' || yarn run bundle:prod || yarn run webpack:prod"
+          parallel --jobs $1 --lb --halt-on-error 2 --verbose ::: "'$RUN_NODE_LINT' != 'true' || yarn run lint" "'$RUN_NODE_TEST' != 'true' || yarn run test" "'$RUN_NODE_BUILD' != 'true' || yarn run build" "'$RUN_NODE_BUNDLE' != 'true' || yarn run bundle:prod || yarn run webpack:prod"
         }
 
         # Define the python sequence of commands
         python_job() {
           set -e
           make develop
-          parallel --jobs $1 --lb --halt-on-error 2 --verbose ::: "$RUN_PYTHON_LINT != 'true' || make lint check-format" "$RUN_PYTHON_TEST != 'true' || make test"
+          parallel --jobs $1 --lb --halt-on-error 2 --verbose ::: "'$RUN_PYTHON_LINT' != 'true' || make lint check-format" "'$RUN_PYTHON_TEST' != 'true' || make test" "'$RUN_PYTHON_BUILD' != 'true' || make build"
         }
 
         # Export the functions so they can be used by GNU parallel
