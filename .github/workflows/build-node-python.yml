@@ -384,8 +384,8 @@ jobs:
           python_job() {
             set -e
             make develop
-            make env_decrypt || true
             parallel --lb --halt-on-error 2 --verbose ::: "make lint check-format" "make test"
+            make env_decrypt || true
           }
 
           # Export the functions so they can be used by GNU parallel
