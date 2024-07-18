@@ -144,6 +144,8 @@ runs:
       # if: ${{ inputs.run_parallel }}
       id: build
       run: |
+        # Run node and python in parallel
+
         # If RUN_PARALLEL is set, set --jobs to 0, otherwise to 1
         JOBS=1
         if [ "$RUN_PARALLEL" = "true" ]; then
