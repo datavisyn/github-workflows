@@ -373,12 +373,11 @@ jobs:
         if: ${{ inputs.run_parallel }}
         run: |
           parallel --lb --halt-on-error 2 --verbose ::: \
-            'yarn install --no-immutable --inline-builds && yarn run dist && (yarn run env:decrypt -pass env:ENV_PASSWORD || true) && (yarn run bundle:prod || yarn run webpack:prod)' \
+            'yarn install --no-immutable --inline-builds && yarn run dist && (yarn run env:decrypt -pass env:ENV_PASSWORD || true) && (yarn run bundle:prod || yarn run webpack:prod) && yarn playwright install --with-deps chromium' \
             'make develop && make lint check-format && make test && make env_decrypt || true'
         shell: bash
-      - name: Install playwright browsers
-        run: yarn playwright install --with-deps chromium
-        shell: bash
+        env:
+          ENV_PASSWORD: ${{ secrets.ENV_PASSWORD }}
       - name: Run playwright e2e tests
         run: yarn run pw:run ${{ inputs.playwright_spec_param }}
         shell: bash
