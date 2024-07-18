@@ -372,9 +372,27 @@ jobs:
       - name: Build node and python in parallel
         if: ${{ inputs.run_parallel }}
         run: |
-          parallel --lb --halt-on-error 2 --verbose ::: \
-            'yarn install --no-immutable --inline-builds && yarn run dist && (yarn run env:decrypt -pass env:ENV_PASSWORD || true) && (yarn run bundle:prod || yarn run webpack:prod) && yarn playwright install --with-deps chromium' \
-            'make develop && make lint check-format && make test && make env_decrypt || true'
+          # Define the node sequence of commands
+          node_job() {
+            set -e
+            yarn install --no-immutable --inline-builds
+            yarn run env:decrypt -pass env:ENV_PASSWORD || true
+            parallel --lb --halt-on-error 2 --verbose ::: "yarn run dist" "yarn run bundle:prod || yarn run webpack:prod" "yarn playwright install --with-deps chromium"
+          }
+
+          # Define the python sequence of commands
+          python_job() {
+            set -e
+            make develop
+            parallel --lb --halt-on-error 2 --verbose ::: "make lint check-format" "make test" "make env_decrypt || true"
+          }
+
+          # Export the functions so they can be used by GNU parallel
+          export -f node_job
+          export -f python_job
+
+          # Run both sequences in parallel
+          parallel --lb --halt-on-error 2 --verbose ::: node_job python_job
         shell: bash
         env:
           ENV_PASSWORD: ${{ secrets.ENV_PASSWORD }}
