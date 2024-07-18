@@ -377,7 +377,8 @@ jobs:
             set -e
             yarn install --no-immutable --inline-builds
             yarn run env:decrypt -pass env:ENV_PASSWORD || true
-            parallel --lb --halt-on-error 2 --verbose ::: "yarn run dist" "yarn run bundle:prod || yarn run webpack:prod" "yarn playwright install --with-deps chromium"
+            parallel --lb --halt-on-error 2 --verbose ::: "yarn run lint" "yarn run test" "yarn run build" "yarn run bundle:prod || yarn run webpack:prod" "yarn playwright install --with-deps chromium"
+            yarn run dist
           }
 
           # Define the python sequence of commands
