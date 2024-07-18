@@ -168,7 +168,7 @@ runs:
             parallel_jobs+=("yarn run build")
           fi
           if [ "$RUN_NODE_BUNDLE" = "true" ]; then
-            parallel_jobs+=("yarn run bundle:prod || yarn
+            parallel_jobs+=("yarn run bundle:prod || yarn run webpack:prod")
           fi
 
           parallel --jobs $1 --lb --halt-on-error 2 --verbose ::: "${parallel_jobs[@]}"
