@@ -242,7 +242,7 @@ jobs:
           touch ./yarn.lock
           yarn install --no-immutable
           yarn info --name-only
-          npm run dist
+          yarn run dist
         env:
           COMPONENT: ${{ inputs.component }}
           COMPONENT_DIRECTORY: ${{ steps.get-parameters.outputs.directory }}

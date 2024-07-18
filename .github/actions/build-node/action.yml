@@ -103,7 +103,7 @@ runs:
     #   shell: bash
     - name: Build
       if: inputs.run_install == 'true' && inputs.run_dist == 'true'
-      run: npm run dist
+      run: yarn run lint && yarn run test && yarn run build
       shell: bash
     - uses: actions/upload-artifact@v3
       if: inputs.run_install == 'true' && inputs.upload_yarn_lock == 'true'
@@ -112,7 +112,7 @@ runs:
         path: ./yarn.lock
     - name: Webpack build
       if: inputs.run_install == 'true' && inputs.run_webpack == 'true'
-      run: npm run bundle:prod || npm run webpack:prod
+      run: yarn run bundle:prod || yarn run webpack:prod
       shell: bash
     - uses: actions/upload-artifact@v3
       if: inputs.run_webpack == 'true'

@@ -1,0 +1,205 @@
+name: build-node-python
+description: Build node sources via yarn and python via make
+author: datavisyn
+
+inputs:
+  github_ro_token:
+    description: "github read-only token"
+    default: "admin"
+    required: true
+  run_parallel:
+    description: "enables parallel running of node and python tasks"
+    default: true
+    required: true
+  # Node
+  enable_node:
+    description: "enables the node part of the action"
+    default: true
+    required: true
+  node_version:
+    description: "node version to use"
+    default: "20.9"
+    required: true
+  npm_registry:
+    description: "npm registry"
+    default: "https://registry.npmjs.org/"
+    required: true
+  enable_node_cache:
+    description: "enables the yarn cache download and upload"
+    required: false
+    default: true
+  download_yarn_lock:
+    description: "downloads the node-yarn-lock artifact (only available when build-node was called before)"
+    required: false
+    default: false
+  upload_yarn_lock:
+    description: "uploads the node-yarn-lock artifact"
+    required: false
+    default: true
+  run_node_lint:
+    default: true
+    required: false
+  run_node_test:
+    default: true
+    required: false
+  run_node_build:
+    default: true
+    required: false
+  run_node_bundle:
+    default: false
+    required: false
+  chromatic_enable:
+    description: 'Enable Chromatic tests'
+    required: false
+    type: boolean
+    default: false
+  chromatic_project_token:
+    description: 'Chromatic project token'
+    required: false
+  # Python
+  enable_python:
+    description: "enables the python part of the action"
+    default: true
+    required: true
+  python_version:
+    description: "python version to use"
+    default: "3.10"
+    required: true
+  enable_python_cache:
+    description: "enables the pip cache download and upload"
+    required: false
+    default: true
+  run_python_lint:
+    default: true
+    required: false
+  run_python_test:
+    default: true
+    required: false
+  run_python_build:
+    default: true
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    # Node
+    - name: Set up node version
+      uses: actions/setup-node@v3
+      if: inputs.enable_node == 'true'
+      with:
+        node-version: ${{ inputs.node_version }}
+        registry-url: ${{ inputs.npm_registry }}
+    - name: Show node and npm version
+      if: inputs.enable_node == 'true'
+      run: |
+        corepack enable
+        node -v
+        npm -v
+      shell: bash
+    # Python
+    - name: Set up python
+      uses: actions/setup-python@v5
+      if: inputs.enable_python == 'true'
+      with:
+        python-version: ${{ inputs.python_version }}
+        cache: ${{ inputs.enable_python_cache == 'true' && 'pip' || null }}
+    - name: Install additional python requirements
+      if: inputs.enable_python == 'true'
+      run: |
+        pip install setuptools wheel
+        python --version
+        pip --version
+      shell: bash
+    # General
+    - name: Git config
+      if: inputs.github_ro_token != ''
+      run: |
+        if [ -f ~/.gitconfig ]; then
+          rm ~/.gitconfig
+          touch ~/.gitconfig
+        fi
+        git config --global --replace-all url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
+        git config --add --global url."https://$GITHUB_TOKEN@github".insteadOf https://github
+        git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_ro_token }}
+      shell: bash
+    - uses: actions/download-artifact@v3
+      # TODO: Remove the variable whenever we can ensure that build-node was called before
+      if: inputs.enable_node == 'true' && inputs.download_yarn_lock == 'true'
+      with:
+        name: node-yarn-lock
+    # Enable yarn download cache, @see https://github.com/actions/cache/tree/main/save#always-save-cache and https://github.com/actions/setup-node/issues/325
+    - name: Restore yarn cache
+      uses: actions/cache/restore@v3
+      if: inputs.enable_node == 'true' && inputs.enable_node_cache == 'true'
+      with:
+        # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
+        path: ~/.yarn/berry/cache/
+        key: yarn-download-cache-${{ hashFiles('package.json') }}
+        restore-keys: |
+          yarn-download-cache-
+    # Parallel build
+    - name: Build node and python in parallel
+      # if: ${{ inputs.run_parallel }}
+      id: build
+      run: |
+        # Define the node sequence of commands
+        node_job() {
+          set -e
+          yarn install --no-immutable --inline-builds
+          parallel --lb --halt-on-error 2 --verbose ::: "$RUN_NODE_LINT != 'true' || yarn run lint" "$RUN_NODE_TEST != 'true' || yarn run test" "$RUN_NODE_BUILD != 'true' || yarn run build" "$RUN_NODE_BUNDLE != 'true' || yarn run bundle:prod || yarn run webpack:prod"
+        }
+
+        # Define the python sequence of commands
+        python_job() {
+          set -e
+          make develop
+          parallel --lb --halt-on-error 2 --verbose ::: "$RUN_PYTHON_LINT != 'true' || make lint check-format" "$RUN_PYTHON_TEST != 'true' || make test"
+        }
+
+        # Export the functions so they can be used by GNU parallel
+        export -f node_job
+        export -f python_job
+
+        # If run parallel, run both sequences in parallel
+        if [ "$RUN_PARALLEL" = "true" ]; then
+          parallel --lb --halt-on-error 2 --verbose ::: node_job python_job
+        else
+          node_job
+          python_job
+        fi
+      shell: bash
+      env:
+        RUN_PARALLEL: ${{ inputs.run_parallel }}
+        RUN_NODE_LINT: ${{ inputs.run_node_lint }}
+        RUN_NODE_TEST: ${{ inputs.run_node_test }}
+        RUN_NODE_BUILD: ${{ inputs.run_node_build }}
+        RUN_NODE_BUNDLE: ${{ inputs.run_node_bundle }}
+        RUN_PYTHON_LINT: ${{ inputs.run_python_lint }}
+        RUN_PYTHON_TEST: ${{ inputs.run_python_test }}
+        RUN_PYTHON_BUILD: ${{ inputs.run_python_build }}
+    # Node
+    - name: Save yarn cache
+      uses: actions/cache/save@v3
+      if: inputs.enable_node == 'true' && steps.build.outcome == 'success' && inputs.enable_node_cache == 'true'
+      with:
+        # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
+        path: ~/.yarn/berry/cache/
+        key: yarn-download-cache-${{ hashFiles('package.json') }}
+    - uses: actions/upload-artifact@v3
+      if: inputs.enable_node == 'true' && inputs.upload_yarn_lock == 'true'
+      with:
+        name: node-yarn-lock
+        path: ./yarn.lock
+    - uses: actions/upload-artifact@v3
+      if: inputs.enable_node == 'true' && inputs.run_node_bundle == 'true'
+      with:
+        name: node-bundle
+        path: ./bundles
+    # Chromatic
+    - name: Run Chromatic
+      if: inputs.enable_node == 'true' && inputs.chromatic_enable == 'true'
+      uses: chromaui/action@v11.5.4
+      with:
+        projectToken: ${{ inputs.chromatic_project_token }}

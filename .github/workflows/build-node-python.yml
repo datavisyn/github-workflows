@@ -112,7 +112,7 @@ permissions:
   id-token: write
 
 jobs:
-  build-node:
+  build-node-python:
     name: Node
     if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
     concurrency:
@@ -135,42 +135,19 @@ jobs:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
-      - name: Build node
-        uses: ./tmp/github-workflows/.github/actions/build-node
+      - name: Build node and python
+        uses: ./tmp/github-workflows/.github/actions/build-node-python
         with:
+          run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
+          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
-          run_webpack: ${{ inputs.node_run_webpack }}
-          enable_cache: ${{ inputs.runs_on != 'self-hosted' }}
+          run_bundle: ${{ inputs.node_run_webpack }}
+          enable_node_cache: ${{ inputs.runs_on != 'self-hosted' }}
+          enable_python_cache: ${{ inputs.runs_on != 'self-hosted' }}
           chromatic_enable: ${{ inputs.chromatic_enable }}
           chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-
-  build-python:
-    name: Python
-    if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
-    concurrency:
-      group: "python-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
-      cancel-in-progress: true
-    runs-on: ${{ inputs.runs_on }}
-    steps:
-      - name: Checkout source repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
-          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
-      - name: Checkout github-workflows
-        uses: actions/checkout@v4
-        with:
-          repository: datavisyn/github-workflows
-          ref: ${{ env.WORKFLOW_BRANCH }}
-          path: ./tmp/github-workflows
-      - name: Build python
-        uses: ./tmp/github-workflows/.github/actions/build-python
-        with:
-          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
-          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-          enable_cache: ${{ inputs.runs_on != 'self-hosted' }}
 
   # If cypress is used, build node and python sequentially as it is avoiding the duplicate install overhead
   build-node-python-cypress:
@@ -229,22 +206,19 @@ jobs:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
-      - name: Build node
-        uses: ./tmp/github-workflows/.github/actions/build-node
+      - name: Build node and python
+        uses: ./tmp/github-workflows/.github/actions/build-node-python
         with:
+          run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
+          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
-          run_webpack: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
-          enable_cache: ${{ inputs.cypress_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
+          run_bundle: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
+          enable_node_cache: ${{ inputs.cypress_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
+          enable_python_cache: ${{ inputs.cypress_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
           chromatic_enable: ${{ inputs.chromatic_enable }}
           chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-      - name: Build python
-        uses: ./tmp/github-workflows/.github/actions/build-python
-        with:
-          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
-          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-          enable_cache: ${{ inputs.cypress_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
       - name: Decrypt .env.enc and <app>/.env.enc
         run: |
           yarn run env:decrypt -pass env:ENV_PASSWORD || true
@@ -252,7 +226,7 @@ jobs:
         env:
           ENV_PASSWORD: ${{ secrets.ENV_PASSWORD }}
       - name: Bundle build
-        run: npm run bundle:prod || npm run webpack:dev
+        run: yarn run bundle:prod || yarn run webpack:dev
         shell: bash
       - name: Run cypress e2e tests
         uses: cypress-io/github-action@v6
@@ -351,53 +325,29 @@ jobs:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
-      - name: Build node
-        uses: ./tmp/github-workflows/.github/actions/build-node
+      - name: Build node and python
+        uses: ./tmp/github-workflows/.github/actions/build-node-python
         with:
+          run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
+          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
-          run_install: ${{ !inputs.run_parallel }}
-          run_webpack: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
-          enable_cache: false # ${{ inputs.playwright_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
+          run_bundle: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
+          enable_node_cache: ${{ inputs.cypress_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
+          enable_python_cache: ${{ inputs.cypress_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
           chromatic_enable: ${{ inputs.chromatic_enable }}
           chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-      - name: Build python
-        uses: ./tmp/github-workflows/.github/actions/build-python
-        with:
-          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
-          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-          run_install: ${{ !inputs.run_parallel }}
-          enable_cache: false # ${{ inputs.playwright_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
-      - name: Build node and python in parallel
-        if: ${{ inputs.run_parallel }}
+      - name: Decrypt .env.enc and <app>/.env.enc
         run: |
-          # Define the node sequence of commands
-          node_job() {
-            set -e
-            yarn install --no-immutable --inline-builds
-            parallel --lb --halt-on-error 2 --verbose ::: "yarn run lint" "yarn run test" "yarn run build" "yarn run bundle:prod || yarn run webpack:prod" "yarn playwright install --with-deps chromium"
-            yarn run dist
-            yarn run env:decrypt -pass env:ENV_PASSWORD || true
-          }
-
-          # Define the python sequence of commands
-          python_job() {
-            set -e
-            make develop
-            parallel --lb --halt-on-error 2 --verbose ::: "make lint check-format" "make test"
-            make env_decrypt || true
-          }
-
-          # Export the functions so they can be used by GNU parallel
-          export -f node_job
-          export -f python_job
-
-          # Run both sequences in parallel
-          parallel --lb --halt-on-error 2 --verbose ::: node_job python_job
-        shell: bash
+          yarn run env:decrypt -pass env:ENV_PASSWORD || true
+          make env_decrypt || true
         env:
           ENV_PASSWORD: ${{ secrets.ENV_PASSWORD }}
+      - name: Install playwright browsers
+        # TODO: Maybe put it into the parallel action from above
+        run: yarn playwright install --with-deps chromium
+        shell: bash
       - name: Run playwright e2e tests
         run: yarn run pw:run ${{ inputs.playwright_spec_param }}
         shell: bash

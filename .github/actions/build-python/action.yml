@@ -11,20 +11,20 @@ inputs:
     description: "github read-only token"
     default: "admin"
     required: true
-  enable_cache:
+  enable_python_cache:
     description: "enables the pip cache download and upload"
     required: false
     default: true
-  run_install:
+  run_python_install:
     default: true
     required: false
-  run_lint:
+  run_python_lint:
     default: true
     required: false
-  run_test:
+  run_python_test:
     default: true
     required: false
-  run_build:
+  run_python_build:
     default: true
     required: false
 
@@ -35,7 +35,7 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python_version }}
-        cache: ${{ inputs.enable_cache == 'true' && 'pip' || null }}
+        cache: ${{ inputs.enable_python_cache == 'true' && 'pip' || null }}
     # needs wheel for make
     - name: install additional requirements
       run: |
@@ -53,22 +53,22 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
     - name: Install python dependencies
-      if: inputs.run_install == 'true'
+      if: inputs.run_python_install == 'true'
       run: make develop
       shell: bash
     - name: Show installed pip packages
-      if: inputs.run_install == 'true'
+      if: inputs.run_python_install == 'true'
       run: pip list || true
       shell: bash
     - name: Linting
-      if: inputs.run_install == 'true' && inputs.run_lint == 'true'
+      if: inputs.run_python_install == 'true' && inputs.run_python_lint == 'true'
       run: make lint check-format
       shell: bash
     - name: Run tests
-      if: inputs.run_install == 'true' && inputs.run_test == 'true'
+      if: inputs.run_python_install == 'true' && inputs.run_python_test == 'true'
       run: make test
       shell: bash
     - name: Build wheel
-      if: inputs.run_install == 'true' && inputs.run_build == 'true'
+      if: inputs.run_python_install == 'true' && inputs.run_python_build == 'true'
       run: make build
       shell: bash
