@@ -144,31 +144,31 @@ runs:
       # if: ${{ inputs.run_parallel }}
       id: build
       run: |
+        # If RUN_PARALLEL is set, set --jobs to 0, otherwise to 1
+        JOBS=1
+        if [ "$RUN_PARALLEL" = "true" ]; then
+          JOBS=0
+        fi
+
         # Define the node sequence of commands
         node_job() {
           set -e
           yarn install --no-immutable --inline-builds
-          parallel --lb --halt-on-error 2 --verbose ::: "$RUN_NODE_LINT != 'true' || yarn run lint" "$RUN_NODE_TEST != 'true' || yarn run test" "$RUN_NODE_BUILD != 'true' || yarn run build" "$RUN_NODE_BUNDLE != 'true' || yarn run bundle:prod || yarn run webpack:prod"
+          parallel --jobs $JOBS --lb --halt-on-error 2 --verbose ::: "$RUN_NODE_LINT != 'true' || yarn run lint" "$RUN_NODE_TEST != 'true' || yarn run test" "$RUN_NODE_BUILD != 'true' || yarn run build" "$RUN_NODE_BUNDLE != 'true' || yarn run bundle:prod || yarn run webpack:prod"
         }
 
         # Define the python sequence of commands
         python_job() {
           set -e
           make develop
-          parallel --lb --halt-on-error 2 --verbose ::: "$RUN_PYTHON_LINT != 'true' || make lint check-format" "$RUN_PYTHON_TEST != 'true' || make test"
+          parallel --jobs $JOBS --lb --halt-on-error 2 --verbose ::: "$RUN_PYTHON_LINT != 'true' || make lint check-format" "$RUN_PYTHON_TEST != 'true' || make test"
         }
 
         # Export the functions so they can be used by GNU parallel
         export -f node_job
         export -f python_job
 
-        # If run parallel, run both sequences in parallel
-        if [ "$RUN_PARALLEL" = "true" ]; then
-          parallel --lb --halt-on-error 2 --verbose ::: node_job python_job
-        else
-          node_job
-          python_job
-        fi
+        parallel --jobs $JOBS --lb --halt-on-error 2 --verbose ::: node_job python_job
       shell: bash
       env:
         RUN_PARALLEL: ${{ inputs.run_parallel }}

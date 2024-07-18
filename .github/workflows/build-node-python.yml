@@ -113,7 +113,7 @@ permissions:
 
 jobs:
   build-node-python:
-    name: Node
+    name: Node and Python
     if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
     concurrency:
       group: "node-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
@@ -121,7 +121,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    runs-on: ${{ inputs.runs_on }}
+    runs-on: ${{ inputs.runs_on || "ubuntu-22.04" }}
     steps:
       - name: Checkout source repository
         uses: actions/checkout@v4
@@ -143,7 +143,7 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
-          run_bundle: ${{ inputs.node_run_webpack }}
+          run_node_bundle: ${{ inputs.node_run_webpack }}
           enable_node_cache: ${{ inputs.runs_on != 'self-hosted' }}
           enable_python_cache: ${{ inputs.runs_on != 'self-hosted' }}
           chromatic_enable: ${{ inputs.chromatic_enable }}
@@ -159,7 +159,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    runs-on: ${{ inputs.cypress_runs_on || inputs.runs_on }}
+    runs-on: ${{ inputs.cypress_runs_on || inputs.runs_on || 'ubuntu-22.04-large' }}
 
     services:
       postgres:
@@ -214,7 +214,7 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
-          run_bundle: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
+          run_node_bundle: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
           enable_node_cache: ${{ inputs.cypress_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
           enable_python_cache: ${{ inputs.cypress_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
           chromatic_enable: ${{ inputs.chromatic_enable }}
@@ -278,7 +278,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    runs-on: ${{ inputs.playwright_runs_on || inputs.runs_on }}
+    runs-on: ${{ inputs.playwright_runs_on || inputs.runs_on || 'ubuntu-22.04-large' }}
 
     services:
       postgres:
@@ -333,7 +333,7 @@ jobs:
           npm_registry: ${{ env.NPM_REGISTRY }}
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
-          run_bundle: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
+          run_node_bundle: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
           enable_node_cache: ${{ inputs.cypress_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
           enable_python_cache: ${{ inputs.cypress_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
           chromatic_enable: ${{ inputs.chromatic_enable }}
