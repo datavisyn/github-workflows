@@ -39,6 +39,9 @@ inputs:
   run_node_lint:
     default: true
     required: false
+  run_playwright_browser_install:
+    default: false
+    required: false
   run_node_test:
     default: true
     required: false
@@ -147,9 +150,9 @@ runs:
         # Run node and python in parallel
 
         # If RUN_PARALLEL is set, set --jobs to 0, otherwise to 1
-        JOBS=1
+        N_JOBS=1
         if [ "$RUN_PARALLEL" = "true" ]; then
-          JOBS=0
+          N_JOBS=0
         fi
 
         # Define the node sequence of commands
@@ -169,6 +172,9 @@ runs:
           fi
           if [ "$RUN_NODE_BUNDLE" = "true" ]; then
             parallel_jobs+=("yarn run bundle:prod || yarn run webpack:prod")
+          fi
+          if [ "$RUN_PLAYWRIGHT_BROWSER_INSTALL" = "true" ]; then
+            parallel_jobs+=("yarn playwright install --with-deps chromium")
           fi
 
           parallel --jobs $1 --lb --halt-on-error 2 --verbose ::: "${parallel_jobs[@]}"
@@ -197,10 +203,11 @@ runs:
         export -f node_job
         export -f python_job
 
-        parallel --jobs $JOBS --lb --halt-on-error 2 --verbose ::: "node_job $JOBS" "python_job $JOBS"
+        parallel --jobs $N_JOBS --lb --halt-on-error 2 --verbose ::: "node_job $N_JOBS" "python_job $N_JOBS"
       shell: bash
       env:
         RUN_PARALLEL: ${{ inputs.run_parallel }}
+        RUN_PLAYWRIGHT_BROWSER_INSTALL: ${{ inputs.run_playwright_browser_install }}
         RUN_NODE_LINT: ${{ inputs.run_node_lint }}
         RUN_NODE_TEST: ${{ inputs.run_node_test }}
         RUN_NODE_BUILD: ${{ inputs.run_node_build }}
