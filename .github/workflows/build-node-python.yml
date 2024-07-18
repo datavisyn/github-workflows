@@ -370,7 +370,7 @@ jobs:
           run_install: ${{ !inputs.run_parallel }}
           enable_cache: false # ${{ inputs.playwright_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
       - name: Build node and python in parallel
-        if: inputs.run_parallel == 'true'
+        if: ${{ inputs.run_parallel }}
         run: |
           parallel --halt-on-error 2 --verbose ::: << EOF
           yarn install --no-immutable --inline-builds
