@@ -7,6 +7,10 @@ on:
         type: string
         required: false
         default: ${{ github.ref || github.head_ref }}
+      runs_on:
+        type: string
+        required: false
+        default: "ubuntu-22.04"
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -17,6 +21,7 @@ env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "test"
   PYTHON_VERSION: "3.10"
+  WORKFLOW_BRANCH: "main"
 
 permissions:
   contents: read
@@ -34,19 +39,24 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    runs-on: ubuntu-22.04
+    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
     steps:
-      # checkout specific source repository
-      - uses: actions/checkout@v3
+      - name: Checkout source repository
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
-      # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
+          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
+      - name: Checkout github-workflows
+        uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
-      - uses: ./tmp/github-workflows/.github/actions/build-python
+      - name: Build python
+        uses: ./tmp/github-workflows/.github/actions/build-node-python
         with:
+          enable_node: false
+          enable_python: true
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
-          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          enable_python_cache: ${{ inputs.runs_on != 'self-hosted' }}
