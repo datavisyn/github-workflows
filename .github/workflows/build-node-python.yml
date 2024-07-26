@@ -112,8 +112,8 @@ permissions:
   id-token: write
 
 jobs:
-  build-node-python:
-    name: Node, Python
+  build-node:
+    name: Node
     if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
     concurrency:
       group: "node-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
@@ -135,9 +135,11 @@ jobs:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
-      - name: Build node and python
+      - name: Build node
         uses: ./tmp/github-workflows/.github/actions/build-node-python
         with:
+          enable_node: true
+          enable_python: false
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
@@ -148,6 +150,42 @@ jobs:
           enable_python_cache: ${{ inputs.runs_on != 'self-hosted' }}
           chromatic_enable: ${{ inputs.chromatic_enable }}
           chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+
+  build-python:
+    name: Python
+    if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
+    concurrency:
+      group: "node-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      cancel-in-progress: true
+    permissions:
+      id-token: write
+      contents: write
+    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
+      - name: Checkout github-workflows
+        uses: actions/checkout@v4
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+      - name: Build python
+        uses: ./tmp/github-workflows/.github/actions/build-node-python
+        with:
+          enable_node: false
+          enable_python: true
+          run_parallel: ${{ inputs.run_parallel }}
+          node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
+          npm_registry: ${{ env.NPM_REGISTRY }}
+          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
+          run_node_bundle: ${{ inputs.node_run_webpack }}
+          enable_node_cache: ${{ inputs.runs_on != 'self-hosted' }}
+          enable_python_cache: ${{ inputs.runs_on != 'self-hosted' }}
 
   # If cypress is used, build node and python sequentially as it is avoiding the duplicate install overhead
   build-node-python-cypress:

@@ -144,16 +144,9 @@ runs:
           yarn-download-cache-
     # Parallel build
     - name: Build node and python in parallel
-      # if: ${{ inputs.run_parallel }}
       id: build
       run: |
         # Run node and python in parallel
-
-        # If RUN_PARALLEL is set, set --jobs to 0, otherwise to 1
-        N_JOBS=1
-        if [ "$RUN_PARALLEL" = "true" ]; then
-          N_JOBS=0
-        fi
 
         # Define the node sequence of commands
         node_job() {
@@ -202,6 +195,12 @@ runs:
         # Export the functions so they can be used by GNU parallel
         export -f node_job
         export -f python_job
+
+        # If RUN_PARALLEL is set, set --jobs to 0, otherwise to 1
+        N_JOBS=1
+        if [ "$RUN_PARALLEL" = "true" ]; then
+          N_JOBS=0
+        fi
 
         parallel --jobs $N_JOBS --lb --halt-on-error 2 --verbose ::: "node_job $N_JOBS" "python_job $N_JOBS"
       shell: bash
