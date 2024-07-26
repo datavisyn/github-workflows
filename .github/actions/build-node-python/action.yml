@@ -202,10 +202,20 @@ runs:
           N_JOBS=0
         fi
 
-        parallel --jobs $N_JOBS --lb --halt-on-error 2 --verbose ::: "node_job $N_JOBS" "python_job $N_JOBS"
+        final_jobs=()
+        if [ "$RUN_NODE" = "true" ]; then
+          final_jobs+=("node_job $N_JOBS")
+        fi
+        if [ "$RUN_PYTHON" = "true" ]; then
+          final_jobs+=("python_job $N_JOBS")
+        fi
+
+        parallel --jobs $N_JOBS --lb --halt-on-error 2 --verbose ::: "${final_jobs[@]}"
       shell: bash
       env:
         RUN_PARALLEL: ${{ inputs.run_parallel }}
+        RUN_NODE: ${{ inputs.enable_node }}
+        RUN_PYTHON: ${{ inputs.enable_python }}
         RUN_PLAYWRIGHT_BROWSER_INSTALL: ${{ inputs.run_playwright_browser_install }}
         RUN_NODE_LINT: ${{ inputs.run_node_lint }}
         RUN_NODE_TEST: ${{ inputs.run_node_test }}
