@@ -33,7 +33,7 @@ jobs:
       - name: checkout repository
         uses: actions/checkout@v3
         with:
-          token: ${{ github.token }}
+          token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       # checkout this workflow repository to get actions
       - name: checkout github-workflows repository
         uses: actions/checkout@v3
