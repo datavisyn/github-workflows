@@ -49,8 +49,10 @@ jobs:
           dv_devops: ${{ vars.DV_DEVOPS }}
           actor: ${{ github.actor }}
           qms_are_allowed: "false"
-      - uses: ./tmp/github-workflows/.github/actions/build-node
+      - uses: ./tmp/github-workflows/.github/actions/build-node-python
         with:
+          enable_node: true
+          enable_python: false
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
