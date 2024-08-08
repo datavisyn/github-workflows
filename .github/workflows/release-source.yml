@@ -2,8 +2,8 @@ name: release-source
 
 on:
   workflow_call:
-    
 
+    
 permissions:
   contents: write
   pull-requests: write
@@ -121,13 +121,11 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "<>"
           git checkout -b release-"$RELEASE_VERSION"
-          git push origin release-"$RELEASE_VERSION"
       - name: Update package.json
         run: |
           sed -i "s/^\(\s*\)\"version\".*/\1\"version\": \"$RELEASE_VERSION\",/" package.json
           git add package.json
           git commit -m "Update package.json version to $RELEASE_VERSION"
-          git push origin release-"$RELEASE_VERSION"
       - name: Add Helm repository
         run: helm repo add datavisyn https://chartmuseum.app.datavisyn.io --username ${{ env.CHARTMUSEUM_USER }} --password ${{ env.CHARTMUSEUM_PASSWORD }}
       - name: change charts and subcharts version
@@ -150,10 +148,8 @@ jobs:
                 helm dep update "$folder"/subcharts/*; \
             fi; \
           done
-          # commit and push changes
           git add .
           git commit -m "Update chart version to $RELEASE_VERSION"
-          git push origin release-"$RELEASE_VERSION"
       - name: update imageTag and repository_tag in values files
         if: ${{ github.repository  == 'datavisyn/reprovisyn' ||  github.repository == 'datavisyn/aelixir' }}
         run: |
@@ -183,10 +179,8 @@ jobs:
               helm dep update "$dir"
             fi
           done  
-          # commit and push changes
           git add .
           git commit -m "Update imageTag & repository_tag if exists in values files to v$RELEASE_VERSION"
-          git push origin release-"$RELEASE_VERSION"
         env:
           CHARTMUSEUM_PASSWORD: ${{ secrets.DV_CHARTMUSEUM_PASSWORD }}
       - name: update readme files
@@ -202,11 +196,11 @@ jobs:
           # update readme files
           cd deploy/helm
           helm-docs --document-dependency-values 
-          # commit and push changes
           git add .
           git commit -m "Update Helm documentation"
+      - name: push all changes
+        run: |
           git push origin release-"$RELEASE_VERSION"
-
       - name: get latest release date
         id: get-release-date
         run: |
@@ -252,7 +246,3 @@ jobs:
                   --arg base "main" \
                   --argjson draft false \
                   '{title: $title, body: $body, head: $head, base: $base, draft: $draft}')"
-
-        
-
-            
