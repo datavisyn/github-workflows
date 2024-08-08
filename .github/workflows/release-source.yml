@@ -3,7 +3,6 @@ name: release-source
 on:
   workflow_call:
 
-    
 permissions:
   contents: write
   pull-requests: write
