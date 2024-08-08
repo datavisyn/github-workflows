@@ -69,9 +69,9 @@ inputs:
     default: "3.10"
     required: true
   enable_python_cache:
-    description: "enables the pip cache download and upload"
+    description: "deprecated and disabled"
     required: false
-    default: true
+    default: false
   run_python_lint:
     default: true
     required: false
@@ -105,13 +105,14 @@ runs:
       if: inputs.enable_python == 'true'
       with:
         python-version: ${{ inputs.python_version }}
-        cache: ${{ inputs.enable_python_cache == 'true' && 'pip' || null }}
+        # cache: ${{ inputs.enable_python_cache == 'true' && 'pip' || null }} Disable cache as uv is probably faster anyways: https://github.com/actions/setup-python/issues/822
     - name: Install additional python requirements
       if: inputs.enable_python == 'true'
       run: |
-        pip install setuptools wheel
+        python -m pip install --upgrade pip uv
         python --version
         pip --version
+        uv --version
       shell: bash
     # General
     - name: Git config
