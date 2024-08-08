@@ -252,8 +252,7 @@ jobs:
         run: |
           cd "./tmp/$COMPONENT"
           ls -lah
-          python -m pip install --upgrade pip uv
-          uv pip install setuptools wheel
+          python -m pip install --upgrade pip uv setuptools wheel
           mkdir -p ./build/source
           mkdir -p ./dist_python/
           cd "$DEFAULT_APP"
