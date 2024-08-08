@@ -109,7 +109,8 @@ runs:
     - name: Install additional python requirements
       if: inputs.enable_python == 'true'
       run: |
-        python -m pip install --upgrade pip uv setuptools wheel
+        python -m pip install --upgrade pip uv
+        uv pip install setuptools wheel --system
         python --version
         pip --version
         uv --version

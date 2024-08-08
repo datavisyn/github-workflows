@@ -218,7 +218,8 @@ jobs:
         run: |
           cd "./tmp/$COMPONENT/$APP"
           ls -lah
-          python -m pip install --upgrade pip uv setuptools wheel
+          python -m pip install --upgrade pip uv
+          uv pip install setuptools wheel --system
           make install
           make build
         env:
