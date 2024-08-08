@@ -69,7 +69,7 @@ inputs:
     default: "3.10"
     required: true
   enable_python_cache:
-    description: "deprecated and disabled"
+    description: "deprecated and disabled as uv is usually faster anyways"
     required: false
     default: false
   run_python_lint:
