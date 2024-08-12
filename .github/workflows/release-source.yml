@@ -8,6 +8,10 @@ on:
         required: false
         type: boolean
         default: false
+      release_version:
+        type: string
+        description: 'The version to release'
+        required: false
 
 permissions:
   contents: write
