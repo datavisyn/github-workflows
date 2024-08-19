@@ -35,8 +35,10 @@ jobs:
     steps:
       - name: Validate required inputs
         run: |
-          [[ "${{ inputs.release_version }}" ]] || { echo "release_version input is empty" ; exit 1; }
-      
+          if [ -z "${{ inputs.release_version }}" ]; then
+            echo "release_version input is empty"
+            exit 1
+          fi
       - name: check branch
         if: ${{ github.ref_name != 'develop' }}
         run: |
