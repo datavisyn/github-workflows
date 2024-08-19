@@ -11,7 +11,7 @@ on:
       release_version:
         type: string
         description: 'The version to release'
-        required: false
+        required: true
 
 permissions:
   contents: write
@@ -56,12 +56,12 @@ jobs:
           dv_devops: ${{ vars.DV_DEVOPS }}
           actor: ${{ github.actor }}
           qms_are_allowed: "false"
-      - name: get release version from package.json
-        id: get-release-version
-        if: ${{ inputs.release_version == null }}
-        run: |
-          release_version="$(jq -r '.version' package.json | cut -d '-' -f 1)"
-          echo "RELEASE_VERSION=$release_version" >> "$GITHUB_ENV"
+      #- name: get release version from package.json
+      #  id: get-release-version
+      #  if: ${{ inputs.release_version == null }}
+      #  run: |
+      #    release_version="$(jq -r '.version' package.json | cut -d '-' -f 1)"
+      #    echo "RELEASE_VERSION=$release_version" >> "$GITHUB_ENV"
       - name: get release version from input
         id: get-release-version-from-input
         if: ${{ inputs.release_version != null }}
