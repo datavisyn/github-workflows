@@ -134,7 +134,6 @@ jobs:
         run: |
           sed -i "s/^\(\s*\)\"version\".*/\1\"version\": \"$RELEASE_VERSION\",/" package.json
           git add package.json
-          git commit -m "Update package.json version to $RELEASE_VERSION"
       - name: Add Helm repository
         if: ${{ inputs.is_helm_chart == true }}
         run: helm repo add datavisyn https://chartmuseum.app.datavisyn.io --username ${{ env.CHARTMUSEUM_USER }} --password ${{ env.CHARTMUSEUM_PASSWORD }}
@@ -159,7 +158,6 @@ jobs:
             fi; \
           done
           git add .
-          git commit -m "Update chart version to $RELEASE_VERSION"
       - name: update imageTag and repository_tag in values files
         if: ${{ inputs.is_helm_chart == true }}
         run: |
@@ -190,7 +188,6 @@ jobs:
             fi
           done  
           git add .
-          git commit -m "Update imageTag & repository_tag if exists in values files to v$RELEASE_VERSION"
         env:
           CHARTMUSEUM_PASSWORD: ${{ secrets.DV_CHARTMUSEUM_PASSWORD }}
       - name: update readme files
@@ -207,7 +204,7 @@ jobs:
           cd deploy/helm
           helm-docs --document-dependency-values 
           git add .
-          git commit -m "Update Helm documentation"
+          git commit -m "Update version to $RELEASE_VERSION"
       - name: push all changes
         run: |
           git push origin release-"$RELEASE_VERSION"
