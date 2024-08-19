@@ -136,6 +136,7 @@ jobs:
           git add package.json
           git commit -m "Update package.json version to $RELEASE_VERSION"
       - name: Add Helm repository
+        if: ${{ inputs.is_helm_chart == true }}
         run: helm repo add datavisyn https://chartmuseum.app.datavisyn.io --username ${{ env.CHARTMUSEUM_USER }} --password ${{ env.CHARTMUSEUM_PASSWORD }}
       - name: change charts and subcharts version
         if: ${{ inputs.is_helm_chart == true }}
