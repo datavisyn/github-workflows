@@ -33,6 +33,10 @@ jobs:
   release-repository:
     runs-on: ubuntu-22.04
     steps:
+      - name: Validate required inputs
+        run: |
+          [[ "${{ inputs.release_version }}" ]] || { echo "release_version input is empty" ; exit 1; }
+      
       - name: check branch
         if: ${{ github.ref_name != 'develop' }}
         run: |
@@ -56,15 +60,9 @@ jobs:
           dv_devops: ${{ vars.DV_DEVOPS }}
           actor: ${{ github.actor }}
           qms_are_allowed: "false"
-      #- name: get release version from package.json
-      #  id: get-release-version
-      #  if: ${{ inputs.release_version == null }}
-      #  run: |
-      #    release_version="$(jq -r '.version' package.json | cut -d '-' -f 1)"
-      #    echo "RELEASE_VERSION=$release_version" >> "$GITHUB_ENV"
+          
       - name: get release version from input
         id: get-release-version-from-input
-        if: ${{ inputs.release_version != null }}
         run: |
           input_release_version="${{ inputs.release_version }}"
           if echo "$input_release_version" | grep -q '^[0-9.]*$'; then
@@ -204,6 +202,8 @@ jobs:
           cd deploy/helm
           helm-docs --document-dependency-values 
           git add .
+      - name: Commit changes
+        run: |
           git commit -m "Update version to $RELEASE_VERSION"
       - name: push all changes
         run: |
