@@ -206,7 +206,7 @@ jobs:
           git add .
       - name: Commit changes
         run: |
-          git commit -m "Update version to $RELEASE_VERSION"
+          git commit -m "Prepare release version $RELEASE_VERSION"
       - name: push all changes
         run: |
           git push origin release-"$RELEASE_VERSION"
