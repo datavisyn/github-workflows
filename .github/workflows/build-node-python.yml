@@ -28,7 +28,7 @@ on:
         description: "Value for the `--spec` parameter. Example: `cypress/e2e/your_spec.cy.ts`. Will only work if cypress_enable: true."
         type: string
         required: false
-        default: ''
+        default: ""
       playwright_enable:
         description: "Global enable for playwright"
         type: boolean
@@ -44,7 +44,7 @@ on:
         # TODO: actionlint is failing as it expects true/false as default value for boolean types
         type: string
         required: false
-        default: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || !!startsWith(github.ref, 'refs/heads/release-') || !!startsWith(github.ref, 'refs/heads/dependabot')}}  
+        default: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || !!startsWith(github.ref, 'refs/heads/release-') || !!startsWith(github.ref, 'refs/heads/dependabot')}}
       playwright_spec_param:
         type: string
         description: "Run specific test(s). Example: `landing-page.spec.ts`"
@@ -77,11 +77,11 @@ on:
         description: Unique id per workflow run. Must be set to unique value if dispatched multiple times for a single workflow.
         default: ""
       chromatic_enable:
-        description: 'Enable Chromatic tests'
+        description: "Enable Chromatic tests"
         required: false
         type: boolean
         default: false
-      
+
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -340,7 +340,7 @@ jobs:
         run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
       - name: Set github token, hostname, port and docker network for self-hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
-        run: | 
+        run: |
           {
             echo "POSTGRES_HOSTNAME=postgres_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}"
             echo "POSTGRES_PORT=5432"
@@ -357,6 +357,7 @@ jobs:
           ref: ${{ inputs.branch }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
           fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
+          lfs: true
       - name: Checkout github-workflows
         uses: actions/checkout@v4
         with:
