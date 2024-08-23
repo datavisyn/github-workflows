@@ -8,6 +8,11 @@ on:
         required: false
         # When using github.ref || github.head_ref, it would contain the full path, including /, which breaks the postgres hostname
         default: ${{ github.sha }}
+      enable_lfs:
+        description: "Enable git-lfs for the checkout"
+        type: boolean
+        required: false
+        default: false
       cypress_enable:
         description: "Global enable for cypress"
         type: boolean
@@ -123,12 +128,19 @@ jobs:
       contents: write
     runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
     steps:
+      - name: Install git-lfs
+        if: ${{ inputs.enable_lfs }}
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && sudo git lfs install
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
           fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
+          lfs: ${{ inputs.enable_lfs }}
+      - name: Checkout LFS objects
+        if: ${{ inputs.enable_lfs }}
+        run: git lfs checkout
       - name: Checkout github-workflows
         uses: actions/checkout@v4
         with:
@@ -162,11 +174,18 @@ jobs:
       contents: write
     runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
     steps:
+      - name: Install git-lfs
+        if: ${{ inputs.enable_lfs }}
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && sudo git lfs install
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
+          lfs: ${{ inputs.enable_lfs }}
+      - name: Checkout LFS objects
+        if: ${{ inputs.enable_lfs }}
+        run: git lfs checkout
       - name: Checkout github-workflows
         uses: actions/checkout@v4
         with:
@@ -232,12 +251,19 @@ jobs:
         run: |
           echo "POSTGRES_HOSTNAME=localhost" >> "$GITHUB_ENV"
           echo "POSTGRES_PORT=${{ job.services.postgres.ports['5432'] }}" >> "$GITHUB_ENV"
+      - name: Install git-lfs
+        if: ${{ inputs.enable_lfs }}
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && sudo git lfs install
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
           fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
+          lfs: ${{ inputs.enable_lfs }}
+      - name: Checkout LFS objects
+        if: ${{ inputs.enable_lfs }}
+        run: git lfs checkout
       - name: Checkout github-workflows
         uses: actions/checkout@v4
         with:
@@ -352,15 +378,17 @@ jobs:
           echo "POSTGRES_HOSTNAME=localhost" >> "$GITHUB_ENV"
           echo "POSTGRES_PORT=${{ job.services.postgres.ports['5432'] }}" >> "$GITHUB_ENV"
       - name: Install git-lfs
+        if: ${{ inputs.enable_lfs }}
         run: sudo apt-get update && sudo apt-get install -y git-lfs && sudo git lfs install
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
-          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
+          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
-          lfs: true
+          lfs: ${{ inputs.enable_lfs }}
       - name: Checkout LFS objects
+        if: ${{ inputs.enable_lfs }}
         run: git lfs checkout
       - name: Checkout github-workflows
         uses: actions/checkout@v4
