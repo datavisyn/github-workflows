@@ -358,6 +358,8 @@ jobs:
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
           fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
           lfs: true
+      - name: Checkout LFS objects
+        run: git lfs checkout
       - name: Checkout github-workflows
         uses: actions/checkout@v4
         with:
