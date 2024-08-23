@@ -352,7 +352,7 @@ jobs:
           echo "POSTGRES_HOSTNAME=localhost" >> "$GITHUB_ENV"
           echo "POSTGRES_PORT=${{ job.services.postgres.ports['5432'] }}" >> "$GITHUB_ENV"
       - name: Install git-lfs
-        run: apt-get update && apt-get install git-lfs
+        run: sudo apt-get update && apt-get install git-lfs
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
