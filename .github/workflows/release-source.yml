@@ -87,7 +87,7 @@ jobs:
 
           if [ "$input_major" -eq "$file_major" ]; then
             if [ "$input_minor" -eq "$file_minor" ]; then
-              if [ "$input_patch" -gt "$file_patch" ]; then
+              if [ "$input_patch" -ge "$file_patch" ]; then
                 echo "Valid patch version input"
               else
                 echo "Error: Patch version cannot be less than or equal to the current version."
