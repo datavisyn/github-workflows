@@ -375,7 +375,7 @@ jobs:
           run_playwright_browser_install: true
           enable_node_cache: ${{ inputs.playwright_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
           enable_python_cache: ${{ inputs.playwright_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
-          chromatic_enable: ${{ inputs.chromatic_enable }}
+          chromatic_enable: false # Set to false as we run chromatic below w/ playwright integration
           chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       - name: Decrypt .env.enc and <app>/.env.enc
         run: |
@@ -395,3 +395,11 @@ jobs:
         with:
           name: "playwright-report-${{ inputs.branch }}"
           path: playwright-report/
+      - name: Run Chromatic Playwright
+        if: ${{ inputs.chromatic_enable }}
+        uses: chromaui/action@v11.7.1
+        with:
+          playwright: true
+          exitZeroOnChanges: true
+          exitOnceUploaded: true
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
