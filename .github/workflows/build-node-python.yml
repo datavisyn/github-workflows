@@ -396,8 +396,10 @@ jobs:
           name: "playwright-report-${{ inputs.branch }}"
           path: playwright-report/
       - name: Run Chromatic Playwright
-        if: inputs.chromatic_enable == 'true'
+        if: ${{ inputs.chromatic_enable }}
         uses: chromaui/action@v11.7.1
         with:
           playwright: true
+          exitZeroOnChanges: true
+          exitOnceUploaded: true
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
