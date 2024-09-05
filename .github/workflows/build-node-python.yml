@@ -399,7 +399,5 @@ jobs:
         if: inputs.chromatic_enable == 'true'
         uses: chromaui/action@v11.7.1
         with:
-          # ⚠️ Enable Playwright
           playwright: true
-          # ⚠️ Make sure to configure a `CHROMATIC_PROJECT_TOKEN` repository secret
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
