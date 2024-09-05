@@ -395,3 +395,12 @@ jobs:
         with:
           name: "playwright-report-${{ inputs.branch }}"
           path: playwright-report/
+      - name: Run Chromatic Playwright
+        if: inputs.chromatic_enable == 'true'
+        uses: chromaui/action@v11.7.1
+        with:
+          # ⚠️ Enable Playwright
+          playwright: true
+          # ⚠️ Make sure to configure a `CHROMATIC_PROJECT_TOKEN` repository secret
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        env: CHROMATIC_ARCHIVE_LOCATION=./test-results
