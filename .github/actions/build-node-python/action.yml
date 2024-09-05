@@ -249,4 +249,6 @@ runs:
       if: inputs.enable_node == 'true' && inputs.chromatic_enable == 'true'
       uses: chromaui/action@v11.7.1
       with:
+        exitZeroOnChanges: true
+        exitOnceUploaded: true
         projectToken: ${{ inputs.chromatic_project_token }}
