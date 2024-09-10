@@ -81,16 +81,20 @@ jobs:
           file_minor=$(echo "$file_release_version" | cut -d'.' -f2)
           file_patch=$(echo "$file_release_version" | cut -d'.' -f3)
 
+          # decrement the patch version by 1 to get the latest stable release version
+          stable_patch=$((file_patch - 1))
+          echo "Stable release version: $file_major.$file_minor.$stable_patch"
+
           input_major=$(echo "$input_release_version" | cut -d'.' -f1)
           input_minor=$(echo "$input_release_version" | cut -d'.' -f2)
           input_patch=$(echo "$input_release_version" | cut -d'.' -f3)
 
           if [ "$input_major" -eq "$file_major" ]; then
             if [ "$input_minor" -eq "$file_minor" ]; then
-              if [ "$input_patch" -ge "$file_patch" ]; then
+              if [ "$input_patch" -gt "$stable_patch" ]; then
                 echo "Valid patch version input"
               else
-                echo "Error: Patch version cannot be less than or equal to the current version."
+                echo "Error: Patch version cannot be less than or equal to the stable release version."
                 exit 1
               fi
             elif [ "$input_minor" -gt "$file_minor" ] && [ "$input_patch" -eq 0 ]; then
