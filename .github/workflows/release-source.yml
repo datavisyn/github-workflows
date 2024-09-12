@@ -91,10 +91,10 @@ jobs:
 
           if [ "$input_major" -eq "$file_major" ]; then
             if [ "$input_minor" -eq "$file_minor" ]; then
-              if [ "$input_patch" -gt "$stable_patch" ]; then
+              if [ "$input_patch" -eq "$stable_patch" ]; then
                 echo "Valid patch version input"
               else
-                echo "Error: Patch version cannot be less than or equal to the stable release version."
+                echo "Error: Patch version must match the package.json version without the -SNAPSHOT suffix."
                 exit 1
               fi
             elif [ "$input_minor" -gt "$file_minor" ] && [ "$input_patch" -eq 0 ]; then
