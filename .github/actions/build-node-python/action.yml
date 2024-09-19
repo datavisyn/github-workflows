@@ -138,6 +138,7 @@ runs:
       shell: bash
     - name: Output Git Configurations
       run: git config --global --list
+      shell: bash
     - uses: actions/download-artifact@v3
       # TODO: Remove the variable whenever we can ensure that build-node was called before
       if: inputs.enable_node == 'true' && inputs.download_yarn_lock == 'true'
