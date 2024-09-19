@@ -123,6 +123,7 @@ runs:
           rm ~/.gitconfig
           touch ~/.gitconfig
         fi
+        git config --global http.postBuffer 524288000
         git config --global --replace-all url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
         git config --add --global url."https://$GITHUB_TOKEN@github".insteadOf https://github
         git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
