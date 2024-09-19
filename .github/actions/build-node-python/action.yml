@@ -123,6 +123,11 @@ runs:
           rm ~/.gitconfig
           touch ~/.gitconfig
         fi
+        git config --global core.packedGitLimit 512m
+        git config --global core.packedGitWindowSize 512m
+        git config --global pack.deltaCacheSize 2047m
+        git config --global pack.packSizeLimit 2047m
+        git config --global pack.windowMemory 2047m
         git config --global http.postBuffer 524288000
         git config --global core.compression 9 repack
         git config --global --replace-all url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
@@ -131,6 +136,8 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash
+    - name: Output Git Configurations
+        run: git config --global --list
     - uses: actions/download-artifact@v3
       # TODO: Remove the variable whenever we can ensure that build-node was called before
       if: inputs.enable_node == 'true' && inputs.download_yarn_lock == 'true'
