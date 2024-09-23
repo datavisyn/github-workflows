@@ -129,7 +129,11 @@ runs:
         git config --global pack.packSizeLimit 2047m
         git config --global pack.windowMemory 2047m
         git config --global http.postBuffer 524288000
-        git config --global core.compression 9 repack
+        #git config --global core.compression 9 repack
+        git config --global core.compression 0
+        git config --global http.maxRequests 100
+        git config --global http.lowSpeedLimit 0
+        git config --global http.lowSpeedTime 999999
         git config --global --replace-all url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
         git config --add --global url."https://$GITHUB_TOKEN@github".insteadOf https://github
         git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
