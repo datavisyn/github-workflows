@@ -316,8 +316,8 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    runs-on: ${{ inputs.playwright_runs_on || inputs.runs_on || 'ubuntu-22.04-large' }}
-
+    #runs-on: ${{ inputs.playwright_runs_on || inputs.runs_on || 'ubuntu-22.04-large' }}
+    runs-on: [self-hosted, testing]
     services:
       postgres:
         image: postgres:14
