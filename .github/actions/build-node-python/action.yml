@@ -124,8 +124,20 @@ runs:
           touch ~/.gitconfig
         fi
 
+        git config --global pack.packSizeLimit 1g
+        git config --global pack.deltaCacheSize 1g
+        git config --global pack.windowMemory 1g
+        git config --global core.packedGitLimit 1g
+        git config --global core.packedGitWindowSize 1g
+
+        git config --global http.postBuffer 10g
+        git config --global http.maxRequestBuffer 10g
+        git config --global https.postBuffer 10g
+        git config --global https.maxRequestBuffer 10g
+
         git config --global pack.window 1
         git config --global pack.depth 1
+        git config --global pack.threads 128
 
         git config --global --replace-all url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
         git config --add --global url."https://$GITHUB_TOKEN@github".insteadOf https://github
