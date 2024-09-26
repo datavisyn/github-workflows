@@ -134,6 +134,9 @@ runs:
         git config --global http.maxRequestBuffer 10g
         git config --global https.postBuffer 10g
         git config --global https.maxRequestBuffer 10g
+        
+        git config --global http.timeout 600
+        git config --global core.compression 9
 
         git config --global pack.window 1
         git config --global pack.depth 1
@@ -175,7 +178,10 @@ runs:
         # Define the node sequence of commands
         node_job() {
           set -e
-          yarn install --no-immutable --inline-builds
+          
+          for i in {1..3}; do
+            yarn install --no-immutable --inline-builds && break || sleep 15
+          done
 
           parallel_jobs=()
           if [ "$RUN_NODE_LINT" = "true" ]; then
