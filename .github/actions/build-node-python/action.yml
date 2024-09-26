@@ -135,11 +135,11 @@ runs:
         #git config --global https.postBuffer 10g
         #git config --global https.maxRequestBuffer 10g
 
-        git config --global http.timeout 600
-        git config --global core.compression 9
+        #git config --global http.timeout 600
+        #git config --global core.compression 9
 
-        git config --global pack.window 1
-        git config --global pack.depth 1
+        #git config --global pack.window 1
+        #git config --global pack.depth 1
         #git config --global pack.threads 128
 
         #git config --global http.lowSpeedLimit 100
