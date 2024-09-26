@@ -124,6 +124,9 @@ runs:
           touch ~/.gitconfig
         fi
 
+        git config --global fetch.depth 1
+        git config --global clone.depth 1
+
         #git config --global pack.packSizeLimit 1g
         #git config --global pack.deltaCacheSize 1g
         #git config --global pack.windowMemory 1g
