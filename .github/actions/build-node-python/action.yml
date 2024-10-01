@@ -9,7 +9,7 @@ inputs:
     required: true
   run_parallel:
     description: "enables parallel running of node and python tasks"
-    default: false
+    default: true
     required: true
   # Node
   enable_node:

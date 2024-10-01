@@ -62,7 +62,7 @@ on:
         description: "Flag to ensure that node and python jobs are run in parallel."
         type: boolean
         required: false
-        default: false
+        default: true
       cypress_runs_on:
         type: string
         required: false
