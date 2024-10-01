@@ -129,8 +129,8 @@ runs:
         git config --global http.lowSpeedLimit 0
         git config --global http.lowSpeedTime 999999
 
-        git config --global fetch.depth 1
-        git config --global clone.depth 1
+        #git config --global fetch.depth 1
+        #git config --global clone.depth 1
 
         #git config --global pack.packSizeLimit 1g
         #git config --global pack.deltaCacheSize 1g
