@@ -130,20 +130,28 @@ jobs:
           ls_result="$(ls)"
           # update chart version
           for dir in $ls_result; do \
-           sed -i "s/^version.*/version: $RELEASE_VERSION/" "$dir"/Chart.yaml;\
-           sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" "$dir"/Chart.yaml;\
-           sed -i "/  - name: marvinjs/{n; s/    version.*/    version: $RELEASE_VERSION/}" "$dir"/Chart.yaml;\
+            sed -i "s/^version.*/version: $RELEASE_VERSION/" "$dir"/Chart.yaml;\
+            sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" "$dir"/Chart.yaml;\
+            sed -i "/  - name: marvinjs/{n; s/    version.*/    version: $RELEASE_VERSION/}" "$dir"/Chart.yaml;\
+            
+            # update dependency version if folder name matches the dependency name
+            if grep -q "dependencies:" "$dir/Chart.yaml"; then \
+              dependency_name=$(grep -A1 "dependencies:" "$dir/Chart.yaml" | grep "name:" | awk '{print $2}'); \
+              if [ "$dependency_name" == "$dir" ]; then \
+                sed -i "s/^\(\s*version:\s*\).*/\1$RELEASE_VERSION/" "$dir"/Chart.yaml; \
+              fi; \
+            fi; \
           done
           # update subchart version
           for folder in ./*; do \
             if [ -d "$folder/subcharts" ]; then \
-                sed -i "s/^version.*/version: $RELEASE_VERSION/" "$folder"/subcharts/*/Chart.yaml; \
-                sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" "$folder"/subcharts/*/Chart.yaml; \
-                helm dep build "$folder"/subcharts/*;             
-                helm dep update "$folder"/subcharts/*; \
+              sed -i "s/^version.*/version: $RELEASE_VERSION/" "$folder"/subcharts/*/Chart.yaml; \
+              sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" "$folder"/subcharts/*/Chart.yaml; \
+              helm dep build "$folder"/subcharts/*; \
+              helm dep update "$folder"/subcharts/*; \
             fi; \
           done
-          git add .
+          git add .      
       - name: update imageTag and repository_tag in values files
         if: ${{ inputs.is_helm_chart == true }}
         run: |
