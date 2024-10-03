@@ -141,8 +141,9 @@ jobs:
             # Check for dependencies and update version if the dependency name matches a folder name
             if grep -q "dependencies:" "$dir/Chart.yaml"; then \
               echo "Dependencies found in $dir/Chart.yaml"; \
-              dependency_name=$(grep -A1 "dependencies:" "$dir/Chart.yaml" | grep "name:" | awk '{print $2}'); \
-              echo "Dependency name: $dependency_name"; \
+              # Extract the correct dependency name (fixing multiline grep to handle proper yaml formatting)
+              dependency_name=$(awk '/dependencies:/ { getline; print $2 }' "$dir/Chart.yaml"); \
+              echo "Extracted dependency name: $dependency_name"; \
               if [ -d "$dependency_name" ]; then \
                 echo "Folder $dependency_name exists"; \
                 if [ "$dependency_name" == "$dir" ]; then \
@@ -172,6 +173,7 @@ jobs:
               echo "No subcharts directory found in $folder. Skipping subchart version update."; \
             fi; \
           done
+          
           git add .
       - name: update imageTag and repository_tag in values files
         if: ${{ inputs.is_helm_chart == true }}
