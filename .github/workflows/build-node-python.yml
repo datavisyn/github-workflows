@@ -102,7 +102,7 @@ env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "vdelev_gitconfig"
+  WORKFLOW_BRANCH: "main"
   POSTGRES_HOSTNAME: postgres_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}
 
 permissions:
@@ -316,8 +316,8 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    #runs-on: ${{ inputs.playwright_runs_on || inputs.runs_on || 'ubuntu-22.04-large' }}
-    runs-on: [self-hosted, testing]
+    runs-on: ${{ inputs.playwright_runs_on || inputs.runs_on || 'ubuntu-22.04-large' }}
+
     services:
       postgres:
         image: postgres:14
