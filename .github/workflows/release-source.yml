@@ -131,17 +131,17 @@ jobs:
           ls_result="$(ls)"
           echo "List of directories in deploy/helm: $ls_result"
 
-          # update the version and appVersion fields in all Chart.yml files
+          # update the version and appVersion fields in all Chart.yaml files
           for dir in $ls_result; do
             echo "Processing directory: $dir"
 
-            # Check if the Chart.yml file exists before running sed
-            if [ -f "$dir/Chart.yml" ]; then
-              # Update the version and appVersion fields in the Chart.yml
-              sed -i "s/^version:.*/version: $RELEASE_VERSION/" "$dir/Chart.yml"
-              sed -i "s/^appVersion:.*/appVersion: \"$RELEASE_VERSION\"/" "$dir/Chart.yml"
+            # Check if the Chart.yaml file exists before running sed
+            if [ -f "$dir/Chart.yaml" ]; then
+              # Update the version and appVersion fields in the Chart.yaml
+              sed -i "s/^version:.*/version: $RELEASE_VERSION/" "$dir/Chart.yaml"
+              sed -i "s/^appVersion:.*/appVersion: \"$RELEASE_VERSION\"/" "$dir/Chart.yaml"
             else
-              echo "Chart.yml file not found in $dir. Skipping."
+              echo "Chart.yaml file not found in $dir. Skipping."
               continue
             fi
           done
@@ -150,11 +150,11 @@ jobs:
           for dir in $ls_result; do
             echo "Processing dependencies in $dir"
 
-            if [ -f "$dir/Chart.yml" ]; then
+            if [ -f "$dir/Chart.yaml" ]; then
               for dep_dir in $ls_result; do
-                if grep -q "name: $dep_dir" "$dir/Chart.yml"; then
+                if grep -q "name: $dep_dir" "$dir/Chart.yaml"; then
                   echo "Found dependency on $dep_dir in $dir. Updating version to $RELEASE_VERSION"
-                  sed -i "/name: $dep_dir/!b;n;s/version:.*/version: $RELEASE_VERSION/" "$dir/Chart.yml"
+                  sed -i "/name: $dep_dir/!b;n;s/version:.*/version: $RELEASE_VERSION/" "$dir/Chart.yaml"
                 fi
               done
             fi
