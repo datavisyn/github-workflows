@@ -130,49 +130,37 @@ jobs:
           echo "Current directory: $(pwd)"
           ls_result="$(ls)"
           echo "List of directories in deploy/helm: $ls_result"
-          
-          # update chart version
-          for dir in $ls_result; do \
-            echo "Processing directory: $dir"; \
-            sed -i "s/^version.*/version: $RELEASE_VERSION/" "$dir"/Chart.yaml;\
-            sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" "$dir"/Chart.yaml;\
-            sed -i "/  - name: marvinjs/{n; s/    version.*/    version: $RELEASE_VERSION/}" "$dir"/Chart.yaml;\
-            
-            # Check for dependencies and update version if the dependency name matches a folder name
-            if grep -q "dependencies:" "$dir/Chart.yaml"; then \
-              echo "Dependencies found in $dir/Chart.yaml"; \
-              # Extract the correct dependency name (fixing multiline grep to handle proper yaml formatting)
-              dependency_name=$(awk '/dependencies:/ { getline; print $2 }' "$dir/Chart.yaml"); \
-              echo "Extracted dependency name: $dependency_name"; \
-              if [ -d "$dependency_name" ]; then \
-                echo "Folder $dependency_name exists"; \
-                if [ "$dependency_name" == "$dir" ]; then \
-                  echo "Dependency name matches directory: $dir. Updating version..."; \
-                  sed -i "/dependencies:/!b;n;s/version:.*/version: $RELEASE_VERSION/" "$dir/Chart.yaml"; \
-                else \
-                  echo "Dependency name does not match directory: $dir. Skipping version update."; \
-                fi; \
-              else \
-                echo "Folder $dependency_name does not exist. Skipping version update."; \
-              fi; \
-            else \
-              echo "No dependencies found in $dir/Chart.yaml"; \
-            fi; \
+
+          # update the version and appVersion fields in all Chart.yml files
+          for dir in $ls_result; do
+            echo "Processing directory: $dir"
+
+            # Check if the Chart.yml file exists before running sed
+            if [ -f "$dir/Chart.yml" ]; then
+              # Update the version and appVersion fields in the Chart.yml
+              sed -i "s/^version:.*/version: $RELEASE_VERSION/" "$dir/Chart.yml"
+              sed -i "s/^appVersion:.*/appVersion: \"$RELEASE_VERSION\"/" "$dir/Chart.yml"
+            else
+              echo "Chart.yml file not found in $dir. Skipping."
+              continue
+            fi
           done
-          
-          # update subchart version
-          for folder in ./*; do \
-            echo "Processing subcharts in $folder"; \
-            if [ -d "$folder/subcharts" ]; then \
-              echo "Subcharts directory found in $folder. Updating subchart version..."; \
-              sed -i "s/^version.*/version: $RELEASE_VERSION/" "$folder"/subcharts/*/Chart.yaml; \
-              sed -i "s/^appVersion.*/appVersion: \"$RELEASE_VERSION\"/" "$folder"/subcharts/*/Chart.yaml; \
-              helm dep build "$folder"/subcharts/*; \
-              helm dep update "$folder"/subcharts/*; \
-            else \
-              echo "No subcharts directory found in $folder. Skipping subchart version update."; \
-            fi; \
+
+          # update the dependencies versions based on the charts available in deploy/helm
+          for dir in $ls_result; do
+            echo "Processing dependencies in $dir"
+
+            if [ -f "$dir/Chart.yml" ]; then
+              for dep_dir in $ls_result; do
+                if grep -q "name: $dep_dir" "$dir/Chart.yml"; then
+                  echo "Found dependency on $dep_dir in $dir. Updating version to $RELEASE_VERSION"
+                  sed -i "/name: $dep_dir/!b;n;s/version:.*/version: $RELEASE_VERSION/" "$dir/Chart.yml"
+                fi
+              done
+            fi
           done
+
+          echo "Completed version updates."
           
           git add .
       - name: update imageTag and repository_tag in values files
