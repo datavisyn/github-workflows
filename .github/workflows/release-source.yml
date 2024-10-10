@@ -186,8 +186,8 @@ jobs:
                   sed -i "s/.*repository_tag.*/        repository_tag: v$RELEASE_VERSION/" "$dir"/values/values.yaml; \
                 fi; \
             fi; \
-            # skip helm dep update and helm dep build for directories with '_starter' in the name
-            if [[ "$dir" != *"_starter"* ]]; then
+            # skip helm dep update and helm dep build for directories with 'starter' in the name
+            if [[ "$dir" != *"starter"* ]]; then
               helm dep build "$dir"
               helm dep update "$dir"
             fi
