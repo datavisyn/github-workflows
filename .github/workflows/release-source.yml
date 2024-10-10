@@ -24,7 +24,7 @@ concurrency:
 env:
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
-  WORKFLOW_BRANCH: "feat-automate-releases-releasenotes"
+  WORKFLOW_BRANCH: "main"
   GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
   CHARTMUSEUM_USER: ${{ secrets.DV_CHARTMUSEUM_USER }}
   CHARTMUSEUM_PASSWORD: ${{ secrets.DV_CHARTMUSEUM_PASSWORD }}
@@ -127,41 +127,31 @@ jobs:
         if: ${{ inputs.is_helm_chart == true }}
         run: |
           cd deploy/helm
-          echo "Current directory: $(pwd)"
           ls_result="$(ls)"
-          echo "List of directories in deploy/helm: $ls_result"
 
           # update the version and appVersion fields in all Chart.yaml files
           for dir in $ls_result; do
             echo "Processing directory: $dir"
-
-            # Check if the Chart.yaml file exists before running sed
             if [ -f "$dir/Chart.yaml" ]; then
               # Update the version and appVersion fields in the Chart.yaml
               sed -i "s/^version:.*/version: $RELEASE_VERSION/" "$dir/Chart.yaml"
               sed -i "s/^appVersion:.*/appVersion: \"$RELEASE_VERSION\"/" "$dir/Chart.yaml"
             else
-              echo "Chart.yaml file not found in $dir. Skipping."
               continue
             fi
           done
 
           # update the dependencies versions based on the charts available in deploy/helm
           for dir in $ls_result; do
-            echo "Processing dependencies in $dir"
-
             if [ -f "$dir/Chart.yaml" ]; then
               for dep_dir in $ls_result; do
                 if grep -q "name: $dep_dir" "$dir/Chart.yaml"; then
-                  echo "Found dependency on $dep_dir in $dir. Updating version to $RELEASE_VERSION"
                   sed -i "/name: $dep_dir/!b;n;s/version:.*/version: $RELEASE_VERSION/" "$dir/Chart.yaml"
                 fi
               done
             fi
           done
 
-          echo "Completed version updates."
-          
           git add .
       - name: update imageTag and repository_tag in values files
         if: ${{ inputs.is_helm_chart == true }}
