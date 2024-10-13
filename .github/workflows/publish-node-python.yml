@@ -22,7 +22,7 @@ env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "feat-automate-releases-releasenotes"
+  WORKFLOW_BRANCH: "main"
 
 permissions:
   contents: read
