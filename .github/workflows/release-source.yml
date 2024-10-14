@@ -12,6 +12,11 @@ on:
         type: string
         description: 'The version to release'
         required: true
+      skip_branch_check:
+        description: 'Skip the branch check'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -39,10 +44,10 @@ jobs:
             echo "release_version input is empty"
             exit 1
           fi
-      - name: check branch
-        if: ${{ github.ref_name != 'develop' }}
+      - name: Check branch
+        if: ${{ inputs.skip_branch_check != true && github.ref_name != 'develop' }}
         run: |
-          echo 'only the develop branch can be released.'
+          echo 'Branch check is enabled: only the develop branch can be released.'
           exit 1
       # checkout specific repository
       - name: checkout repository
