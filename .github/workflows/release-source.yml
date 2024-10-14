@@ -227,14 +227,14 @@ jobs:
           PRS=$(curl -s -H "Accept: application/vnd.github+json" \
                           -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                           -H "X-GitHub-Api-Version: 2022-11-28" \
-                          "https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/pulls?state=closed&base=develop&sort=updated&direction=desc")
+                          "https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/pulls?state=closed&base=${{ github.ref_name }}&sort=updated&direction=desc")
 
           if echo "$PRS" | jq -e . > /dev/null 2>&1; then
             PR_NOTES=$(echo "$PRS" | jq -r --arg since "$RELEASE_DATE" '.[] | select(.merged_at != null and .merged_at > $since) | "* \(.title) ([#\(.number)](\(.html_url)))"')
           else
             PR_NOTES="could not fetch release notes"
           fi
-          echo "$PR_NOTES" > pr_notes.txt
+          echo "$PR_NOTES" > pr_notes.txt  
 
       - name: create pr
         id: create-pr
