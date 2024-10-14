@@ -21,7 +21,7 @@ env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "test"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "feat-automate-releases-releasenotes"
 
 permissions:
   contents: read

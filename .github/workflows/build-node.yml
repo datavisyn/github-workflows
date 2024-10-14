@@ -32,7 +32,7 @@ on:
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
   NODE_VERSION: "20.9"
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "feat-automate-releases-releasenotes"
 
 permissions:
   contents: read

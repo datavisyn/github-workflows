@@ -17,6 +17,11 @@ on:
         required: false
         type: boolean
         default: false
+      base_branch:
+        description: 'The base branch to use'
+        required: false
+        type: string
+        default: main
 
 permissions:
   contents: write
@@ -29,7 +34,7 @@ concurrency:
 env:
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "feat-automate-releases-releasenotes"
   GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
   CHARTMUSEUM_USER: ${{ secrets.DV_CHARTMUSEUM_USER }}
   CHARTMUSEUM_PASSWORD: ${{ secrets.DV_CHARTMUSEUM_PASSWORD }}
@@ -45,7 +50,7 @@ jobs:
             exit 1
           fi
       - name: Check branch
-        if: ${{ inputs.skip_branch_check != true && github.ref_name != 'develop' }}
+        if: ${{ inputs.skip_branch_check == false && github.ref_name != 'develop' }}
         run: |
           echo 'Branch check is enabled: only the develop branch can be released.'
           exit 1
@@ -67,7 +72,7 @@ jobs:
           dv_devops: ${{ vars.DV_DEVOPS }}
           actor: ${{ github.actor }}
           qms_are_allowed: "false"
-          
+
       - name: get release version from input
         id: get-release-version-from-input
         run: |
@@ -252,6 +257,6 @@ jobs:
                   --arg title "Release ${{ env.RELEASE_VERSION }}" \
                   --arg body "$PR_NOTES" \
                   --arg head "release-${{ env.RELEASE_VERSION }}" \
-                  --arg base "main" \
+                  --arg base "${{ inputs.base_branch }}" \
                   --argjson draft false \
                   '{title: $title, body: $body, head: $head, base: $base, draft: $draft}')"

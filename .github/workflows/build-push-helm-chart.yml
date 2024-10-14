@@ -22,7 +22,7 @@ permissions:
   contents: read
 
 env:
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "feat-automate-releases-releasenotes"
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
