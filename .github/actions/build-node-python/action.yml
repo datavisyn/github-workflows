@@ -129,7 +129,7 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       # TODO: Remove the variable whenever we can ensure that build-node was called before
       if: inputs.enable_node == 'true' && inputs.download_yarn_lock == 'true'
       with:
@@ -234,12 +234,12 @@ runs:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
         path: ~/.yarn/berry/cache/
         key: yarn-download-cache-${{ hashFiles('package.json') }}
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: inputs.enable_node == 'true' && inputs.upload_yarn_lock == 'true'
       with:
         name: node-yarn-lock
         path: ./yarn.lock
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: inputs.enable_node == 'true' && inputs.run_node_bundle == 'true'
       with:
         name: node-bundle
