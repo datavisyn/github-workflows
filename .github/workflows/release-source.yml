@@ -54,6 +54,13 @@ jobs:
         run: |
           echo 'Branch check is enabled: only the develop branch can be released.'
           exit 1
+      - name: Ensure base branch is main when skip_branch_check is false
+        if: ${{ inputs.skip_branch_check == false }}
+        run: |
+          if [ "${{ inputs.base_branch }}" != "main" ]; then
+            echo "Error: base_branch must be 'main' when skip_branch_check is false."
+            exit 1
+          fi
       # checkout specific repository
       - name: checkout repository
         uses: actions/checkout@v3
