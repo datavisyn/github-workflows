@@ -74,6 +74,7 @@ jobs:
           qms_are_allowed: "false"
 
       - name: get release version from input
+        if: ${{ inputs.skip_branch_check == false }}
         id: get-release-version-from-input
         run: |
           input_release_version="${{ inputs.release_version }}"
