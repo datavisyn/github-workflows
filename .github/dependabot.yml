@@ -1,12 +1,93 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
-
 version: 2
 updates:
-  - package-ecosystem: "github-actions" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "github-actions"
+    directory: "/" 
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "dvviktordelev"
+
+  # Monitor each custom action folder individually, GH doesnt support wildcards here
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/build-node-python"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "dvviktordelev"
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/build-push-helm-chart"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "dvviktordelev"
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/build-push-image"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "dvviktordelev"
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/check-actor"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "dvviktordelev"
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/check-helm-chart-version"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "dvviktordelev"
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/get-ecr-scan-result"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "dvviktordelev"
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/get-product-parameters"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "dvviktordelev"
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/lint-docker"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "dvviktordelev"
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/lint-github-actions"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "dvviktordelev"
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/publish-node"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "dvviktordelev"
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/publish-python"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "dvviktordelev"
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/release-product-changes"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "dvviktordelev"
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/release-source-changes"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "dvviktordelev"
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/retag-image"
     schedule:
       interval: "weekly"
     reviewers:
