@@ -45,7 +45,7 @@ env:
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: "20.9"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "main"
   PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
@@ -170,7 +170,7 @@ jobs:
       # Enable yarn download cache, @see https://github.com/actions/setup-node/issues/325
       - name: Restore yarn cache
         if: ${{ steps.get-parameters.outputs.type == 'web' }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
           path: ~/.yarn/berry/cache/
@@ -201,7 +201,7 @@ jobs:
           touch ./yarn.lock
           yarn install --no-immutable
           yarn info --name-only
-          yarn run webpack:prod
+          yarn run bundle:prod || yarn run webpack:prod
         env:
           COMPONENT: ${{ inputs.component }}
           APP: ${{ steps.get-parameters.outputs.app }}
@@ -212,14 +212,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
-          cache: 'pip'
+          # cache: 'pip' Disable cache as uv is probably faster anyways: https://github.com/actions/setup-python/issues/822
       - name: Build api
         if: ${{ steps.get-parameters.outputs.type == 'api' }}
         run: |
           cd "./tmp/$COMPONENT/$APP"
           ls -lah
-          python -m pip install --upgrade pip
-          pip install setuptools wheel
+          python -m pip install --upgrade pip uv
+          uv pip install setuptools wheel --system
           make install
           make build
         env:

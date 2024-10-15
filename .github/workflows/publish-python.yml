@@ -15,7 +15,7 @@ on:
 env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "main"
 
 permissions:
   contents: read
@@ -46,8 +46,10 @@ jobs:
           dv_devops: ${{ vars.DV_DEVOPS }}
           actor: ${{ github.actor }}
           qms_are_allowed: "false"
-      - uses: ./tmp/github-workflows/.github/actions/build-python
+      - uses: ./tmp/github-workflows/.github/actions/build-node-python
         with:
+          enable_node: false
+          enable_python: true
           python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       - uses: ./tmp/github-workflows/.github/actions/publish-python

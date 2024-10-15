@@ -7,16 +7,32 @@ on:
         type: string
         required: false
         default: ${{ github.ref || github.head_ref }}
+      chromatic_enable:
+        description: 'Enable Chromatic tests'
+        required: false
+        type: boolean
+        default: false
+      node_run_webpack:
+        description: "Flag to always run the webpack production build."
+        type: boolean
+        required: false
+        default: false
+      runs_on:
+        type: string
+        required: false
+        default: "ubuntu-22.04"
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
       NODE_VERSION:
         required: false
+      CHROMATIC_PROJECT_TOKEN:
+        required: false
 
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
   NODE_VERSION: "20.9"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "main"
 
 permissions:
   contents: read
@@ -34,21 +50,29 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    runs-on: ubuntu-22.04
+    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
     steps:
-      # checkout specific source repository
-      - uses: actions/checkout@v3
+      - name: Checkout source repository
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
-          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token }} # has to set because otherwise it will not work
-      # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
+          token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
+          fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
+      - name: Checkout github-workflows
+        uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
-      - uses: ./tmp/github-workflows/.github/actions/build-node
+      - name: Build node
+        uses: ./tmp/github-workflows/.github/actions/build-node-python
         with:
+          enable_node: true
+          enable_python: false
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
-          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
+          run_node_bundle: ${{ inputs.node_run_webpack }}
+          enable_node_cache: ${{ inputs.runs_on != 'self-hosted' }}
+          chromatic_enable: ${{ inputs.chromatic_enable }}
+          chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}

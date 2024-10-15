@@ -39,11 +39,11 @@ on:
           required: true
           type: string
 env:
-  VISYN_SCRIPTS_VERSION: "develop"
+  VISYN_SCRIPTS_VERSION: "v7" # visyn_scripts@v7 is the last version with workspace support
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: "20.9"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "main"
   PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
@@ -242,7 +242,7 @@ jobs:
           touch ./yarn.lock
           yarn install --no-immutable
           yarn info --name-only
-          npm run dist
+          yarn run dist
         env:
           COMPONENT: ${{ inputs.component }}
           COMPONENT_DIRECTORY: ${{ steps.get-parameters.outputs.directory }}
@@ -252,8 +252,8 @@ jobs:
         run: |
           cd "./tmp/$COMPONENT"
           ls -lah
-          python -m pip install --upgrade pip
-          pip install setuptools wheel
+          python -m pip install --upgrade pip uv
+          uv pip install setuptools wheel --system
           mkdir -p ./build/source
           mkdir -p ./dist_python/
           cd "$DEFAULT_APP"

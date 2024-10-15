@@ -27,7 +27,7 @@ env:
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: "20.9"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "new_deployment"
+  WORKFLOW_BRANCH: "main"
   PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
@@ -90,7 +90,7 @@ jobs:
       fail-fast: true
       matrix:
         component: ${{fromJson(needs.prepare-build.outputs.components)}}
-    uses: datavisyn/github-workflows/.github/workflows/build-single-product-part.yml@new_deployment
+    uses: datavisyn/github-workflows/.github/workflows/build-single-product-part.yml@main
     with:
       component: ${{ matrix.component }}
       image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
@@ -105,7 +105,7 @@ jobs:
       fail-fast: true
       matrix:
         component: ${{fromJson(needs.prepare-build.outputs.components)}}
-    uses: datavisyn/github-workflows/.github/workflows/build-workspace-product-part.yml@new_deployment
+    uses: datavisyn/github-workflows/.github/workflows/build-workspace-product-part.yml@main
     with:
       component: ${{ matrix.component }}
       image_tag1: ${{ needs.prepare-build.outputs.image_tag1 }}
@@ -169,4 +169,4 @@ jobs:
           workflow_file_name: "deploy-app.yml"
           ref: ${{ env.WORKFLOW_BRANCH }}
           github_user: ${{ secrets.DV_BOT_USER }}
-          client_payload: '{ "app": "${{ needs.prepare-build.outputs.app }}", "customer": "${{ steps.get-parameters.outputs.customer }}", "stage": "${{ steps.get-parameters.outputs.stage }}", "sub_app": "${{ needs.prepare-build.outputs.sub_app }}", "branch": "${{ needs.prepare-build.outputs.image_tag2 }}" }'
+          client_payload: '{ "app": "${{ needs.prepare-build.outputs.app }}", "customer": "${{ steps.get-parameters.outputs.customer }}", "stage": "${{ steps.get-parameters.outputs.stage }}", "sub_app": "${{ needs.prepare-build.outputs.sub_app }}", "branch": "${{ needs.prepare-build.outputs.image_tag2 }}", "image_tag": "${{ needs.prepare-build.outputs.image_tag1 }}" }'
