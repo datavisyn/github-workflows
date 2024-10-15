@@ -53,7 +53,7 @@ runs:
         IMAGE_TAG: ${{ inputs.image_tag }}
       shell: bash
     - name: Build and push image to Amazon ECR
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v6
       with:
         context: ${{ inputs.current_directory }}
         file: ${{ inputs.docker_file }}
