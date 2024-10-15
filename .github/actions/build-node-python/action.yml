@@ -87,7 +87,7 @@ runs:
   steps:
     # Node
     - name: Set up node version
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       if: inputs.enable_node == 'true'
       with:
         node-version: ${{ inputs.node_version }}
