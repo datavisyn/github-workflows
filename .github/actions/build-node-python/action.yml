@@ -136,7 +136,7 @@ runs:
         name: node-yarn-lock
     # Enable yarn download cache, @see https://github.com/actions/cache/tree/main/save#always-save-cache and https://github.com/actions/setup-node/issues/325
     - name: Restore yarn cache
-      uses: actions/cache/restore@v3
+      uses: actions/cache/restore@v4
       if: inputs.enable_node == 'true' && inputs.enable_node_cache == 'true'
       with:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
@@ -234,7 +234,7 @@ runs:
         RUN_PYTHON_BUILD: ${{ inputs.run_python_build }}
     # Node
     - name: Save yarn cache
-      uses: actions/cache/save@v3
+      uses: actions/cache/save@v4
       if: inputs.enable_node == 'true' && steps.build.outcome == 'success' && inputs.enable_node_cache == 'true'
       with:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
