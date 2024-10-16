@@ -33,11 +33,11 @@ jobs:
           exit 1
         env:
           GITHUB_REF: ${{ github.ref_name }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -180,10 +180,10 @@ jobs:
         run: |
           echo 'only the main branches can be released.'
           exit 1
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -266,7 +266,7 @@ jobs:
           DEVELOP_BRANCH: ${{ steps.get-release-version.outputs.develop_branch_name }}
           MAIN_BRANCH:  ${{ steps.get-release-version.outputs.main_branch_name }}
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
