@@ -13,7 +13,7 @@ concurrency:
 env:
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "vdelev_all_dependabot"
 
 jobs:
   release-repository:

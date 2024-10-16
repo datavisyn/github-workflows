@@ -23,7 +23,7 @@ permissions:
   contents: read
 
 env:
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "vdelev_all_dependabot"
 
 jobs:
   check-helm-chart-version:

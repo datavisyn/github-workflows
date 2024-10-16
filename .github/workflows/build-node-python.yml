@@ -102,7 +102,7 @@ env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "vdelev_all_dependabot"
   POSTGRES_HOSTNAME: postgres_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}
 
 permissions:
@@ -403,7 +403,7 @@ jobs:
           path: playwright-report/
       - name: Run Chromatic Playwright
         if: ${{ inputs.chromatic_enable }}
-        uses: chromaui/action@v11.7.1
+        uses: chromaui/action@v11.12.1
         with:
           playwright: true
           exitZeroOnChanges: true
