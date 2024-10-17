@@ -35,7 +35,11 @@ inputs:
   upload_yarn_lock:
     description: "uploads the node-yarn-lock artifact"
     required: false
-    default: true
+    default: false # false as it is broken right now when actions run in parallel: the artifact name must be unique (so we have to pass the branch or so)
+  upload_bundle:
+    description: "uploads the bundle artifact"
+    required: false
+    default: false # false as it is broken right now when actions run in parallel: the artifact name must be unique (so we have to pass the branch or so)
   run_node_lint:
     default: true
     required: false
@@ -246,7 +250,7 @@ runs:
         name: node-yarn-lock
         path: ./yarn.lock
     - uses: actions/upload-artifact@v4
-      if: inputs.enable_node == 'true' && inputs.run_node_bundle == 'true'
+      if: inputs.enable_node == 'true' && inputs.run_node_bundle == 'true' && inputs.upload_bundle == 'true'
       with:
         name: node-bundle
         path: ./bundles
