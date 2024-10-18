@@ -47,9 +47,9 @@ jobs:
       revision_label: ${{ steps.get-revision-label.outputs.revision_label }}
     steps:
       # checkout repo to get package.json
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -78,7 +78,7 @@ jobs:
           client_payload: '{ "app": "${{ steps.get-parameters.outputs.app }}", "customer": "${{ inputs.customer }}", "stage": "${{ inputs.stage }}", "sub_app": "${{ steps.get-parameters.outputs.sub_app }}", "branch": "${{ steps.get-parameters.outputs.image_tag2 }}", "add_revision_as_tag": "${{ inputs.add_revision_as_tag }}" }'
       - name: Configure AWS Credentials
         if: ${{ inputs.add_revision_as_tag == true }}
-        uses: aws-actions/configure-aws-credentials@v1.7.0
+        uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
           role-to-assume: ${{ vars.DV_AWS_ECR_ROLE }}
           aws_role: ${{ vars.DV_AWS_ECR_ROLE }}

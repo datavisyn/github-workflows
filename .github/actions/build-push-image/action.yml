@@ -34,13 +34,13 @@ runs:
   using: "composite"
   steps:
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1.7.0
+      uses: aws-actions/configure-aws-credentials@v4.0.2
       with:
         role-to-assume: ${{ inputs.aws_role }}
         aws-region: ${{ inputs.aws_region }}
     - name: Login to Amazon ECR
       id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1.5.3
+      uses: aws-actions/amazon-ecr-login@v2.0.1
     - name: get image tag
       id: get-image-tag
       run: |
@@ -53,7 +53,7 @@ runs:
         IMAGE_TAG: ${{ inputs.image_tag }}
       shell: bash
     - name: Build and push image to Amazon ECR
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v6
       with:
         context: ${{ inputs.current_directory }}
         file: ${{ inputs.docker_file }}

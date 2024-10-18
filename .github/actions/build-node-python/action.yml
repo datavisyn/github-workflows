@@ -35,7 +35,11 @@ inputs:
   upload_yarn_lock:
     description: "uploads the node-yarn-lock artifact"
     required: false
-    default: true
+    default: false # false as it is broken right now when actions run in parallel: the artifact name must be unique (so we have to pass the branch or so)
+  upload_bundle:
+    description: "uploads the bundle artifact"
+    required: false
+    default: false # false as it is broken right now when actions run in parallel: the artifact name must be unique (so we have to pass the branch or so)
   run_node_lint:
     default: true
     required: false
@@ -87,7 +91,7 @@ runs:
   steps:
     # Node
     - name: Set up node version
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       if: inputs.enable_node == 'true'
       with:
         node-version: ${{ inputs.node_version }}
@@ -129,14 +133,14 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       # TODO: Remove the variable whenever we can ensure that build-node was called before
       if: inputs.enable_node == 'true' && inputs.download_yarn_lock == 'true'
       with:
         name: node-yarn-lock
     # Enable yarn download cache, @see https://github.com/actions/cache/tree/main/save#always-save-cache and https://github.com/actions/setup-node/issues/325
     - name: Restore yarn cache
-      uses: actions/cache/restore@v3
+      uses: actions/cache/restore@v4
       if: inputs.enable_node == 'true' && inputs.enable_node_cache == 'true'
       with:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
@@ -234,26 +238,26 @@ runs:
         RUN_PYTHON_BUILD: ${{ inputs.run_python_build }}
     # Node
     - name: Save yarn cache
-      uses: actions/cache/save@v3
+      uses: actions/cache/save@v4
       if: inputs.enable_node == 'true' && steps.build.outcome == 'success' && inputs.enable_node_cache == 'true'
       with:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
         path: ~/.yarn/berry/cache/
         key: yarn-download-cache-${{ hashFiles('package.json') }}
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: inputs.enable_node == 'true' && inputs.upload_yarn_lock == 'true'
       with:
         name: node-yarn-lock
         path: ./yarn.lock
-    - uses: actions/upload-artifact@v3
-      if: inputs.enable_node == 'true' && inputs.run_node_bundle == 'true'
+    - uses: actions/upload-artifact@v4
+      if: inputs.enable_node == 'true' && inputs.run_node_bundle == 'true' && inputs.upload_bundle == 'true'
       with:
         name: node-bundle
         path: ./bundles
     # Chromatic
     - name: Run Chromatic
       if: inputs.enable_node == 'true' && inputs.chromatic_enable == 'true'
-      uses: chromaui/action@v11.7.1
+      uses: chromaui/action@v11.12.1
       with:
         exitZeroOnChanges: true
         exitOnceUploaded: true

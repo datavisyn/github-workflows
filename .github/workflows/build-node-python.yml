@@ -294,7 +294,7 @@ jobs:
       #     # TODO: Do component tests need the frontend/backend?
       #     env: ${{ secrets.CYPRESS_ENV }}
       - name: Upload cypress screenshots
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: cypress-screenshots
@@ -403,7 +403,7 @@ jobs:
           path: playwright-report/
       - name: Run Chromatic Playwright
         if: ${{ inputs.chromatic_enable }}
-        uses: chromaui/action@v11.7.1
+        uses: chromaui/action@v11.12.1
         with:
           playwright: true
           exitZeroOnChanges: true
