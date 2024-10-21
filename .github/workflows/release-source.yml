@@ -224,7 +224,6 @@ jobs:
         run: |
           git push origin release-"$RELEASE_VERSION"
 
-      # New Step: Generate Release Notes using GitHub API
       - name: Generate release notes
         id: generate-release-notes
         run: |
