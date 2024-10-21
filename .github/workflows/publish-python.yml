@@ -15,7 +15,7 @@ on:
 env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYTHON_VERSION: "3.10"
-  WORKFLOW_BRANCH: "vdelev_auto_releasenotes"
+  WORKFLOW_BRANCH: "main"
 
 permissions:
   contents: read
