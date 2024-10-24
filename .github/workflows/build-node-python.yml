@@ -314,7 +314,7 @@ jobs:
   # If playwright is used, build node and python sequentially as it is avoiding the duplicate install overhead
   build-node-python-playwright:
     name: Node, Python, Playwright
-    if: ${{ inputs.playwright_enable && (inputs.playwright_run_because_flag || inputs.playwright_run_because_branch == 'true') }}
+    if: ${{ inputs.redis_enable != 'true' &&  inputs.playwright_enable && (inputs.playwright_run_because_flag || inputs.playwright_run_because_branch == 'true') }}
     concurrency:
       group: "node-python-playwright-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
       cancel-in-progress: true
