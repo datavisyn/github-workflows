@@ -81,6 +81,11 @@ on:
         required: false
         type: boolean
         default: false
+      redis_enable:
+        description: 'Enable Redis service'
+        required: false
+        type: boolean
+        default: false
       
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
@@ -412,7 +417,7 @@ jobs:
 
   build-node-python-playwright-redis:
     name: Node, Python, Playwright, Redis
-    if: ${{ inputs.playwright_enable && (inputs.playwright_run_because_flag || inputs.playwright_run_because_branch == 'true') }}
+    if: ${{ inputs.redis_enable == 'true' && inputs.playwright_enable && (inputs.playwright_run_because_flag || inputs.playwright_run_because_branch == 'true') }}
     concurrency:
       group: "node-python-playwright-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
       cancel-in-progress: true
