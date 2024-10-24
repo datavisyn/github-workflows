@@ -417,7 +417,7 @@ jobs:
 
   build-node-python-playwright-redis:
     name: Node, Python, Playwright, Redis
-    if: ${{ inputs.redis_enable == 'true' && inputs.playwright_enable && (inputs.playwright_run_because_flag || inputs.playwright_run_because_branch == 'true') }}
+    if: ${{ inputs.redis_enable && inputs.playwright_enable && (inputs.playwright_run_because_flag || inputs.playwright_run_because_branch == 'true') }}
     concurrency:
       group: "node-python-playwright-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
       cancel-in-progress: true
@@ -472,10 +472,12 @@ jobs:
       - name: Set service connection details to hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME == ''
         run: |
-          echo "POSTGRES_HOSTNAME=localhost" >> "$GITHUB_ENV"
-          echo "POSTGRES_PORT=${{ job.services.postgres.ports['5432'] }}" >> "$GITHUB_ENV"
-          echo "REDIS_HOSTNAME=localhost" >> "$GITHUB_ENV"
-          echo "REDIS_PORT=${{ job.services.redis.ports['6379'] }}" >> "$GITHUB_ENV"
+          {
+            echo "POSTGRES_HOSTNAME=localhost"
+            echo "POSTGRES_PORT=${{ job.services.postgres.ports['5432'] }}" 
+            echo "REDIS_HOSTNAME=localhost"
+            echo "REDIS_PORT=${{ job.services.redis.ports['6379'] }}" 
+          } >> "$GITHUB_ENV"
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
