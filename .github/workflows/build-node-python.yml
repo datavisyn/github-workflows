@@ -463,11 +463,18 @@ jobs:
           {
             echo "POSTGRES_HOSTNAME=postgres_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}"
             echo "POSTGRES_PORT=5432"
-            echo "REDIS_HOSTNAME=redis_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}"
-            echo "REDIS_PORT=6379"
+            #echo "REDIS_HOSTNAME=redis_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}"
+            #echo "REDIS_PORT=6379"
           } >> "$GITHUB_ENV"
           docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
-          docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.REDIS_HOSTNAME }}
+          #docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.REDIS_HOSTNAME }}
+
+          # Only set Redis variables and connect to Redis if redis_enable is true
+          if [ "${{ inputs.redis_enable }}" == "true" ]; then
+            echo "REDIS_HOSTNAME=redis_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}" >> "$GITHUB_ENV"
+            echo "REDIS_PORT=6379" >> "$GITHUB_ENV"
+            docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} redis_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}
+          fi
     
       - name: Set service connection details to hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME == ''
