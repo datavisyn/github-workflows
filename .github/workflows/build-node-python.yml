@@ -467,6 +467,7 @@ jobs:
             echo "REDIS_PORT=6379"
           } >> "$GITHUB_ENV"
           docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
+          sleep 5
           docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.REDIS_HOSTNAME }}
 
           # Only set Redis variables and connect to Redis if redis_enable is true
