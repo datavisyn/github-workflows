@@ -475,7 +475,9 @@ jobs:
             echo "REDIS_PORT=6379" >> "$GITHUB_ENV"
             source "$GITHUB_ENV"
             echo "Redis Hostname: $REDIS_HOSTNAME"
-            docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.REDIS_HOSTNAME }}
+            #docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.REDIS_HOSTNAME }}
+            docker network connect "${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }}" "$REDIS_HOSTNAME"  # Properly reference the hostname
+
           fi
     
       - name: Set service connection details to hosted runner
