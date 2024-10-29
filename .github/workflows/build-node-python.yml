@@ -473,6 +473,8 @@ jobs:
           if [ "${{ inputs.redis_enable }}" == "true" ]; then
             echo "REDIS_HOSTNAME=redis_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}" >> "$GITHUB_ENV"
             echo "REDIS_PORT=6379" >> "$GITHUB_ENV"
+            source "$GITHUB_ENV"
+            echo "Redis Hostname: $REDIS_HOSTNAME"
             docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.REDIS_HOSTNAME }}
           fi
     
