@@ -457,7 +457,7 @@ jobs:
     steps:
       - name: Set system env variable to github env
         run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
-      - name: Set github token, hostname, port and docker network for self-hosted runner
+      - name: Set up custom postgres and redis hostname, port and docker network for self-hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
         env:
           REDIS_HOSTNAME: redis_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}
