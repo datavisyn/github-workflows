@@ -28,7 +28,7 @@ permissions:
   contents: read
 
 env:
-  WORKFLOW_BRANCH: "main"
+   WORKFLOW_BRANCH: "debug_mode"
 
 jobs:
   build:
