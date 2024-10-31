@@ -23,7 +23,7 @@ permissions:
   contents: read
 
 env:
-   WORKFLOW_BRANCH: "debug_mode"
+  WORKFLOW_BRANCH: "debug_mode"
 
 jobs:
   check-helm-chart-version:

@@ -34,7 +34,7 @@ concurrency:
 env:
   GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
-   WORKFLOW_BRANCH: "debug_mode"
+  WORKFLOW_BRANCH: "debug_mode"
   GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
   CHARTMUSEUM_USER: ${{ secrets.DV_CHARTMUSEUM_USER }}
   CHARTMUSEUM_PASSWORD: ${{ secrets.DV_CHARTMUSEUM_PASSWORD }}

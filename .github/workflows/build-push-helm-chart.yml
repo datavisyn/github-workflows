@@ -22,7 +22,7 @@ permissions:
   contents: read
 
 env:
-   WORKFLOW_BRANCH: "debug_mode"
+  WORKFLOW_BRANCH: "debug_mode"
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
