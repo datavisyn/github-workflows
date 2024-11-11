@@ -9,6 +9,7 @@ on:
 env:
   GITHUB_USER: "datavisyn-bot"
   GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+  PR_TITLE: ${{ github.event.pull_request.title }}
 
 jobs:
   post_release:
@@ -23,7 +24,7 @@ jobs:
       - name: Generate Release Notes
         id: generate-release-notes
         run: |
-          TAG_NAME="v$(echo "${{ github.event.pull_request.title }}" | awk '{print $2}')"
+          TAG_NAME="v$(echo "$PR_TITLE" | awk '{print $2}')"
           response=$(curl -s -X POST \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer $GITHUB_TOKEN" \
