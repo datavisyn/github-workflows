@@ -1,0 +1,67 @@
+name: Post-Merge Release Actions
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - 'main'
+env:
+  GITHUB_USER: "datavisyn-bot"
+  GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+
+jobs:
+  post_release:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.title, 'Release') 
+    runs-on: ubuntu-22.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+        
+      - name: Generate Release Notes
+        id: generate-release-notes
+        run: |
+          response=$(curl -s -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/releases/generate-notes \
+            -d "$(jq -n --arg tag_name "v${{ github.event.pull_request.title.split(' ')[1] }}" \
+                  --arg target_commitish "main" \
+                  '{tag_name: $tag_name, target_commitish: $target_commitish}')")
+          echo "$(echo "$response" | jq -r '.body')" > release_notes.txt
+          
+      - name: Create GitHub Release
+        run: |
+          TAG="v${{ github.event.pull_request.title.split(' ')[1] }}"
+          RELEASE_NOTES=$(cat release_notes.txt)
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository.full_name }}/releases \
+            -d '{
+              "tag_name": "'"$TAG"'",
+              "target_commitish": "main",
+              "name": "'"$TAG"'",
+              "body": "'"$RELEASE_NOTES"'",
+              "draft": false,
+              "prerelease": false
+            }'
+
+      - name: Merge Main into Develop
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "<>"
+          git checkout develop
+          git pull origin main
+          git push origin develop
+
+      - name: Update Package Version for Next Development Cycle
+        run: |
+          CURRENT_VERSION=$(jq -r '.version' package.json)
+          NEW_VERSION=$(echo "$CURRENT_VERSION" | awk -F. -v OFS=. '{$NF += 1 ; print $0"-SNAPSHOT"}')
+          jq --arg new_version "$NEW_VERSION" '.version = $new_version' package.json > tmp.json && mv tmp.json package.json
+
+          git add package.json
+          git commit -m "Bump to $NEW_VERSION"
+          git push origin develop
