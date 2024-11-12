@@ -53,15 +53,13 @@ jobs:
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/releases \
-            -d '{
-              "tag_name": "'"$TAG_NAME"'",
-              "target_commitish": "main",
-              "name": "'"$TAG_NAME"'",
-              "body": "'"$RELEASE_NOTES"'",
-              "draft": false,
-              "prerelease": false
-            }'
-
+            -d "$(jq -n \
+                  --arg tag_name "$TAG_NAME" \
+                  --arg target_commitish "main" \
+                  --arg name "$TAG_NAME" \
+                  --arg body "$RELEASE_NOTES" \
+                  '{tag_name: $tag_name, target_commitish: $target_commitish, name: $name, body: $body, draft: false, prerelease: false}')"
+  
       - name: Merge Main into Develop
         run: |
           git config user.name "$GITHUB_ACTOR"
