@@ -53,6 +53,7 @@ runs:
     - name: Get AWS ECR Scan results
       id: get-scan-results
       run: |
+        # As the image scan itself may not be started yet, we have to wait (and retry) until it is actually available
         max_retries=5
         retries=0
         scan_complete=1
