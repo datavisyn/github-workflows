@@ -60,7 +60,7 @@ runs:
             aws ecr wait image-scan-complete --repository-name $ECR_REPOSITORY --image-id imageTag=$IMAGE_TAG && scan_complete=0 && break
             sleep 5
             retries=$((retries + 1))
-            echo "Retry $retries/$max_retries: Waiting for image scan to complete..."
+            echo "Retry $retries/$max_retries: Waiting for image scan to start..."
         done
 
         if [ $scan_complete -eq 0 ]; then
