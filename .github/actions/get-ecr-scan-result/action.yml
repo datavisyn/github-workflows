@@ -53,8 +53,18 @@ runs:
     - name: Get AWS ECR Scan results
       id: get-scan-results
       run: |
-        aws ecr wait image-scan-complete --repository-name $ECR_REPOSITORY --image-id imageTag=$IMAGE_TAG
-        if [ $(echo $?) -eq 0 ]; then
+        # As the image scan itself may not be started yet, we have to wait (and retry) until it is actually available
+        max_retries=5
+        retries=0
+        scan_complete=1
+        until [ $retries -eq $max_retries ]; do
+            aws ecr wait image-scan-complete --repository-name $ECR_REPOSITORY --image-id imageTag=$IMAGE_TAG && scan_complete=0 && break
+            sleep 5
+            retries=$((retries + 1))
+            echo "Retry $retries/$max_retries: Waiting for image scan to start..."
+        done
+
+        if [ $scan_complete -eq 0 ]; then
           scan_findings=$(aws ecr describe-image-scan-findings --repository-name $ECR_REPOSITORY --image-id imageTag=$IMAGE_TAG | jq '.imageScanFindings.findingSeverityCounts')
           critical=$(echo $scan_findings | jq '.CRITICAL')
           high=$(echo $scan_findings | jq '.HIGH')
