@@ -63,7 +63,8 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "<>"
           git checkout develop
-          git pull origin main
+          git fetch origin main
+          git merge origin/main
           git push origin develop
 
       - name: Update Package Version for Next Development Cycle
