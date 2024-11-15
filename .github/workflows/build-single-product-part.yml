@@ -142,7 +142,7 @@ jobs:
           cd "./tmp/$COMPONENT"
           repository="$REPO"
           if [[ $repository == *"gitlab"* && -n $GITLAB_TOKEN ]] ; then
-            repository=https://$GITLAB_TOKEN@${repository}}
+            repository=https://$GITLAB_TOKEN@${repository}
           else
             repository=https://$GH_TOKEN@github.com/${repository}.git
           fi
