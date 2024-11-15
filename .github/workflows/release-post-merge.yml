@@ -1,10 +1,35 @@
 name: Post-Merge Release Actions
 
 on:
-  pull_request:
-    types: [closed]
-    branches:
-      - 'main' 
+  workflow_call:
+    inputs:
+      base_branch:
+        type: string
+        description: "The base branch to check for merged PRs"
+        required: false
+        default: "main"
+      develop_branch:
+        type: string
+        description: "The branch to merge into"
+        required: false
+        default: "develop"
+      pr_title:
+        type: string
+        description: "The title of the merged pull request"
+        required: true
+      pr_number:
+        type: string
+        description: "The number of the merged pull request"
+        required: true
+      repository_owner:
+        type: string
+        description: "The owner of the repository"
+        required: true
+      repository_name:
+        type: string
+        description: "The name of the repository"
+        required: true
+
 
 permissions:
   contents: write
@@ -13,11 +38,9 @@ permissions:
 env:
   GITHUB_USER: "datavisyn-bot"
   GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
-  PR_TITLE: ${{ github.event.pull_request.title }}
 
 jobs:
   post_release:
-    if: ${{ github.event.pull_request.merged == true && startsWith(github.event.pull_request.title, 'Release') }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout Repository
@@ -28,7 +51,7 @@ jobs:
 
       - name: Create and Push Tag
         run: |
-          TAG_NAME="v$(echo "$PR_TITLE" | awk '{print $2}')"
+          TAG_NAME="v$(echo "${{ inputs.pr_title }}" | awk '{print $2}')"
           git tag "$TAG_NAME"
           git push origin "$TAG_NAME"
 
@@ -38,23 +61,23 @@ jobs:
           echo "Fetching PR body for release notes..."
           PR_RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                         -H "Accept: application/vnd.github.v3+json" \
-                        https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/pulls/${{ github.event.pull_request.number }})
+                        https://api.github.com/repos/${{ inputs.repository_owner }}/${{ inputs.repository_name }}/pulls/${{ inputs.pr_number }})
         
           PR_BODY=$(echo "$PR_RESPONSE" | jq -r '.body')
           echo "$PR_BODY" > pr_release_notes.txt
           
       - name: Create GitHub Release
         run: |
-          TAG_NAME="v$(echo "$PR_TITLE" | awk '{print $2}')"
+          TAG_NAME="v$(echo "${{ inputs.pr_title }}" | awk '{print $2}')"
           RELEASE_NOTES=$(cat pr_release_notes.txt)
 
           RESPONSE=$(curl -s -o response.json -w "%{http_code}" -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/releases \
+            https://api.github.com/repos/${{ inputs.repository_owner }}/${{ inputs.repository_name }}/releases \
             -d "$(jq -n \
                   --arg tag_name "$TAG_NAME" \
-                  --arg target_commitish "main" \
+                  --arg target_commitish "${{ inputs.base_branch }}" \
                   --arg name "$TAG_NAME" \
                   --arg body "$RELEASE_NOTES" \
                   '{tag_name: $tag_name, target_commitish: $target_commitish, name: $name, body: $body, draft: false, prerelease: false}')")
@@ -72,10 +95,10 @@ jobs:
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "<>"
-          git checkout develop
-          git fetch origin main
-          git merge origin/main
-          git push origin develop
+          git checkout ${{ inputs.develop_branch }}
+          git fetch origin ${{ inputs.base_branch }}
+          git merge origin/${{ inputs.base_branch }}
+          git push origin ${{ inputs.develop_branch }}
           
       - name: Update Package Version for Next Development Cycle
         run: |
@@ -85,4 +108,4 @@ jobs:
 
           git add package.json
           git commit -m "chore: prepare next dev release"
-          git push origin develop
+          git push origin ${{ inputs.develop_branch }}
