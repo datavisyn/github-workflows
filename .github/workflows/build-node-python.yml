@@ -215,23 +215,43 @@ jobs:
         ports:
           # will assign a random free host port
           - 5432/tcp
-
+      redis:
+        image: redis:6
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --name redis_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}
+        ports:
+          - 6379/tcp
+    
     steps:
       - name: Set self-hosted env variable to github env
         run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
-      - name: Set github token, hostname, port and docker network for self-hosted runner
+      - name: Set up custom postgres and redis hostname, port and docker network for self-hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
-        run: |
+        env:
+          REDIS_HOSTNAME: redis_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}
+          REDIS_PORT: 6379
+        run: | 
           {
             echo "POSTGRES_HOSTNAME=postgres_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}"
             echo "POSTGRES_PORT=5432"
+            echo "REDIS_HOSTNAME=redis_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}"
+            echo "REDIS_PORT=6379"
           } >> "$GITHUB_ENV"
-          docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} "postgres_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}"
-      - name: Set postgres connection details to hosted runner
+          docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
+          docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.REDIS_HOSTNAME }}
+      - name: Set service connection details to hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME == ''
         run: |
-          echo "POSTGRES_HOSTNAME=localhost" >> "$GITHUB_ENV"
-          echo "POSTGRES_PORT=${{ job.services.postgres.ports['5432'] }}" >> "$GITHUB_ENV"
+          {
+            echo "POSTGRES_HOSTNAME=localhost"
+            echo "POSTGRES_PORT=${{ job.services.postgres.ports['5432'] }}" 
+            echo "REDIS_HOSTNAME=localhost"
+            echo "REDIS_PORT=${{ job.services.redis.ports['6379'] }}" 
+          } >> "$GITHUB_ENV"
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
@@ -334,23 +354,45 @@ jobs:
         ports:
           # will assign a random free host port
           - 5432/tcp
+          
+      redis:
+        image: redis:6
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --name redis_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}
+        ports:
+          - 6379/tcp
 
     steps:
       - name: Set system env variable to github env
         run: echo "GH_ACTIONS_SELF_HOSTED_NETWORK_NAME=${GH_ACTIONS_SELF_HOSTED_NETWORK_NAME}" >> "$GITHUB_ENV"
-      - name: Set github token, hostname, port and docker network for self-hosted runner
+      - name: Set up custom postgres and redis hostname, port and docker network for self-hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME != ''
+        env:
+          REDIS_HOSTNAME: redis_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}
+          REDIS_PORT: 6379
         run: | 
           {
             echo "POSTGRES_HOSTNAME=postgres_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}"
             echo "POSTGRES_PORT=5432"
+            echo "REDIS_HOSTNAME=redis_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}"
+            echo "REDIS_PORT=6379"
           } >> "$GITHUB_ENV"
           docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.POSTGRES_HOSTNAME }}
-      - name: Set postgres connection details to hosted runner
+          docker network connect ${{ env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME }} ${{ env.REDIS_HOSTNAME }}
+
+      - name: Set service connection details to hosted runner
         if: env.GH_ACTIONS_SELF_HOSTED_NETWORK_NAME == ''
         run: |
-          echo "POSTGRES_HOSTNAME=localhost" >> "$GITHUB_ENV"
-          echo "POSTGRES_PORT=${{ job.services.postgres.ports['5432'] }}" >> "$GITHUB_ENV"
+          {
+            echo "POSTGRES_HOSTNAME=localhost"
+            echo "POSTGRES_PORT=${{ job.services.postgres.ports['5432'] }}" 
+            echo "REDIS_HOSTNAME=localhost"
+            echo "REDIS_PORT=${{ job.services.redis.ports['6379'] }}" 
+          } >> "$GITHUB_ENV"
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
