@@ -38,7 +38,7 @@ concurrency:
 
 env:
   GA_VERSION: "main"
-  WORKFLOW_BRANCH: "add-message-argocd-deployment"
+  WORKFLOW_BRANCH: "deploy-with-argocd"
 
 jobs:
   deploy:
@@ -73,7 +73,7 @@ jobs:
           repo:  "infrastructure-k8s"
           github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
           workflow_file_name: "deploy-app.yml"
-          ref: ${{ env.WORKFLOW_BRANCH }}
+          ref: add-message-argocd-deployment
           github_user: ${{ secrets.DV_BOT_USER }}
           client_payload: '{ "app": "${{ steps.get-parameters.outputs.app }}", "customer": "${{ inputs.customer }}", "stage": "${{ inputs.stage }}", "sub_app": "${{ steps.get-parameters.outputs.sub_app }}", "branch": "${{ steps.get-parameters.outputs.image_tag2 }}", "add_revision_as_tag": "${{ inputs.add_revision_as_tag }}" }'
       - name: Configure AWS Credentials
