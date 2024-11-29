@@ -58,6 +58,11 @@ jobs:
   build-components:
     runs-on: ubuntu-22.04
     steps:
+      - name: Remove unnecessary files
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
       # checkout specific repository
       - uses: actions/checkout@v4
         with:
