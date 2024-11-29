@@ -1,0 +1,111 @@
+name: Post-Merge Release Actions
+
+on:
+  workflow_call:
+    inputs:
+      base_branch:
+        type: string
+        description: "The base branch to check for merged PRs"
+        required: false
+        default: "main"
+      develop_branch:
+        type: string
+        description: "The branch to merge into"
+        required: false
+        default: "develop"
+      pr_title:
+        type: string
+        description: "The title of the merged pull request"
+        required: true
+      pr_number:
+        type: string
+        description: "The number of the merged pull request"
+        required: true
+      repository_owner:
+        type: string
+        description: "The owner of the repository"
+        required: true
+      repository_name:
+        type: string
+        description: "The name of the repository"
+        required: true
+
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  GITHUB_USER: "datavisyn-bot"
+  GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+
+jobs:
+  post_release:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          fetch-depth: 0
+
+      - name: Create and Push Tag
+        run: |
+          TAG_NAME="v$(echo "${{ inputs.pr_title }}" | awk '{print $2}')"
+          git tag "$TAG_NAME"
+          git push origin "$TAG_NAME"
+
+      - name: Get PR body from release PR for release notes
+        id: get-pr-body
+        run: |
+          echo "Fetching PR body for release notes..."
+          PR_RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                        -H "Accept: application/vnd.github.v3+json" \
+                        https://api.github.com/repos/${{ inputs.repository_owner }}/${{ inputs.repository_name }}/pulls/${{ inputs.pr_number }})
+        
+          PR_BODY=$(echo "$PR_RESPONSE" | jq -r '.body')
+          echo "$PR_BODY" > pr_release_notes.txt
+          
+      - name: Create GitHub Release
+        run: |
+          TAG_NAME="v$(echo "${{ inputs.pr_title }}" | awk '{print $2}')"
+          RELEASE_NOTES=$(cat pr_release_notes.txt)
+
+          RESPONSE=$(curl -s -o response.json -w "%{http_code}" -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ inputs.repository_owner }}/${{ inputs.repository_name }}/releases \
+            -d "$(jq -n \
+                  --arg tag_name "$TAG_NAME" \
+                  --arg target_commitish "${{ inputs.base_branch }}" \
+                  --arg name "$TAG_NAME" \
+                  --arg body "$RELEASE_NOTES" \
+                  '{tag_name: $tag_name, target_commitish: $target_commitish, name: $name, body: $body, draft: false, prerelease: false}')")
+
+          if [ "$RESPONSE" -ne 201 ]; then
+            echo "Failed to create GitHub release. Status code: $RESPONSE"
+            echo "Response body:"
+            cat response.json
+            exit 1  
+          else
+            echo "GitHub release '$TAG_NAME' created successfully."
+          fi
+          
+      - name: Merge Main into Develop
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "<>"
+          git checkout ${{ inputs.develop_branch }}
+          git fetch origin ${{ inputs.base_branch }}
+          git merge origin/${{ inputs.base_branch }}
+          git push origin ${{ inputs.develop_branch }}
+          
+      - name: Update Package Version for Next Development Cycle
+        run: |
+          CURRENT_VERSION=$(jq -r '.version' package.json)
+          NEW_VERSION=$(echo "$CURRENT_VERSION" | awk -F. -v OFS=. '{$NF += 1 ; print $0"-SNAPSHOT"}')
+          jq --arg new_version "$NEW_VERSION" '.version = $new_version' package.json > tmp.json && mv tmp.json package.json
+
+          git add package.json
+          git commit -m "chore: prepare next dev release"
+          git push origin ${{ inputs.develop_branch }}
