@@ -124,6 +124,7 @@ runs:
       run: |
         sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
         sudo apt-get install postgresql-16-pgvector
+      shell: bash
     # General
     - name: Git config
       if: inputs.github_ro_token != ''
