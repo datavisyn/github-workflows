@@ -37,7 +37,7 @@ permissions:
 
 env:
   GITHUB_USER: "datavisyn-bot"
-  GITHUB_TOKEN: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+  GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
 
 jobs:
   post_release:
