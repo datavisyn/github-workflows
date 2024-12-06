@@ -43,6 +43,16 @@ jobs:
   post_release:
     runs-on: ubuntu-22.04
     steps:
+      - name: Git config
+        run: |
+          if [ -f ~/.gitconfig ]; then
+            rm ~/.gitconfig
+            touch ~/.gitconfig
+          fi
+          git config --global --replace-all url."https://$GITHUB_TOKEN@github.com/".insteadOf ssh://git@github.com/
+          git config --add --global url."https://$GITHUB_TOKEN@github".insteadOf https://github
+          git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
+
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
