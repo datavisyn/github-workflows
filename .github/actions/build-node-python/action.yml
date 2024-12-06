@@ -119,6 +119,12 @@ runs:
         pip --version
         uv --version
       shell: bash
+    - name: Install pgvector
+      if: inputs.enable_python == 'true'
+      run: |
+        sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+        sudo apt-get install postgresql-16-pgvector -y
+      shell: bash
     # General
     - name: Git config
       if: inputs.github_ro_token != ''
