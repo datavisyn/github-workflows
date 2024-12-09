@@ -112,6 +112,8 @@ jobs:
           
       - name: Update Package Version for Next Development Cycle
         run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "<>"
           CURRENT_VERSION=$(jq -r '.version' package.json)
           NEW_VERSION=$(echo "$CURRENT_VERSION" | awk -F. -v OFS=. '{$NF += 1 ; print $0"-SNAPSHOT"}')
           jq --arg new_version "$NEW_VERSION" '.version = $new_version' package.json > tmp.json && mv tmp.json package.json
