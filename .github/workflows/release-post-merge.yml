@@ -103,7 +103,7 @@ jobs:
           
       - name: Merge Main into Develop
         run: |
-          git config user.name "$GITHUB_ACTOR"
+          git config user.name "$GITHUB_USER"
           git config user.email "<>"
           git checkout ${{ inputs.develop_branch }}
           git fetch origin ${{ inputs.base_branch }}
@@ -112,7 +112,7 @@ jobs:
           
       - name: Update Package Version for Next Development Cycle
         run: |
-          git config user.name "$GITHUB_ACTOR"
+          git config user.name "$GITHUB_USER"
           git config user.email "<>"
           CURRENT_VERSION=$(jq -r '.version' package.json)
           NEW_VERSION=$(echo "$CURRENT_VERSION" | awk -F. -v OFS=. '{$NF += 1 ; print $0"-SNAPSHOT"}')
