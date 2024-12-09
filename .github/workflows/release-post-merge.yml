@@ -56,7 +56,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
           fetch-depth: 0
 
       - name: Create and Push Tag
@@ -103,7 +103,7 @@ jobs:
           
       - name: Merge Main into Develop
         run: |
-          git config user.name "$GITHUB_ACTOR"
+          git config user.name "$GITHUB_USER"
           git config user.email "<>"
           git checkout ${{ inputs.develop_branch }}
           git fetch origin ${{ inputs.base_branch }}
@@ -112,6 +112,8 @@ jobs:
           
       - name: Update Package Version for Next Development Cycle
         run: |
+          git config user.name "$GITHUB_USER"
+          git config user.email "<>"
           CURRENT_VERSION=$(jq -r '.version' package.json)
           NEW_VERSION=$(echo "$CURRENT_VERSION" | awk -F. -v OFS=. '{$NF += 1 ; print $0"-SNAPSHOT"}')
           jq --arg new_version "$NEW_VERSION" '.version = $new_version' package.json > tmp.json && mv tmp.json package.json
