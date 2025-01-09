@@ -433,7 +433,7 @@ jobs:
       - name: Start Xvfb
         run: Xvfb :99 & export DISPLAY=:99
       - name: Run playwright e2e tests
-        run: yarn run pw:run ${{ inputs.playwright_spec_param }}
+        run: xvfb-run -a -- yarn run pw:run ${{ inputs.playwright_spec_param }}
         shell: bash
       - name: Upload bundle
         uses: actions/upload-artifact@v4
