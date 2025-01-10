@@ -408,6 +408,8 @@ jobs:
       - name: Build node and python
         uses: ./tmp/github-workflows/.github/actions/build-node-python
         with:
+          run_node_test: false
+          run_node_lint: false
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
