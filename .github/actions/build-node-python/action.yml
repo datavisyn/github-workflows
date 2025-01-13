@@ -263,7 +263,7 @@ runs:
     # Chromatic
     - name: Run Chromatic
       if: inputs.enable_node == 'true' && inputs.chromatic_enable == 'true'
-      uses: chromaui/action@v11.20.0
+      uses: chromaui/action@v11.22.2
       with:
         exitZeroOnChanges: true
         exitOnceUploaded: true
