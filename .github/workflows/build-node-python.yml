@@ -81,6 +81,11 @@ on:
         required: false
         type: boolean
         default: false
+      timeout:
+        description: "Timeout for each job in minutes."
+        type: number
+        required: false
+        default: 60
       
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
@@ -114,6 +119,7 @@ permissions:
 jobs:
   build-node:
     name: Node
+    timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
     concurrency:
       group: "node-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
@@ -153,6 +159,7 @@ jobs:
 
   build-python:
     name: Python
+    timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
     concurrency:
       group: "python-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
@@ -190,6 +197,7 @@ jobs:
   # If cypress is used, build node and python sequentially as it is avoiding the duplicate install overhead
   build-node-python-cypress:
     name: Node, Python, Cypress
+    timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     if: ${{ inputs.cypress_enable && (inputs.cypress_run_because_flag || inputs.cypress_run_because_branch == 'true') }}
     concurrency:
       group: "node-python-cypress-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
@@ -329,6 +337,7 @@ jobs:
   # If playwright is used, build node and python sequentially as it is avoiding the duplicate install overhead
   build-node-python-playwright:
     name: Node, Python, Playwright
+    timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     if: ${{ inputs.playwright_enable && (inputs.playwright_run_because_flag || inputs.playwright_run_because_branch == 'true') }}
     concurrency:
       group: "node-python-playwright-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"

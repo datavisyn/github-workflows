@@ -38,6 +38,11 @@ on:
           description: "stage for the image (develop or production) depending on the branch name"
           required: true
           type: string
+        timeout:
+          description: "Timeout for each job in minutes."
+          type: number
+          required: false
+          default: 60
 env:
   VISYN_SCRIPTS_VERSION: "v7" # visyn_scripts@v7 is the last version with workspace support
   TIME_ZONE: "Europe/Vienna"
@@ -54,6 +59,7 @@ permissions:
 
 jobs:
   build-components:
+    timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     runs-on: ubuntu-22.04
     steps:
       # checkout specific repository
