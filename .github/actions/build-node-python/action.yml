@@ -173,7 +173,7 @@ runs:
 
           parallel_jobs=()
           if [ "$RUN_NODE_LINT" = "true" ]; then
-            parallel_jobs+=("yarn run lint")
+            parallel_jobs+=("yarn run lint --quiet")
           fi
           if [ "$RUN_NODE_TEST" = "true" ]; then
             parallel_jobs+=("yarn run test")
