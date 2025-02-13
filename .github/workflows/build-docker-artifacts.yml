@@ -75,7 +75,7 @@ jobs:
             const config = require('./deploy/build/config.json');
 
             const buildTime = new Date().toISOString().replace(/:/g, '').replace(/\..+/, 'Z');
-            const imageTagBranchName = "${{ github.ref }}".replace('refs/heads/', '').replace(/[^a-zA-Z0-9._-]/g, '-');
+            const imageTagBranchName = "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-');
             const imageTag = `tagged-${imageTagBranchName}-${buildTime}`;
 
             const flavors = config.flavors.filter(flavor => flavor.skip !== true).map(flavor => {
