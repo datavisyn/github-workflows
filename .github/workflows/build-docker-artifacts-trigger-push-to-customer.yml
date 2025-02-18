@@ -1,0 +1,104 @@
+name: Trigger push docker artifacts to customer
+
+on:
+  workflow_call:
+    inputs:
+      customers:
+        type: string
+        required: true
+        description: Comma separated list of customers
+      branch:
+        type: string
+        required: false
+        # When using github.ref || github.head_ref, it would contain the full path, including /, which breaks the postgres hostname
+        default: ${{ github.sha }}
+      runs_on:
+        type: string
+        required: false
+        default: "ubuntu-22.04"
+    secrets:
+      DATAVISYN_BOT_REPO_TOKEN:
+        required: false
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ github.event.inputs.app }}-${{ github.event.inputs.customer }}-${{ github.event.inputs.image_tag }}"
+  cancel-in-progress: true
+
+env:
+  WORKFLOW_BRANCH: "mp/push_docker"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  get-customers:
+    name: Trigger push docker artifacts to ${{ inputs.customers }}
+    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+    outputs:
+      result: ${{ steps.get-customers.outputs.result }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+  
+      - name: Checkout github-workflows repository
+        uses: actions/checkout@v4
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+  
+      - name: Validate ./deploy/build/config.json
+        shell: bash
+        run: |
+          # Validate the config with the schema
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install jsonschema
+          jsonschema -i ./deploy/build/config.json ./tmp/github-workflows/.github/workflows/build-docker-artifacts-config.schema.json
+          deactivate
+          rm -rf .venv
+
+      - name: Get customers from ./deploy/build/config.json
+        uses: actions/github-script@v7
+        id: get-customers
+        with:
+          script: |
+            const config = require('./deploy/build/config.json');
+            const customers = process.env.CUSTOMERS.split(',');
+            const imageTagBranchName = "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-');
+
+            const result = customers.map((c) => ({
+              repository: process.env.REPOSITORY,
+              customer: c,
+              customer_json: JSON.stringify(config.customers[c]),
+              image_tag: imageTagBranchName,
+            }));
+            console.log(result);
+            return result;
+        env:
+          CUSTOMERS: ${{ inputs.customers }}
+          REPOSITORY: ${{ github.repository }}
+
+  trigger-push:
+    needs: get-customers
+    strategy:
+      fail-fast: true
+      matrix:
+        customer: ${{ fromJson(needs.get-customers.outputs.result) }}
+    runs-on: ${{ inputs.runs_on }}
+    steps:
+      - name: Trigger push docker artifacts to ${{ matrix.customer.customer }}
+        uses: datavisyn/github-action-trigger-workflow@v1
+        with:
+          owner: "datavisyn"
+          repo:  "infrastructure-k8s"
+          github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
+          workflow_file_name: "push-docker-artifact-to-customer.yml"
+          ref: "main"
+          github_user: ${{ secrets.DV_BOT_USER }}
+          client_payload: ${{ toJson(matrix.customer) }}

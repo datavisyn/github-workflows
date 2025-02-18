@@ -35,6 +35,7 @@
                 },
                 "skip_image_scan": {
                   "type": "boolean",
+                  "default": false,
                   "description": "Skip scanning the image for vulnerabilities"
                 }
               },
@@ -43,6 +44,52 @@
           }
         },
         "required": ["directory", "components"]
+      }
+    },
+    "customers": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "patternProperties": {
+          "^[a-zA-Z0-9_-]+$": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["aws"],
+                "description": "Type of customer configuration"
+              },
+              "secret_key": {
+                "type": "string",
+                "description": "Secret key for AWS secrets"
+              },
+              "registry": {
+                "type": "string",
+                "description": "Registry URL at customer"
+              },
+              "repositories": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "source_repository": {
+                      "type": "string",
+                      "description": "Internal ECR repository name"
+                    },
+                    "target_repository": {
+                      "type": "string",
+                      "description": "Repository name at customer"
+                    }
+                  },
+                  "required": ["source_repository", "target_repository"]
+                }
+              }
+            },
+            "required": ["type", "secret_key", "registry", "repositories"]
+          }
+        }
       }
     }
   },
