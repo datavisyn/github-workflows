@@ -295,6 +295,7 @@ jobs:
     # if? When should we do this? Always? Only for certain branches? If so, how should we define that, in the config.json?
     needs: [retag-images, get-flavors]
     uses: datavisyn/github-workflows/.github/workflows/build-docker-artifacts-trigger-push-to-customer.yml@mp/push_docker
+    secrets: inherit
     with:
       customers: ${{ fromJson(needs.get-flavors.outputs.result).customers }}
       branch: ${{ inputs.branch }}

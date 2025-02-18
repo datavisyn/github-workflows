@@ -34,7 +34,7 @@ permissions:
 
 jobs:
   get-customers:
-    name: Trigger push docker artifacts to ${{ inputs.customers || 'all' }}
+    name: Get customers to push to (${{ inputs.customers || 'all' }})
     runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
     outputs:
       result: ${{ steps.get-customers.outputs.result }}
@@ -88,6 +88,7 @@ jobs:
           REPOSITORY: ${{ github.repository }}
 
   trigger-push:
+    name: Trigger push docker artifacts to ${{ matrix.customer.customer }}
     needs: get-customers
     strategy:
       fail-fast: true
