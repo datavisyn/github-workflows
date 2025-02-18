@@ -61,8 +61,8 @@ jobs:
             const customer = JSON.parse(process.env.CUSTOMER_JSON);
 
             // Comma separated list of source images, incl. registry, repository and tag
-            const sourceImages = customer.repositories.map(repo => `${process.env.SOURCE_ECR_REGISTRY}/${repo.source_repository}:${repo.image_tag || process.env.IMAGE_TAG}`).join(',');
-            const destinationImages = customer.repositories.map(repo => `${customer.registry}/${repo.target_repository}:${repo.image_tag || process.env.IMAGE_TAG}`).join(',');
+            const sourceImages = customer.repositories.map(repo => `${process.env.SOURCE_ECR_REGISTRY}/${repo.source_repository}:${repo.source_image_tag || process.env.IMAGE_TAG}`).join(',');
+            const destinationImages = customer.repositories.map(repo => `${customer.registry}/${repo.target_repository}:${repo.target_image_tag || process.env.IMAGE_TAG}`).join(',');
 
             const result = {
               customer,

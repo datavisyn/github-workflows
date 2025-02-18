@@ -78,9 +78,17 @@
                       "type": "string",
                       "description": "Internal ECR repository name"
                     },
+                    "source_image_tag": {
+                      "type": "string",
+                      "description": "Tag of the source image. If omitted, uses the tag of the current build."
+                    },
                     "target_repository": {
                       "type": "string",
                       "description": "Repository name at customer"
+                    },
+                    "target_image_tag": {
+                      "type": "string",
+                      "description": "Tag of the target image. If omitted, uses the tag of the current build."
                     }
                   },
                   "required": ["source_repository", "target_repository"]
