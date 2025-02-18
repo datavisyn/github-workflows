@@ -105,6 +105,7 @@ jobs:
             const result = {
               flavors,
               components: flattenedComponents,
+              customers: Object.keys(config.customers).join(','),
             };
             console.log(result);
             return result;
@@ -232,7 +233,7 @@ jobs:
             exit 1  #exit execution due to docker image vulnerabilities
           fi
 
-  post-build:
+  retag-images:
     name: Retag images of flavor ${{ matrix.flavor || 'default' }}
     needs: [get-flavors, build-flavors]
     strategy:
@@ -288,3 +289,22 @@ jobs:
       - name: Log out from Amazon ECR
         shell: bash
         run: docker logout ${{ steps.login-ecr.outputs.registry }}
+
+  push-to-customers:
+    name: Push images to customers
+    # if? When should we do this? Always? Only for certain branches? If so, how should we define that, in the config.json?
+    needs: [retag-images, get-flavors]
+    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+    steps:
+      - name: Checkout github-workflows repository
+        uses: actions/checkout@v4
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+      - name: Trigger push docker artifacts to ${{ fromJson(needs.get-flavors.outputs.result).customers }}
+        uses: ./tmp/github-workflows/.github/workflows/build-docker-artifacts-trigger-push-to-customer
+        with:
+          customers: ${{ fromJson(needs.get-flavors.outputs.result).customers }}
+          branch: ${{ inputs.branch }}
+          runs_on: ${{ inputs.runs_on || 'ubuntu-22.04' }}

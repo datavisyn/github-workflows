@@ -6,7 +6,8 @@ on:
       customers:
         type: string
         required: true
-        description: Comma separated list of customers
+        default: ""
+        description: Comma separated list of customers. Leave empty to trigger for all customers.
       branch:
         type: string
         required: false
@@ -33,7 +34,7 @@ permissions:
 
 jobs:
   get-customers:
-    name: Trigger push docker artifacts to ${{ inputs.customers }}
+    name: Trigger push docker artifacts to ${{ inputs.customers || 'all' }}
     runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
     outputs:
       result: ${{ steps.get-customers.outputs.result }}
@@ -44,14 +45,14 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-  
+
       - name: Checkout github-workflows repository
         uses: actions/checkout@v4
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
-  
+
       - name: Validate ./deploy/build/config.json
         shell: bash
         run: |
@@ -69,7 +70,9 @@ jobs:
         with:
           script: |
             const config = require('./deploy/build/config.json');
-            const customers = process.env.CUSTOMERS.split(',');
+
+            const customers = process.env.CUSTOMERS ? process.env.CUSTOMERS.split(',') : Object.keys(config.customers);
+
             const imageTagBranchName = "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-');
 
             const result = customers.map((c) => ({
@@ -96,7 +99,7 @@ jobs:
         uses: datavisyn/github-action-trigger-workflow@v1
         with:
           owner: "datavisyn"
-          repo:  "infrastructure-k8s"
+          repo: "infrastructure-k8s"
           github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
           workflow_file_name: "push-docker-artifact-to-customer.yml"
           ref: "main"

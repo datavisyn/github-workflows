@@ -1,4 +1,4 @@
-name: Push docker artifacts to customer (must be infrastructure-k8s)
+name: Push docker artifacts to customer (must be run in infrastructure-k8s)
 run-name: Push ${{ inputs.repository }}:${{ inputs.image_tag }} docker artifacts to ${{ inputs.customer }}
 
 on:
@@ -41,7 +41,7 @@ jobs:
     runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
 
     steps:
-      - name: Checkout repository (must be infrastructure-k8s)
+      - name: Checkout repository (must be run in infrastructure-k8s)
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
