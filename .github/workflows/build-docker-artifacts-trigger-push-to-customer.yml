@@ -5,7 +5,7 @@ on:
     inputs:
       customers:
         type: string
-        required: true
+        required: false
         default: ""
         description: Comma separated list of customers. Leave empty to trigger for all customers.
       branch:
@@ -19,6 +19,10 @@ on:
         default: "ubuntu-22.04"
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
+        required: false
+      CHECKOUT_TOKEN:
+        required: false
+      DV_BOT_USER:
         required: false
 
 concurrency:
