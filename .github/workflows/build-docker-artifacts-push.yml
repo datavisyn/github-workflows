@@ -1,0 +1,107 @@
+name: Push docker artifacts to customer (must be run in infrastructure-k8s)
+run-name: Push ${{ inputs.repository }}:${{ inputs.image_tag }} docker artifacts to ${{ inputs.customer }}
+
+on:
+  workflow_call:
+    inputs:
+      repository:
+        type: string
+        required: true
+      customer:
+        type: string
+        required: true
+      customer_json:
+        type: string
+        required: true
+      image_tag:
+        type: string
+        required: true
+      runs_on:
+        type: string
+        required: false
+        default: "ubuntu-22.04"
+    secrets:
+      DATAVISYN_BOT_REPO_TOKEN:
+        required: false
+      CHECKOUT_TOKEN:
+        required: false
+      DV_AWS_ECR_SECRETS:
+        required: false
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ github.event.inputs.repository }}-${{ github.event.inputs.customer }}-${{ github.event.inputs.image_tag }}"
+  cancel-in-progress: true
+
+env:
+  WORKFLOW_BRANCH: "main"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  post-build:
+    name: Push docker artifacts to ${{ inputs.customer }}
+    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+
+    steps:
+      - name: Checkout repository (must be run in infrastructure-k8s)
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+  
+      - name: Checkout github-workflows repository
+        uses: actions/checkout@v4
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+
+      - name: Extract customer from payload
+        uses: actions/github-script@v7
+        id: get-customer
+        with:
+          script: |
+            const customer = JSON.parse(process.env.CUSTOMER_JSON);
+
+            // Comma separated list of source images, incl. registry, repository and tag
+            const sourceImages = customer.repositories.map(repo => `${process.env.SOURCE_ECR_REGISTRY}/${repo.source_repository}:${repo.source_image_tag || process.env.IMAGE_TAG}`).join(',');
+            const destinationImages = customer.repositories.map(repo => `${customer.registry}/${repo.target_repository}:${repo.target_image_tag || process.env.IMAGE_TAG}`).join(',');
+
+            const result = {
+              customer,
+              source_images: sourceImages,
+              destination_images: destinationImages
+            };
+            console.log(result);
+            return result;
+        env:
+          SOURCE_ECR_REGISTRY: ${{ vars.DV_AWS_ECR_REGISTRY }}
+          CUSTOMER_JSON: ${{ inputs.customer_json }}
+          CUSTOMER: ${{ inputs.customer }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+
+      - name: Get dv image aws config
+        id: get-dv-aws-image-config
+        uses: ./.github/actions/get-aws-config
+        with:
+          aws_config: ${{ secrets.DV_AWS_ECR_SECRETS }}
+
+      - name: Get image aws config
+        id: get-aws-image-config
+        uses: ./.github/actions/get-aws-config
+        with:
+          aws_config: ${{ secrets[fromJson(steps.get-customer.outputs.result).customer.secret_key] }}
+
+      - name: Push images
+        id: pull-push-image
+        uses: ./.github/actions/pull-push-image
+        with:
+          source_aws_role: ${{ steps.get-dv-aws-image-config.outputs.aws_role }}
+          source_aws_region: ${{ steps.get-dv-aws-image-config.outputs.aws_region }}
+          source_images: ${{ fromJson(steps.get-customer.outputs.result).source_images }}
+          destination_aws_role: ${{ steps.get-aws-image-config.outputs.aws_role }}
+          destination_aws_region: ${{ steps.get-aws-image-config.outputs.aws_region }}
+          destination_aws_access_key_id: ${{ steps.get-aws-image-config.outputs.aws_access_key_id }}
+          destination_aws_secret_access_key: ${{ steps.get-aws-image-config.outputs.aws_secret_access_key }}
+          destination_images: ${{ fromJson(steps.get-customer.outputs.result).destination_images }}

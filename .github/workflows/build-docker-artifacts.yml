@@ -78,9 +78,10 @@ jobs:
             const imageTagBranchName = "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-');
             const imageTag = `tagged-${imageTagBranchName}-${buildTime}`;
 
-            const flavors = config.flavors.filter(flavor => flavor.skip !== true).map(flavor => {
+            const flavors = Object.entries(config.build).filter(([id, flavor]) => flavor.skip !== true).map(([id, flavor]) => {
               return {
                 ...flavor,
+                id,
                 // Add metadata to the flavor object (will be used as matrix input)
                 build_time: buildTime,
                 image_tag: imageTag,
@@ -91,6 +92,7 @@ jobs:
                     ...component,
                     // Add metadata to the component object (will be used as matrix input),
                     flavor,
+                    flavor_id: id,
                     flavor_directory: `./deploy/build/${flavor.directory}`,
                     build_time: buildTime,
                     image_tag: imageTag,
@@ -105,6 +107,7 @@ jobs:
             const result = {
               flavors,
               components: flattenedComponents,
+              push_to: Object.keys(config.push).join(','),
             };
             console.log(result);
             return result;
@@ -232,7 +235,7 @@ jobs:
             exit 1  #exit execution due to docker image vulnerabilities
           fi
 
-  post-build:
+  retag-images:
     name: Retag images of flavor ${{ matrix.flavor || 'default' }}
     needs: [get-flavors, build-flavors]
     strategy:
@@ -288,3 +291,14 @@ jobs:
       - name: Log out from Amazon ECR
         shell: bash
         run: docker logout ${{ steps.login-ecr.outputs.registry }}
+
+  push-to-repositories:
+    name: Push images to push targets
+    # if? When should we do this? Always? Only for certain branches? If so, how should we define that, in the config.json?
+    needs: [retag-images, get-flavors]
+    uses: datavisyn/github-workflows/.github/workflows/build-docker-artifacts-trigger-push.yml@main
+    secrets: inherit
+    with:
+      push_to: ${{ fromJson(needs.get-flavors.outputs.result).push_to }}
+      branch: ${{ inputs.branch }}
+      runs_on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
