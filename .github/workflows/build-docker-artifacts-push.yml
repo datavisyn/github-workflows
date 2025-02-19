@@ -23,6 +23,10 @@ on:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
+      CHECKOUT_TOKEN:
+        required: false
+      DV_AWS_ECR_SECRETS:
+        required: false
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ github.event.inputs.repository }}-${{ github.event.inputs.customer }}-${{ github.event.inputs.image_tag }}"
