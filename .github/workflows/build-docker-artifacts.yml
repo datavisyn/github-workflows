@@ -120,7 +120,7 @@ jobs:
             const result = {
               flavors,
               components: flattenedComponents,
-              push_to,
+              push_to: push_to.join(','),
             };
             console.log(result);
             return result;
