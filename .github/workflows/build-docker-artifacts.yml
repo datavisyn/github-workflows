@@ -78,9 +78,10 @@ jobs:
             const imageTagBranchName = "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-');
             const imageTag = `tagged-${imageTagBranchName}-${buildTime}`;
 
-            const flavors = config.flavors.filter(flavor => flavor.skip !== true).map(flavor => {
+            const flavors = Object.entries(config.build).filter([id, flavor] => flavor.skip !== true).map([id, flavor] => {
               return {
                 ...flavor,
+                id,
                 // Add metadata to the flavor object (will be used as matrix input)
                 build_time: buildTime,
                 image_tag: imageTag,
@@ -91,6 +92,7 @@ jobs:
                     ...component,
                     // Add metadata to the component object (will be used as matrix input),
                     flavor,
+                    flavor_id: id,
                     flavor_directory: `./deploy/build/${flavor.directory}`,
                     build_time: buildTime,
                     image_tag: imageTag,
@@ -105,7 +107,7 @@ jobs:
             const result = {
               flavors,
               components: flattenedComponents,
-              customers: Object.keys(config.customers).join(','),
+              customers: Object.keys(config.push).join(','),
             };
             console.log(result);
             return result;

@@ -3,11 +3,11 @@ name: Trigger push docker artifacts to customer
 on:
   workflow_call:
     inputs:
-      customers:
+      push_to:
         type: string
         required: false
         default: ""
-        description: Comma separated list of customers. Leave empty to trigger for all customers.
+        description: Comma separated list of push keys. Leave empty to trigger for all.
       branch:
         type: string
         required: false
@@ -38,7 +38,7 @@ permissions:
 
 jobs:
   get-customers:
-    name: Get customers to push to (${{ inputs.customers || 'all' }})
+    name: Get customers to push to (${{ inputs.push_to || 'all' }})
     runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
     outputs:
       result: ${{ steps.get-customers.outputs.result }}
@@ -75,20 +75,20 @@ jobs:
           script: |
             const config = require('./deploy/build/config.json');
 
-            const customers = process.env.CUSTOMERS ? process.env.CUSTOMERS.split(',') : Object.keys(config.customers);
+            const customers = process.env.PUSH_TO ? process.env.PUSH_TO.split(',') : Object.keys(config.push);
 
             const imageTagBranchName = "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-');
 
             const result = customers.map((c) => ({
               repository: process.env.REPOSITORY,
               customer: c,
-              customer_json: JSON.stringify(config.customers[c]),
+              customer_json: JSON.stringify(config.push[c]),
               image_tag: imageTagBranchName,
             }));
             console.log(result);
             return result;
         env:
-          CUSTOMERS: ${{ inputs.customers }}
+          PUSH_TO: ${{ inputs.push_to }}
           REPOSITORY: ${{ github.repository }}
 
   trigger-push:
