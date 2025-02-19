@@ -89,7 +89,7 @@ jobs:
             const imageTag = `tagged-${imageTagBranchName}-${buildTime}`;
 
             const builds = process.env.BUILDS ? process.env.BUILDS.split(',') : Object.keys(config.build);
-            const push_to = process.env.PUSH_TO ? process.env.PUSH_TO.split(',') : Object.keys(config.push);
+            const push_to = process.env.PUSH_TO ? process.env.PUSH_TO.split(',') : Object.keys(config.push || {});
 
             const flavors = builds.map(id => [id, config.build[id]]).filter(([id, flavor]) => flavor.skip !== true).map(([id, flavor]) => {
               return {

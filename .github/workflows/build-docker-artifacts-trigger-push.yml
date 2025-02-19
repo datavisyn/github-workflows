@@ -75,7 +75,7 @@ jobs:
           script: |
             const config = require('./deploy/build/config.json');
 
-            const customers = process.env.PUSH_TO ? process.env.PUSH_TO.split(',') : Object.keys(config.push);
+            const customers = process.env.PUSH_TO ? process.env.PUSH_TO.split(',') : Object.keys(config.push || {});
 
             const imageTagBranchName = "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-');
 
