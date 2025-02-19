@@ -78,7 +78,7 @@ jobs:
             const imageTagBranchName = "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-');
             const imageTag = `tagged-${imageTagBranchName}-${buildTime}`;
 
-            const flavors = Object.entries(config.build).filter([id, flavor] => flavor.skip !== true).map([id, flavor] => {
+            const flavors = Object.entries(config.build).filter(([id, flavor]) => flavor.skip !== true).map(([id, flavor]) => {
               return {
                 ...flavor,
                 id,
@@ -107,7 +107,7 @@ jobs:
             const result = {
               flavors,
               components: flattenedComponents,
-              customers: Object.keys(config.push).join(','),
+              push_to: Object.keys(config.push).join(','),
             };
             console.log(result);
             return result;
@@ -292,13 +292,13 @@ jobs:
         shell: bash
         run: docker logout ${{ steps.login-ecr.outputs.registry }}
 
-  push-to-customers:
-    name: Push images to customers
+  push-to-repositories:
+    name: Push images to push targets
     # if? When should we do this? Always? Only for certain branches? If so, how should we define that, in the config.json?
     needs: [retag-images, get-flavors]
-    uses: datavisyn/github-workflows/.github/workflows/build-docker-artifacts-trigger-push-to-customer.yml@mp/push_docker
+    uses: datavisyn/github-workflows/.github/workflows/build-docker-artifacts-trigger-push.yml@mp/push_docker
     secrets: inherit
     with:
-      customers: ${{ fromJson(needs.get-flavors.outputs.result).customers }}
+      push_to: ${{ fromJson(needs.get-flavors.outputs.result).push_to }}
       branch: ${{ inputs.branch }}
       runs_on: ${{ inputs.runs_on || 'ubuntu-22.04' }}

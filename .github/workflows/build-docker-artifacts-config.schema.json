@@ -105,5 +105,5 @@
       }
     }
   },
-  "required": ["flavors"]
+  "required": ["build"]
 }
