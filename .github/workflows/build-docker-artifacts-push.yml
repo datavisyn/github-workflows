@@ -33,7 +33,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  WORKFLOW_BRANCH: "mp/push_docker"
+  WORKFLOW_BRANCH: "main"
 
 permissions:
   contents: read

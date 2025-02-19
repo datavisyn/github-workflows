@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  WORKFLOW_BRANCH: "mp/push_docker"
+  WORKFLOW_BRANCH: "main"
   PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   NODE_BASE_IMAGE: "node:20.9-bullseye"
@@ -296,7 +296,7 @@ jobs:
     name: Push images to push targets
     # if? When should we do this? Always? Only for certain branches? If so, how should we define that, in the config.json?
     needs: [retag-images, get-flavors]
-    uses: datavisyn/github-workflows/.github/workflows/build-docker-artifacts-trigger-push.yml@mp/push_docker
+    uses: datavisyn/github-workflows/.github/workflows/build-docker-artifacts-trigger-push.yml@main
     secrets: inherit
     with:
       push_to: ${{ fromJson(needs.get-flavors.outputs.result).push_to }}
