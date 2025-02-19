@@ -311,6 +311,7 @@ jobs:
   push-to-repositories:
     name: Push images to push targets
     # if? When should we do this? Always? Only for certain branches? If so, how should we define that, in the config.json?
+    if: ${{ fromJson(needs.get-flavors.outputs.result).push_to != '' }}
     needs: [retag-images, get-flavors]
     uses: datavisyn/github-workflows/.github/workflows/build-docker-artifacts-trigger-push.yml@main
     secrets: inherit
