@@ -3,6 +3,16 @@ name: Build docker artifacts
 on:
   workflow_call:
     inputs:
+      builds:
+        type: string
+        required: false
+        default: ""
+        description: Comma separated list of build keys. Leave empty to run for all.
+      push_to:
+        type: string
+        required: false
+        default: ""
+        description: Comma separated list of push keys. Leave empty to trigger for all.
       branch:
         type: string
         required: false
@@ -78,7 +88,10 @@ jobs:
             const imageTagBranchName = "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-');
             const imageTag = `tagged-${imageTagBranchName}-${buildTime}`;
 
-            const flavors = Object.entries(config.build).filter(([id, flavor]) => flavor.skip !== true).map(([id, flavor]) => {
+            const builds = process.env.BUILDS ? process.env.BUILDS.split(',') : Object.keys(config.build);
+            const push_to = process.env.PUSH_TO ? process.env.PUSH_TO.split(',') : Object.keys(config.push);
+
+            const flavors = builds.map(id => [id, config.build[id]]).filter(([id, flavor]) => flavor.skip !== true).map(([id, flavor]) => {
               return {
                 ...flavor,
                 id,
@@ -107,10 +120,13 @@ jobs:
             const result = {
               flavors,
               components: flattenedComponents,
-              push_to: Object.keys(config.push).join(','),
+              push_to,
             };
             console.log(result);
             return result;
+        env:
+          BUILDS: ${{ inputs.builds }}
+          PUSH_TO: ${{ inputs.push_to }}
 
   build-flavors:
     name: Build ${{ matrix.component.directory }} of ${{ matrix.component.flavor.directory }} (${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }})
