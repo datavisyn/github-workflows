@@ -30,7 +30,7 @@ on:
         description: "Token to use for the checkout actions to access private repositories"
 
 concurrency:
-  group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}"
+  group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ github.event.inputs.branch }}-${{ github.event.inputs.builds }}-${{ github.event.inputs.push_to }}"
   cancel-in-progress: true
 
 env:

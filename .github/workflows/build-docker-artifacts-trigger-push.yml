@@ -26,7 +26,7 @@ on:
         required: false
 
 concurrency:
-  group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ github.event.inputs.app }}-${{ github.event.inputs.customer }}-${{ github.event.inputs.image_tag }}"
+  group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ github.event.inputs.branch }}-${{ github.event.inputs.push_to }}"
   cancel-in-progress: true
 
 env:
