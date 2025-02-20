@@ -29,7 +29,7 @@ on:
         required: false
 
 concurrency:
-  group: "build-push-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ github.event.inputs.repository }}-${{ github.event.inputs.customer }}-${{ github.event.inputs.image_tag }}"
+  group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.repository }}-${{ inputs.customer }}-${{ inputs.image_tag }}"
   cancel-in-progress: true
 
 env:
