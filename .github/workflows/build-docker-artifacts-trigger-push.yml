@@ -82,6 +82,7 @@ jobs:
             const result = customers.map((c) => ({
               repository: process.env.REPOSITORY,
               customer: c,
+              skip: !!config.push[c].skip,
               customer_json: JSON.stringify(config.push[c]),
               image_tag: imageTagBranchName,
             }));
@@ -101,6 +102,7 @@ jobs:
     runs-on: ${{ inputs.runs_on }}
     steps:
       - name: Trigger push docker artifacts to ${{ matrix.customer.customer }}
+        if: ${{ matrix.customer.skip != true }}
         uses: datavisyn/github-action-trigger-workflow@v1
         with:
           owner: "datavisyn"

@@ -14,12 +14,12 @@
             "properties": {
               "directory": {
                 "type": "string",
-                "description": "Directory of the flavor containing the components to build"
+                "description": "Directory of the build containing the components"
               },
               "skip": {
                 "type": "boolean",
                 "default": false,
-                "description": "Skip building the flavor"
+                "description": "Skip building the build"
               },
               "components": {
                 "type": "array",
@@ -29,7 +29,7 @@
                   "properties": {
                     "directory": {
                       "type": "string",
-                      "description": "Directory of the component to build, relative to the flavor directory"
+                      "description": "Directory of the component to build, relative to the build directory"
                     },
                     "ecr_repository": {
                       "type": "string",
@@ -72,6 +72,11 @@
                 "type": "string",
                 "description": "Registry URL at customer"
               },
+              "skip": {
+                "type": "boolean",
+                "default": false,
+                "description": "Skip pushing the images"
+              },
               "repositories": {
                 "type": "array",
                 "items": {
@@ -93,6 +98,11 @@
                     "target_image_tag": {
                       "type": "string",
                       "description": "Tag of the target image. If omitted, uses the tag of the current build."
+                    },
+                    "skip": {
+                      "type": "boolean",
+                      "default": false,
+                      "description": "Skip pushing this image"
                     }
                   },
                   "required": ["source_repository", "target_repository"]
