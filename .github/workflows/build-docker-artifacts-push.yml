@@ -41,7 +41,7 @@ permissions:
 
 jobs:
   post-build:
-    name: Push docker artifacts to ${{ inputs.customer }}
+    name: Push ${{ inputs.repository }}:${{ inputs.image_tag }} docker artifacts to ${{ inputs.customer }}
     runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
 
     steps:
