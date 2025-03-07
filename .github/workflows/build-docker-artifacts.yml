@@ -49,7 +49,9 @@ jobs:
     name: Get flavors from config.json
     outputs:
       result: ${{ steps.get-flavors.outputs.result }}
-    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+    # Do not run this on self-hosted, as it is faster and shouldn't be blocking anything
+    # runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+    runs-on: 'ubuntu-22.04'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -258,7 +260,9 @@ jobs:
       fail-fast: false
       matrix:
         flavor: ${{ fromJson(needs.get-flavors.outputs.result).flavors }}
-    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+    # Do not run this on self-hosted, as it is faster and shouldn't be blocking anything
+    # runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+    runs-on: 'ubuntu-22.04'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -318,4 +322,5 @@ jobs:
     with:
       push_to: ${{ fromJson(needs.get-flavors.outputs.result).push_to }}
       branch: ${{ inputs.branch }}
-      runs_on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+      # Do not run this on self-hosted, as it is faster and shouldn't be blocking anything
+      # runs_on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
