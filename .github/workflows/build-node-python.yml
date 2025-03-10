@@ -441,8 +441,8 @@ jobs:
         run: yarn run pw:run ${{ inputs.playwright_spec_param }}
         shell: bash
         env:
-          VISYN_CORE__SENTRY__FRONTEND_DSN: ${{ vars.SENTRY_FRONTEND_DSN }}
-          VISYN_CORE__SENTRY__BACKEND_DSN: ${{ vars.SENTRY_BACKEND_DSN }}
+          VISYN_CORE__SENTRY__FRONTEND_DSN: ${{ vars.PLAYWRIGHT__VISYN_CORE__SENTRY__FRONTEND_DSN }}
+          VISYN_CORE__SENTRY__BACKEND_DSN: ${{ vars.PLAYWRIGHT__VISYN_CORE__SENTRY__BACKEND_DSN }}
       - name: Upload bundle
         uses: actions/upload-artifact@v4
         if: always()
