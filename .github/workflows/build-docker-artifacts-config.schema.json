@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "build": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "patternProperties": {
+          "^[a-zA-Z0-9_-]+$": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "directory": {
+                "type": "string",
+                "description": "Directory of the build containing the components"
+              },
+              "skip": {
+                "type": "boolean",
+                "default": false,
+                "description": "Skip building the build"
+              },
+              "components": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "directory": {
+                      "type": "string",
+                      "description": "Directory of the component to build, relative to the build directory"
+                    },
+                    "ecr_repository": {
+                      "type": "string",
+                      "description": "ECR repository to push the image to"
+                    },
+                    "skip_image_scan": {
+                      "type": "boolean",
+                      "default": false,
+                      "description": "Skip scanning the image for vulnerabilities"
+                    }
+                  },
+                  "required": ["directory", "ecr_repository"]
+                }
+              }
+            },
+            "required": ["directory", "components"]
+          }
+        }
+      }
+    },
+    "push": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "patternProperties": {
+          "^[a-zA-Z0-9_-]+$": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["aws"],
+                "description": "Type of customer configuration"
+              },
+              "secret_key": {
+                "type": "string",
+                "description": "Secret key for AWS secrets"
+              },
+              "registry": {
+                "type": "string",
+                "description": "Registry URL at customer"
+              },
+              "skip": {
+                "type": "boolean",
+                "default": false,
+                "description": "Skip pushing the images"
+              },
+              "repositories": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "source_repository": {
+                      "type": "string",
+                      "description": "Internal ECR repository name"
+                    },
+                    "source_image_tag": {
+                      "type": "string",
+                      "description": "Tag of the source image. If omitted, uses the tag of the current build."
+                    },
+                    "target_repository": {
+                      "type": "string",
+                      "description": "Repository name at customer"
+                    },
+                    "target_image_tag": {
+                      "type": "string",
+                      "description": "Tag of the target image. If omitted, uses the tag of the current build."
+                    },
+                    "skip": {
+                      "type": "boolean",
+                      "default": false,
+                      "description": "Skip pushing this image"
+                    }
+                  },
+                  "required": ["source_repository", "target_repository"]
+                }
+              }
+            },
+            "required": ["type", "secret_key", "registry", "repositories"]
+          }
+        }
+      }
+    }
+  },
+  "required": ["build"]
+}

@@ -41,6 +41,11 @@ on:
           description: "stage for the image (develop or production) depending on the branch name"
           required: true
           type: string
+        timeout:
+          description: "Timeout for each job in minutes."
+          type: number
+          required: false
+          default: 60
 env:
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: "20.9"
@@ -56,6 +61,7 @@ permissions:
 
 jobs:
   build-components:
+    timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     runs-on: ubuntu-22.04
     steps:
       - name: Remove unnecessary files

@@ -1,0 +1,326 @@
+name: Build docker artifacts
+
+on:
+  workflow_call:
+    inputs:
+      builds:
+        type: string
+        required: false
+        default: ""
+        description: Comma separated list of build keys. Leave empty to run for all.
+      push_to:
+        type: string
+        required: false
+        default: ""
+        description: Comma separated list of push keys. Leave empty to trigger for all.
+      branch:
+        type: string
+        required: false
+        # When using github.ref || github.head_ref, it would contain the full path, including /, which breaks the postgres hostname
+        default: ${{ github.sha }}
+      runs_on:
+        type: string
+        required: false
+        default: "ubuntu-22.04"
+    secrets:
+      DATAVISYN_BOT_REPO_TOKEN:
+        required: false
+      CHECKOUT_TOKEN:
+        required: false
+        description: "Token to use for the checkout actions to access private repositories"
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}-${{ inputs.builds }}-${{ inputs.push_to }}"
+  cancel-in-progress: true
+
+env:
+  WORKFLOW_BRANCH: "main"
+  PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
+  DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
+  NODE_BASE_IMAGE: "node:20.9-bullseye"
+  DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  get-flavors:
+    name: Get flavors from config.json
+    outputs:
+      result: ${{ steps.get-flavors.outputs.result }}
+    # Do not run this on self-hosted, as it is faster and shouldn't be blocking anything
+    # runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+    runs-on: 'ubuntu-22.04'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+
+      - name: Checkout github-workflows repository
+        uses: actions/checkout@v4
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+
+      - name: Validate ./deploy/build/config.json
+        shell: bash
+        run: |
+          # Validate the config with the schema
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install jsonschema
+          jsonschema -i ./deploy/build/config.json ./tmp/github-workflows/.github/workflows/build-docker-artifacts-config.schema.json
+          deactivate
+          rm -rf .venv
+
+      - name: Get all flavors and components from ./deploy/build/config.json
+        uses: actions/github-script@v7
+        id: get-flavors
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const config = require('./deploy/build/config.json');
+
+            const buildTime = new Date().toISOString().replace(/:/g, '').replace(/\..+/, 'Z');
+            const imageTagBranchName = "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-');
+            const imageTag = `tagged-${imageTagBranchName}-${buildTime}`;
+
+            const builds = process.env.BUILDS ? process.env.BUILDS.split(',') : Object.keys(config.build);
+            const push_to = process.env.PUSH_TO ? process.env.PUSH_TO.split(',') : Object.keys(config.push || {});
+
+            const flavors = builds.map(id => [id, config.build[id]]).filter(([id, flavor]) => flavor.skip !== true).map(([id, flavor]) => {
+              return {
+                ...flavor,
+                id,
+                // Add metadata to the flavor object (will be used as matrix input)
+                build_time: buildTime,
+                image_tag: imageTag,
+                image_tag_branch_name: imageTagBranchName,
+                ecr_respositories: flavor.components.map(component => component.ecr_repository),
+                components: flavor.components.map(component => {
+                  return {
+                    ...component,
+                    // Add metadata to the component object (will be used as matrix input),
+                    flavor,
+                    flavor_id: id,
+                    flavor_directory: `./deploy/build/${flavor.directory}`,
+                    build_time: buildTime,
+                    image_tag: imageTag,
+                    image_tag_branch_name: imageTagBranchName,
+                  };
+                }),
+              };
+            });
+
+            const flattenedComponents = flavors.flatMap(flavor => flavor.components);
+
+            const result = {
+              flavors,
+              components: flattenedComponents,
+              push_to: push_to.join(','),
+            };
+            console.log(result);
+            return result;
+        env:
+          BUILDS: ${{ inputs.builds }}
+          PUSH_TO: ${{ inputs.push_to }}
+
+  build-flavors:
+    name: Build ${{ matrix.component.directory }} of ${{ matrix.component.flavor.directory }} (${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }})
+    needs: get-flavors
+    strategy:
+      fail-fast: true
+      matrix:
+        component: ${{ fromJson(needs.get-flavors.outputs.result).components }}
+    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+    steps:
+      - name: View flavor and component
+        shell: bash
+        run: |
+          echo "Component ${{ toJson(matrix.component) }}"
+      - name: Remove unnecessary files
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+      # TODO: Support arbitrary repositories, not just the current one?
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+          # This is required such that yarn install can access private repositories, i.e. visyn_pro
+          # https://github.com/yarnpkg/yarn/issues/2614#issuecomment-2148174789
+          persist-credentials: false
+      - name: Checkout github-workflows repository
+        uses: actions/checkout@v4
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+          # This is required such that yarn install can access private repositories, i.e. visyn_pro
+          # https://github.com/yarnpkg/yarn/issues/2614#issuecomment-2148174789
+          persist-credentials: false
+      - name: Copy _base folder and .env
+        shell: bash
+        run: |
+          if [[ -d "./deploy/build/_base" ]]; then
+            echo "copy _base directory into flavor"
+            cp -r -n "./deploy/build/_base/." "${{ matrix.component.flavor_directory }}"
+            tree "${{ matrix.component.flavor_directory }}"
+          fi
+          if [[ -f "${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/.env" ]]; then
+            echo "copy .env into repo root"
+            cp "${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/.env" "./"
+          fi
+
+      # Required for build secrets to work: https://docs.docker.com/build/ci/github-actions/secrets/#secret-mounts
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4.1.0
+        with:
+          role-to-assume: ${{ vars.DV_AWS_ECR_ROLE }}
+          aws-region: ${{ vars.DV_AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2.0.1
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/Dockerfile
+          push: true
+          # Disable provenance as it creates weird multi-arch images: https://github.com/docker/build-push-action/issues/755
+          provenance: false
+          build-args: |
+            DOCKERFILE_DIRECTORY=${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}
+            PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}
+            DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
+            NODE_BASE_IMAGE=${{ env.NODE_BASE_IMAGE }}
+            DATAVISYN_NGINX_BASE_IMAGE=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
+          secrets:
+            # Mount the token as secret mount: https://docs.docker.com/build/ci/github-actions/secrets/#secret-mounts
+            "github_token=${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}"
+          # TODO: As soon as we only have a single tag, we can push the same image to multiple repositories: https://docs.docker.com/build/ci/github-actions/push-multi-registries/
+          # This will be useful for the images which don't change between flavors, e.g. the backend images
+          tags: |
+            ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
+          labels: |
+            name=${{ matrix.component.ecr_repository }}
+            version=${{ matrix.component.image_tag_branch_name }}
+            org.opencontainers.image.description=Image for ${{ matrix.component.ecr_repository }}
+            org.opencontainers.image.source=${{ github.event.repository.html_url }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}
+            org.opencontainers.image.title=${{ matrix.component.ecr_repository }}
+            org.opencontainers.image.version=${{ matrix.component.image_tag_branch_name }}
+            org.opencontainers.image.created=${{ matrix.component.build_time }}
+            org.opencontainers.image.revision=${{ github.sha }}
+        env:
+          # Disable the build summary for now as it leads to "Failed to export build record: .../export/rec.dockerbuild not found"
+          # https://github.com/docker/build-push-action/issues/1156#issuecomment-2437227730
+          DOCKER_BUILD_SUMMARY: false
+
+      - name: Log out from Amazon ECR
+        shell: bash
+        run: docker logout ${{ steps.login-ecr.outputs.registry }}
+
+      - name: Scan image
+        if: ${{ matrix.component.skip_image_scan != true }}
+        id: get-ecr-scan-result
+        uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
+        with:
+          aws_role: ${{ vars.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ vars.DV_AWS_REGION }}
+          ecr_registry: ${{ vars.DV_AWS_ECR_REGISTRY }}
+          ecr_repository: ${{ matrix.component.ecr_repository }}
+          image_tag: ${{ matrix.component.image_tag }}
+      - name: Check scan results
+        if: ${{ matrix.component.skip_image_scan != true }}
+        run: |
+          if [ "${{ steps.get-ecr-scan-result.outputs.critical }}" != "null" ] || [ "${{ steps.get-ecr-scan-result.outputs.high }}" != "null" ]; then
+            echo "Docker image contains vulnerabilities at critical or high level"
+            exit 1  #exit execution due to docker image vulnerabilities
+          fi
+
+  retag-images:
+    name: Retag images of flavor ${{ matrix.flavor || 'default' }}
+    needs: [get-flavors, build-flavors]
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: ${{ fromJson(needs.get-flavors.outputs.result).flavors }}
+    # Do not run this on self-hosted, as it is faster and shouldn't be blocking anything
+    # runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+    runs-on: 'ubuntu-22.04'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+
+      - name: Checkout github-workflows repository
+        uses: actions/checkout@v4
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4.1.0
+        with:
+          role-to-assume: ${{ vars.DV_AWS_ECR_ROLE }}
+          aws-region: ${{ vars.DV_AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2.0.1
+
+      - name: Retag images
+        shell: bash
+        run: |
+          image_tag="${{ matrix.flavor.image_tag }}"
+          image_tag_branch_name="${{ matrix.flavor.image_tag_branch_name }}"
+
+          echo "image_tag=$image_tag"
+          echo "image_tag_branch_name=$image_tag_branch_name"
+
+          for repository_name in $(jq -r '.ecr_respositories[]' <<< "$FLAVOR"); do
+            IMAGE_META=$(aws ecr describe-images --repository-name "$repository_name" --image-ids imageTag="$image_tag" --output json | jq --arg var "${image_tag_branch_name}" '.imageDetails[0].imageTags | index( $var )')
+            if [[ -z "${IMAGE_META}" || ${IMAGE_META} == "null" ]]; then
+              MANIFEST=$(aws ecr batch-get-image --repository-name "$repository_name" --image-ids imageTag="$image_tag" --output json | jq --raw-output --join-output '.images[0].imageManifest')
+              aws ecr put-image --repository-name "$repository_name" --image-tag "$image_tag_branch_name" --image-manifest "$MANIFEST"
+            else
+              echo "image already tagged!"
+            fi
+          done;
+        env:
+          FLAVOR: ${{ toJSON(matrix.flavor) }}
+
+      - name: Log out from Amazon ECR
+        shell: bash
+        run: docker logout ${{ steps.login-ecr.outputs.registry }}
+
+  push-to-repositories:
+    name: Push images to push targets
+    # if? When should we do this? Always? Only for certain branches? If so, how should we define that, in the config.json?
+    if: ${{ fromJson(needs.get-flavors.outputs.result).push_to != '' }}
+    needs: [retag-images, get-flavors]
+    uses: datavisyn/github-workflows/.github/workflows/build-docker-artifacts-trigger-push.yml@main
+    secrets: inherit
+    with:
+      push_to: ${{ fromJson(needs.get-flavors.outputs.result).push_to }}
+      branch: ${{ inputs.branch }}
+      # Do not run this on self-hosted, as it is faster and shouldn't be blocking anything
+      # runs_on: ${{ inputs.runs_on || 'ubuntu-22.04' }}

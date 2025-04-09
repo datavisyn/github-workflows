@@ -140,7 +140,12 @@ jobs:
           git add package.json
       - name: Add Helm repository
         if: ${{ inputs.is_helm_chart == true }}
-        run: helm repo add datavisyn https://chartmuseum.app.datavisyn.io --username ${{ env.CHARTMUSEUM_USER }} --password ${{ env.CHARTMUSEUM_PASSWORD }}
+        run: |
+          helm repo add datavisyn https://chartmuseum.app.datavisyn.io --username ${{ env.CHARTMUSEUM_USER }} --password ${{ env.CHARTMUSEUM_PASSWORD }}
+          # required for visynKB as it depends on them.
+          # TODO: make this an input of the workflow.
+          helm repo add apache-airflow https://airflow.apache.org
+          helm repo add bitnami https://charts.bitnami.com/bitnami
       - name: change charts and subcharts version
         if: ${{ inputs.is_helm_chart == true }}
         run: |
