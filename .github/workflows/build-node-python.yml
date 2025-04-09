@@ -439,12 +439,8 @@ jobs:
       - name: Bundle build
         run: yarn run bundle:prod || yarn run webpack:dev
         shell: bash
-      - name: Install Xvfb
-        run: sudo apt-get install -y xvfb
-      - name: Start Xvfb
-        run: Xvfb :99 & export DISPLAY=:99
       - name: Run playwright e2e tests
-        run: xvfb-run -a -- yarn run pw:run ${{ inputs.playwright_spec_param }}
+        run: yarn run pw:run ${{ inputs.playwright_spec_param }}
         shell: bash
         env:
           VISYN_CORE__SENTRY__FRONTEND_DSN: ${{ vars.PLAYWRIGHT__VISYN_CORE__SENTRY__FRONTEND_DSN }}
