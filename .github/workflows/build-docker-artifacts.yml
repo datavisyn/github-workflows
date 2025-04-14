@@ -18,6 +18,10 @@ on:
         required: false
         # When using github.ref || github.head_ref, it would contain the full path, including /, which breaks the postgres hostname
         default: ${{ github.sha }}
+      fail_fast:
+        type: boolean
+        required: false
+        default: true
       runs_on:
         type: string
         required: false
@@ -134,7 +138,7 @@ jobs:
     name: Build ${{ matrix.component.directory }} of ${{ matrix.component.flavor.directory }} (${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }})
     needs: get-flavors
     strategy:
-      fail-fast: true
+      fail-fast: ${{ inputs.fail_fast }}
       matrix:
         component: ${{ fromJson(needs.get-flavors.outputs.result).components }}
     runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
