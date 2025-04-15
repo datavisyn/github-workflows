@@ -240,19 +240,29 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
-          format: 'sarif'
-          output: ${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/trivy-results.sarif
-          # format: 'table'
+          # format: 'sarif'
+          # output: ${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/trivy-results.sarif
+          format: 'table'
           exit-code: '1'
           ignore-unfixed: false
           vuln-type: 'os,library'
           severity: 'MEDIUM,HIGH,CRITICAL'
         continue-on-error: true 
 
-      - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v2
+      # - name: Upload Trivy scan results
+      #   uses: github/codeql-action/upload-sarif@v2
+      #   with:
+      #     sarif_file: ${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/trivy-results.sarif
+
+
+      - name: Push image
+        uses: docker/build-push-action@v6
         with:
-          sarif_file: ${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/trivy-results.sarif
+          push: true
+          context: .
+          tags: |
+            ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
+
 
       - name: Log out from Amazon ECR
         shell: bash
