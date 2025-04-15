@@ -245,7 +245,6 @@ jobs:
           ignore-unfixed: false
           vuln-type: 'os,library'
           severity: 'MEDIUM,HIGH,CRITICAL'
-          trivy-config: ${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/trivy.yaml
         continue-on-error: false 
 
       - name: Push image
