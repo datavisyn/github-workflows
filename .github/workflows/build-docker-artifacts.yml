@@ -22,6 +22,10 @@ on:
         type: boolean
         required: false
         default: true
+      skip_image_scan:
+        type: boolean
+        required: false
+        default: false
       runs_on:
         type: string
         required: false
@@ -262,7 +266,7 @@ jobs:
         run: docker logout ${{ steps.login-ecr.outputs.registry }}
 
       - name: Scan image
-        if: ${{ matrix.component.skip_image_scan != true }}
+        if: ${{ skip_image_scan != true && fromJson(vars.SKIP_IMAGE_SCAN) != true && matrix.component.skip_image_scan != true }}
         id: get-ecr-scan-result
         uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
         with:
@@ -272,7 +276,7 @@ jobs:
           ecr_repository: ${{ matrix.component.ecr_repository }}
           image_tag: ${{ matrix.component.image_tag }}
       - name: Check scan results
-        if: ${{ matrix.component.skip_image_scan != true }}
+        if: ${{ skip_image_scan != true && fromJson(vars.SKIP_IMAGE_SCAN) != true && matrix.component.skip_image_scan != true }}
         run: |
           if [ "${{ steps.get-ecr-scan-result.outputs.critical }}" != "null" ] || [ "${{ steps.get-ecr-scan-result.outputs.high }}" != "null" ]; then
             echo "Docker image contains vulnerabilities at critical or high level"
