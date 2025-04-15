@@ -255,15 +255,15 @@ jobs:
       #     sarif_file: ${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/trivy-results.sarif
 
 
-      - name: Push image
-        uses: docker/build-push-action@v6
-        with:
-          file: ${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/Dockerfile
-          push: true
-          provenance: false
-          context: .
-          tags: |
-            ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
+      # - name: Push image
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     file: ${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/Dockerfile
+      #     push: true
+      #     provenance: false
+      #     context: .
+      #     tags: |
+      #       ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
 
 
       - name: Log out from Amazon ECR
