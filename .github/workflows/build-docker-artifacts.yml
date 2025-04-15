@@ -260,6 +260,7 @@ jobs:
         with:
           file: ${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/Dockerfile
           push: true
+          provenance: false
           context: .
           tags: |
             ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
@@ -269,23 +270,23 @@ jobs:
         shell: bash
         run: docker logout ${{ steps.login-ecr.outputs.registry }}
 
-      # - name: Scan image
-      #   if: ${{ matrix.component.skip_image_scan != true }}
-      #   id: get-ecr-scan-result
-      #   uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
-      #   with:
-      #     aws_role: ${{ vars.DV_AWS_ECR_ROLE }}
-      #     aws_region: ${{ vars.DV_AWS_REGION }}
-      #     ecr_registry: ${{ vars.DV_AWS_ECR_REGISTRY }}
-      #     ecr_repository: ${{ matrix.component.ecr_repository }}
-      #     image_tag: ${{ matrix.component.image_tag }}
-      # - name: Check scan results
-      #   if: ${{ matrix.component.skip_image_scan != true }}
-      #   run: |
-      #     if [ "${{ steps.get-ecr-scan-result.outputs.critical }}" != "null" ] || [ "${{ steps.get-ecr-scan-result.outputs.high }}" != "null" ]; then
-      #       echo "Docker image contains vulnerabilities at critical or high level"
-      #       exit 1  #exit execution due to docker image vulnerabilities
-      #     fi
+      - name: Scan image
+        if: ${{ matrix.component.skip_image_scan != true }}
+        id: get-ecr-scan-result
+        uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
+        with:
+          aws_role: ${{ vars.DV_AWS_ECR_ROLE }}
+          aws_region: ${{ vars.DV_AWS_REGION }}
+          ecr_registry: ${{ vars.DV_AWS_ECR_REGISTRY }}
+          ecr_repository: ${{ matrix.component.ecr_repository }}
+          image_tag: ${{ matrix.component.image_tag }}
+      - name: Check scan results
+        if: ${{ matrix.component.skip_image_scan != true }}
+        run: |
+          if [ "${{ steps.get-ecr-scan-result.outputs.critical }}" != "null" ] || [ "${{ steps.get-ecr-scan-result.outputs.high }}" != "null" ]; then
+            echo "Docker image contains vulnerabilities at critical or high level"
+            #exit 1  #exit execution due to docker image vulnerabilities
+          fi
 
   retag-images:
     name: Retag images of flavor ${{ matrix.flavor || 'default' }}
