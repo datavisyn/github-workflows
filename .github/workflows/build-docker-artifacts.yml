@@ -258,6 +258,7 @@ jobs:
       - name: Push image
         uses: docker/build-push-action@v6
         with:
+          file: ${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/Dockerfile
           push: true
           context: .
           tags: |
