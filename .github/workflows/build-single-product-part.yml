@@ -264,7 +264,7 @@ jobs:
             org.opencontainers.image.created=${{ inputs.build_time }}
             org.opencontainers.image.revision=${{ github.sha }}
       - name: scan image
-        if: ${{ steps.get-parameters.outputs.skip_image_check != 'true' }}
+        if: ${{ fromJson(vars.SKIP_IMAGE_SCAN || 'false') != true && steps.get-parameters.outputs.skip_image_check != 'true' }}
         id: get-ecr-scan-result
         uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
         with:
