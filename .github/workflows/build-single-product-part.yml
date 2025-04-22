@@ -46,6 +46,10 @@ on:
           type: number
           required: false
           default: 60
+        runs_on:
+          type: string
+          required: false
+          default: "ubuntu-22.04"
 env:
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: "20.9"
@@ -62,7 +66,7 @@ permissions:
 jobs:
   build-components:
     timeout-minutes: ${{ fromJSON(inputs.timeout) }}
-    runs-on: ubuntu-22.04
+    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
     steps:
       - name: Remove unnecessary files
         run: |
