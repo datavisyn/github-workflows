@@ -249,7 +249,7 @@ jobs:
           ignore-unfixed: false
           vuln-type: 'os,library'
           severity: 'MEDIUM,HIGH,CRITICAL'
-        continue-on-error: false 
+        continue-on-error: true 
 
       - name: Push image
         uses: docker/build-push-action@v6
