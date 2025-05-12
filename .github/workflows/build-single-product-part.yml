@@ -46,6 +46,10 @@ on:
           type: number
           required: false
           default: 60
+        runs_on:
+          type: string
+          required: false
+          default: "ubuntu-22.04"
 env:
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: "20.9"
@@ -62,7 +66,7 @@ permissions:
 jobs:
   build-components:
     timeout-minutes: ${{ fromJSON(inputs.timeout) }}
-    runs-on: ubuntu-22.04
+    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
     steps:
       - name: Remove unnecessary files
         run: |
@@ -264,7 +268,7 @@ jobs:
             org.opencontainers.image.created=${{ inputs.build_time }}
             org.opencontainers.image.revision=${{ github.sha }}
       - name: scan image
-        if: ${{ steps.get-parameters.outputs.skip_image_check != 'true' }}
+        if: ${{ fromJson(vars.SKIP_IMAGE_SCAN || 'false') != true && steps.get-parameters.outputs.skip_image_check != 'true' }}
         id: get-ecr-scan-result
         uses: ./tmp/github-workflows/.github/actions/get-ecr-scan-result
         with:

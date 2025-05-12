@@ -2,6 +2,11 @@ name: build-product
 
 on:
   workflow_call:
+    inputs:
+      runs_on:
+        type: string
+        required: false
+        default: "ubuntu-22.04"
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -97,6 +102,7 @@ jobs:
       image_tag2: ${{ needs.prepare-build.outputs.image_tag2 }}
       build_time: ${{ needs.prepare-build.outputs.build_time }}
       stage: ${{ needs.prepare-build.outputs.stage }}
+      runs_on: ${{ inputs.runs_on }}
     secrets: inherit
   build-workspace:
     needs: prepare-build
