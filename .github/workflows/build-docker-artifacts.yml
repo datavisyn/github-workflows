@@ -194,7 +194,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4.2.0
+        uses: aws-actions/configure-aws-credentials@v4.2.1
         with:
           role-to-assume: ${{ vars.DV_AWS_ECR_ROLE }}
           aws-region: ${{ vars.DV_AWS_REGION }}
@@ -291,7 +291,7 @@ jobs:
           path: ./tmp/github-workflows
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4.2.0
+        uses: aws-actions/configure-aws-credentials@v4.2.1
         with:
           role-to-assume: ${{ vars.DV_AWS_ECR_ROLE }}
           aws-region: ${{ vars.DV_AWS_REGION }}

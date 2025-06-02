@@ -56,6 +56,7 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/check-actor
         with:
           dv_devops: ${{ vars.DV_DEVOPS }}
+          allowed_users: ${{ vars.DV_CAN_RELEASE }}
           actor: ${{ github.actor }}
           qms_are_allowed: "false"
       - uses: ./tmp/github-workflows/.github/actions/build-node-python
@@ -88,6 +89,7 @@ jobs:
       - uses: ./tmp/github-workflows/.github/actions/check-actor
         with:
           dv_devops: ${{ vars.DV_DEVOPS }}
+          allowed_users: ${{ vars.DV_CAN_RELEASE }}
           actor: ${{ github.actor }}
           qms_are_allowed: "false"
       - uses: ./tmp/github-workflows/.github/actions/build-node-python
