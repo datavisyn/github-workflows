@@ -35,10 +35,10 @@
                       "type": "string",
                       "description": "ECR repository to push the image to"
                     },
-                    "skip_image_scan": {
+                    "scan_high_severity": {
                       "type": "boolean",
-                      "default": false,
-                      "description": "Skip scanning the image for vulnerabilities"
+                      "default": true,
+                      "description": "Scan the image for high severity vulnerabilities"
                     }
                   },
                   "required": ["directory", "ecr_repository"]

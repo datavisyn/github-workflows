@@ -22,10 +22,11 @@ on:
         type: boolean
         required: false
         default: true
-      skip_image_scan:
+      scan_high_severity:
+        description: 'Include high severity'
         type: boolean
         required: false
-        default: false
+        default: true
       runs_on:
         type: string
         required: false
@@ -240,8 +241,15 @@ jobs:
           # https://github.com/docker/build-push-action/issues/1156#issuecomment-2437227730
           DOCKER_BUILD_SUMMARY: false
 
+      - name: Determine trivy scan severity levels
+        id: set_severity
+        run: |
+          if [[ ${{ inputs.scan_high_severity }} != true ]]; then
+            echo "severity=CRITICAL" >> $GITHUB_OUTPUT
+          else
+            echo "severity=HIGH,CRITICAL" >> $GITHUB_OUTPUT
+          fi
       - name: Run Trivy vulnerability scanner
-        if: ${{ inputs.skip_image_scan != true && fromJson(vars.SKIP_IMAGE_SCAN || 'false') != true && matrix.component.skip_image_scan != true }}
         uses: aquasecurity/trivy-action@0.30.0
         with:
           image-ref: ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
@@ -249,7 +257,7 @@ jobs:
           exit-code: '1'
           ignore-unfixed: false
           vuln-type: 'os,library'
-          severity: 'HIGH,CRITICAL'
+          severity: ${{ steps.set_severity.outputs.severity }}
         continue-on-error: false 
 
       - name: Push image
