@@ -244,13 +244,14 @@ jobs:
       - name: Determine trivy scan severity levels
         id: set_severity
         run: |
+          echo "${SCAN_HIGH_SEVERITY}"
           if [[ "${SCAN_HIGH_SEVERITY}" == "false" ]]; then
             echo "severity=CRITICAL" >> "$GITHUB_OUTPUT"
           else
             echo "severity=HIGH,CRITICAL" >> "$GITHUB_OUTPUT"
           fi
         env:
-          SCAN_HIGH_SEVERITY: ${{ inputs.scan_high_severity }}
+          SCAN_HIGH_SEVERITY: ${{ inputs.scan_high_severity }} || fromJson(vars.SCAN_HIGH_SEVERITY)
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.30.0
         with:
