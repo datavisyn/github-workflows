@@ -244,8 +244,6 @@ jobs:
       - name: Determine trivy scan severity levels
         id: set_severity
         run: |
-          echo "${{ github.event.inputs.scan_high_severity}}"
-          echo "${{ matrix.component.scan_high_severity}}"
           if [[ "${{ github.event.inputs.scan_high_severity }}" == "false" ]] || \
              [[ "${{ vars.SCAN_HIGH_SEVERITY }}" == "false" ]] || \
              [[ "${{ matrix.component.scan_high_severity }}" == "false" ]]; then
