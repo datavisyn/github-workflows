@@ -244,7 +244,7 @@ jobs:
       - name: Determine trivy scan severity levels
         id: set_severity
         run: |
-          if [[ ${{ inputs.scan_high_severity }} != true ]]; then
+          if [[ "${{ inputs.scan_high_severity }}" == "false" ]]; then
             echo "severity=CRITICAL" >> $GITHUB_OUTPUT
           else
             echo "severity=HIGH,CRITICAL" >> $GITHUB_OUTPUT
