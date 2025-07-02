@@ -35,6 +35,11 @@
                       "type": "string",
                       "description": "ECR repository to push the image to"
                     },
+                    "skip_image_scan": {
+                      "type": "boolean",
+                      "default": false,
+                      "description": "[Deprecated: use scan_high_severity or the .trivyignore file instead] Skip scanning the image for vulnerabilities"
+                    },
                     "scan_high_severity": {
                       "type": "boolean",
                       "default": true,
