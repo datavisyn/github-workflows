@@ -38,7 +38,12 @@
                     "skip_image_scan": {
                       "type": "boolean",
                       "default": false,
-                      "description": "Skip scanning the image for vulnerabilities"
+                      "description": "[Deprecated: use scan_high_severity or the .trivyignore file instead] Skip scanning the image for vulnerabilities"
+                    },
+                    "scan_high_severity": {
+                      "type": "boolean",
+                      "default": true,
+                      "description": "Scan the image for high severity vulnerabilities"
                     }
                   },
                   "required": ["directory", "ecr_repository"]
