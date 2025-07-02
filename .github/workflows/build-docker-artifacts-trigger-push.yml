@@ -30,7 +30,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  WORKFLOW_BRANCH: "feat/trivy-config"
+  WORKFLOW_BRANCH: "main"
 
 permissions:
   contents: read
