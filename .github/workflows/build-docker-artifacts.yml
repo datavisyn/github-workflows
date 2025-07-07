@@ -257,7 +257,7 @@ jobs:
           fi
       - name: Run Trivy vulnerability scanner
         if: ${{ inputs.skip_image_scan != true && fromJson(vars.SKIP_IMAGE_SCAN || 'false') != true && matrix.component.skip_image_scan != true }}
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@0.32.0
         with:
           image-ref: ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
           format: 'table'
