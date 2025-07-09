@@ -33,7 +33,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "vdelev_imagescan"
 
 permissions:
   contents: read
