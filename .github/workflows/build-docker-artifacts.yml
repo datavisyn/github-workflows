@@ -262,7 +262,7 @@ jobs:
           echo "matrix.component.skip_image_scan = ${{ matrix.component.skip_image_scan }}"
           echo "parsed SKIP_IMAGE_SCAN = ${{ fromJson(vars.SKIP_IMAGE_SCAN || 'false') }}"
       - name: Run Trivy vulnerability scanner
-        if: ${{ inputs.skip_image_scan != true && fromJson(vars.SKIP_IMAGE_SCAN || 'false') != true && matrix.component.skip_image_scan != true }}
+        if: ${{ !inputs.skip_image_scan && !(vars.SKIP_IMAGE_SCAN == 'true') && !matrix.component.skip_image_scan }}
         uses: aquasecurity/trivy-action@0.30.0
         with:
           image-ref: ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
