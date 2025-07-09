@@ -255,6 +255,12 @@ jobs:
           else
             echo "severity=HIGH,CRITICAL" >> "$GITHUB_OUTPUT"
           fi
+      - name: debug scan flags
+        run: |
+          echo "inputs.skip_image_scan = ${{ inputs.skip_image_scan }}"
+          echo "vars.SKIP_IMAGE_SCAN = ${{ vars.SKIP_IMAGE_SCAN }}"
+          echo "matrix.component.skip_image_scan = ${{ matrix.component.skip_image_scan }}"
+          echo "parsed SKIP_IMAGE_SCAN = ${{ fromJson(vars.SKIP_IMAGE_SCAN || 'false') }}"
       - name: Run Trivy vulnerability scanner
         if: ${{ inputs.skip_image_scan != true && fromJson(vars.SKIP_IMAGE_SCAN || 'false') != true && matrix.component.skip_image_scan != true }}
         uses: aquasecurity/trivy-action@0.30.0
