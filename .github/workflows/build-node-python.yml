@@ -105,38 +105,6 @@ on:
         required: false
       CHROMATIC_PROJECT_TOKEN:
         required: false
-  workflow_dispatch:
-    inputs:
-      branch:
-        type: string
-        required: false
-        description: "Branch to build"
-        default: "main"
-      auto_fix_lint:
-        description: "Automatically fix linting errors when possible and commit changes"
-        type: boolean
-        required: false
-        default: false
-      cypress_enable:
-        description: "Global enable for cypress"
-        type: boolean
-        required: false
-        default: false
-      playwright_enable:
-        description: "Global enable for playwright"
-        type: boolean
-        required: false
-        default: false
-      node_run_webpack:
-        description: "Flag to always run the webpack production build."
-        type: boolean
-        required: false
-        default: false
-      run_parallel:
-        description: "Flag to ensure that node and python jobs are run in parallel."
-        type: boolean
-        required: false
-        default: true
 
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
