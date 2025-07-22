@@ -85,6 +85,10 @@ inputs:
   run_python_build:
     default: true
     required: false
+  auto_fix_lint:
+    description: "automatically fix linting errors when possible and commit changes"
+    default: false
+    required: false
 
 runs:
   using: "composite"
@@ -161,6 +165,33 @@ runs:
       run: |
         # Run node and python in parallel
 
+        # Function to setup git for committing fixes
+        setup_git_for_fixes() {
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        }
+
+        # Function to commit lint fixes
+        commit_lint_fixes() {
+          local changes_made="$1"
+          if [ "$changes_made" = "true" ]; then
+            if git diff --quiet && git diff --cached --quiet; then
+              echo "No changes to commit after running fixes"
+              return 0
+            fi
+            
+            echo "Committing lint fixes..."
+            git add .
+            if git diff --cached --quiet; then
+              echo "No staged changes to commit"
+              return 0
+            fi
+            git commit -m "Auto-fix: Apply linting and formatting fixes [skip ci]" || true
+            git push || true
+            echo "✓ Lint fixes committed and pushed"
+          fi
+        }
+
         # Define the node sequence of commands
         node_job() {
           set -e
@@ -172,10 +203,34 @@ runs:
             }
           done
 
-          parallel_jobs=()
+          # Handle node linting with auto-fix capability
           if [ "$RUN_NODE_LINT" = "true" ]; then
-            parallel_jobs+=("yarn run lint --quiet")
+            echo "Running node lint..."
+            if ! yarn run lint --quiet; then
+              if [ "$AUTO_FIX_LINT" = "true" ]; then
+                echo "Node lint failed. Attempting to auto-fix..."
+                setup_git_for_fixes
+                yarn run lint:fix || echo "Warning: yarn lint:fix command failed or not available"
+                
+                echo "Re-running node lint after fixes..."
+                if yarn run lint --quiet; then
+                  echo "✓ Node lint passed after auto-fix"
+                  commit_lint_fixes "true"
+                else
+                  echo "✗ Node lint still failing after auto-fix"
+                  exit 1
+                fi
+              else
+                echo "✗ Node lint failed and auto-fix is disabled"
+                exit 1
+              fi
+            else
+              echo "✓ Node lint passed"
+            fi
           fi
+
+          # Run other node tasks
+          parallel_jobs=()
           if [ "$RUN_NODE_TEST" = "true" ]; then
             parallel_jobs+=("yarn run test")
           fi
@@ -189,7 +244,9 @@ runs:
             parallel_jobs+=("yarn playwright install --with-deps chromium")
           fi
 
-          parallel --jobs $1 --lb --halt-on-error 2 --verbose ::: "${parallel_jobs[@]}"
+          if [ ${#parallel_jobs[@]} -gt 0 ]; then
+            parallel --jobs $1 --lb --halt-on-error 2 --verbose ::: "${parallel_jobs[@]}"
+          fi
         }
 
         # Define the python sequence of commands
@@ -197,10 +254,34 @@ runs:
           set -e
           make develop
 
-          parallel_jobs=()
+          # Handle python linting with auto-fix capability
           if [ "$RUN_PYTHON_LINT" = "true" ]; then
-            parallel_jobs+=("make lint check-format")
+            echo "Running python lint..."
+            if ! make lint check-format; then
+              if [ "$AUTO_FIX_LINT" = "true" ]; then
+                echo "Python lint failed. Attempting to auto-fix..."
+                setup_git_for_fixes
+                make format || echo "Warning: make format command failed or not available"
+                
+                echo "Re-running python lint after fixes..."
+                if make lint check-format; then
+                  echo "✓ Python lint passed after auto-fix"
+                  commit_lint_fixes "true"
+                else
+                  echo "✗ Python lint still failing after auto-fix"
+                  exit 1
+                fi
+              else
+                echo "✗ Python lint failed and auto-fix is disabled"
+                exit 1
+              fi
+            else
+              echo "✓ Python lint passed"
+            fi
           fi
+
+          # Run other python tasks
+          parallel_jobs=()
           if [ "$RUN_PYTHON_TEST" = "true" ]; then
             parallel_jobs+=("make test")
           fi
@@ -208,12 +289,16 @@ runs:
             parallel_jobs+=("make build")
           fi
 
-          parallel --jobs $1 --lb --halt-on-error 2 --verbose ::: "${parallel_jobs[@]}"
+          if [ ${#parallel_jobs[@]} -gt 0 ]; then
+            parallel --jobs $1 --lb --halt-on-error 2 --verbose ::: "${parallel_jobs[@]}"
+          fi
         }
 
         # Export the functions so they can be used by GNU parallel
         export -f node_job
         export -f python_job
+        export -f setup_git_for_fixes
+        export -f commit_lint_fixes
 
         # If RUN_PARALLEL is set, set --jobs to 0, otherwise to 1
         N_JOBS=1
@@ -243,6 +328,7 @@ runs:
         RUN_PYTHON_LINT: ${{ inputs.run_python_lint }}
         RUN_PYTHON_TEST: ${{ inputs.run_python_test }}
         RUN_PYTHON_BUILD: ${{ inputs.run_python_build }}
+        AUTO_FIX_LINT: ${{ inputs.auto_fix_lint }}
     # Node
     - name: Save yarn cache
       uses: actions/cache/save@v4
