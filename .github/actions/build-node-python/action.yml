@@ -186,7 +186,7 @@ runs:
               echo "No staged changes to commit"
               return 0
             fi
-            git commit -m "Auto-fix: Apply linting and formatting fixes [skip ci]" || true
+            git commit -m "Auto-fix: Apply linting and formatting fixes" || true
             git push || true
             echo "✓ Lint fixes committed and pushed"
           fi
