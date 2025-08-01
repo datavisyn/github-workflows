@@ -49,9 +49,9 @@ concurrency:
 env:
   WORKFLOW_BRANCH: "main"
   PYTHON_BASE_IMAGE: "python:3.10.18-slim-bullseye"
-  DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:mp-nginx_1_29_0"
+  DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   NODE_BASE_IMAGE: "node:20.9-bullseye"
-  DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:mp-nginx_1_29_0"
+  DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
 
 permissions:
   contents: read
@@ -269,7 +269,6 @@ jobs:
           ignore-unfixed: false
           vuln-type: 'os,library'
           severity: ${{ steps.set_severity.outputs.severity }}
-          cache: 'false'
         continue-on-error: false 
 
       - name: Push image
