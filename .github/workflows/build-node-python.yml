@@ -8,6 +8,11 @@ on:
         required: false
         # When using github.ref || github.head_ref, it would contain the full path, including /, which breaks the postgres hostname
         default: ${{ github.sha }}
+      auto_fix_lint:
+        description: "Automatically fix linting errors when possible and commit changes"
+        type: boolean
+        required: false
+        default: false
       cypress_enable:
         description: "Global enable for cypress"
         type: boolean
@@ -156,6 +161,7 @@ jobs:
           enable_python_cache: ${{ inputs.runs_on != 'self-hosted' }}
           chromatic_enable: ${{ inputs.chromatic_enable }}
           chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          auto_fix_lint: ${{ inputs.auto_fix_lint }}
 
   build-python:
     name: Python
@@ -193,6 +199,7 @@ jobs:
           run_node_bundle: ${{ inputs.node_run_webpack }}
           enable_node_cache: ${{ inputs.runs_on != 'self-hosted' }}
           enable_python_cache: ${{ inputs.runs_on != 'self-hosted' }}
+          auto_fix_lint: ${{ inputs.auto_fix_lint }}
 
   # If cypress is used, build node and python sequentially as it is avoiding the duplicate install overhead
   build-node-python-cypress:
@@ -285,6 +292,7 @@ jobs:
           enable_python_cache: ${{ inputs.cypress_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
           chromatic_enable: ${{ inputs.chromatic_enable }}
           chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          auto_fix_lint: ${{ inputs.auto_fix_lint }}
       - name: Decrypt .env.enc and <app>/.env.enc
         run: |
           yarn run env:decrypt -pass env:ENV_PASSWORD || true
@@ -428,6 +436,7 @@ jobs:
           enable_python_cache: ${{ inputs.playwright_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
           chromatic_enable: false # Set to false as we run chromatic below w/ playwright integration
           chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          auto_fix_lint: ${{ inputs.auto_fix_lint }}
       - name: Decrypt .env.enc and <app>/.env.enc
         run: |
           yarn run env:decrypt -pass env:ENV_PASSWORD || true
