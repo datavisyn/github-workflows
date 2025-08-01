@@ -262,6 +262,8 @@ jobs:
         uses: aquasecurity/trivy-action@0.32.0
         with:
           image-ref: ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
+          # Disable scanning the current directory (defaults to .)
+          scan-ref: '/dev/null'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: false
