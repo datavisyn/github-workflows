@@ -217,6 +217,8 @@ jobs:
           load: true
           # Disable provenance as it creates weird multi-arch images: https://github.com/docker/build-push-action/issues/755
           provenance: false
+          # Disable the cache to avoid outdated (base) images
+          no-cache: true
           build-args: |
             DOCKERFILE_DIRECTORY=${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}
             PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}
@@ -257,7 +259,7 @@ jobs:
           fi
       - name: Run Trivy vulnerability scanner
         if: ${{ inputs.skip_image_scan != true && fromJson(vars.SKIP_IMAGE_SCAN || 'false') != true && matrix.component.skip_image_scan != true }}
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@0.32.0
         with:
           image-ref: ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
           format: 'table'
@@ -265,6 +267,7 @@ jobs:
           ignore-unfixed: false
           vuln-type: 'os,library'
           severity: ${{ steps.set_severity.outputs.severity }}
+          cache: 'false'
         continue-on-error: false 
 
       - name: Push image
