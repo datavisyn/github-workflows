@@ -271,38 +271,8 @@ jobs:
         continue-on-error: false 
 
       - name: Push image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/Dockerfile
-          push: true
-          # Disable provenance as it creates weird multi-arch images: https://github.com/docker/build-push-action/issues/755
-          provenance: false
-          # Duplicated the build-args, secrets, tags and labels from the actual build above
-          # TODO: How can we avoid the build here and just push with this action?
-          build-args: |
-            DOCKERFILE_DIRECTORY=${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}
-            PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}
-            DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
-            NODE_BASE_IMAGE=${{ env.NODE_BASE_IMAGE }}
-            DATAVISYN_NGINX_BASE_IMAGE=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
-          secrets:
-            # Mount the token as secret mount: https://docs.docker.com/build/ci/github-actions/secrets/#secret-mounts
-            "github_token=${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}"
-          # TODO: As soon as we only have a single tag, we can push the same image to multiple repositories: https://docs.docker.com/build/ci/github-actions/push-multi-registries/
-          # This will be useful for the images which don't change between flavors, e.g. the backend images
-          tags: |
-            ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
-          labels: |
-            name=${{ matrix.component.ecr_repository }}
-            version=${{ matrix.component.image_tag_branch_name }}
-            org.opencontainers.image.description=Image for ${{ matrix.component.ecr_repository }}
-            org.opencontainers.image.source=${{ github.event.repository.html_url }}
-            org.opencontainers.image.url=${{ github.event.repository.html_url }}
-            org.opencontainers.image.title=${{ matrix.component.ecr_repository }}
-            org.opencontainers.image.version=${{ matrix.component.image_tag_branch_name }}
-            org.opencontainers.image.created=${{ matrix.component.build_time }}
-            org.opencontainers.image.revision=${{ github.sha }}
+        # Instead of the docker/build-push-action@v6 which will rebuild the image, just push it directly
+        run: docker push ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
 
       - name: Log out from Amazon ECR
         shell: bash
