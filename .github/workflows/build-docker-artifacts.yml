@@ -113,9 +113,9 @@ jobs:
                 ecr_respositories: flavor.components.map(component => component.ecr_repository),
                 components: flavor.components.map(component => {
                   // Format env variables as build-args string
-                  const envBuildArgs = component.env ? 
+                  const envBuildArgs = component.env ?
                     Object.entries(component.env).map(([key, value]) => `${key}=${value}`).join('\n') : '';
-                  
+
                   return {
                     ...component,
                     // Add metadata to the component object (will be used as matrix input),
