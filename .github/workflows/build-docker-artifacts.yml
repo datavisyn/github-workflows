@@ -18,6 +18,10 @@ on:
         required: false
         # When using github.ref || github.head_ref, it would contain the full path, including /, which breaks the postgres hostname
         default: ${{ github.sha }}
+      skip_push:
+        type: boolean
+        required: false
+        default: false
       fail_fast:
         type: boolean
         required: false
@@ -267,6 +271,7 @@ jobs:
         continue-on-error: false 
 
       - name: Push image
+        if: ${{ inputs.skip_push != true }}
         # Instead of the docker/build-push-action@v6 which will rebuild the image, just push it directly
         run: docker push ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
 
@@ -277,6 +282,7 @@ jobs:
   retag-images:
     name: Retag images of flavor ${{ matrix.flavor || 'default' }}
     needs: [get-flavors, build-flavors]
+    if: ${{ inputs.skip_push != true }}
     strategy:
       fail-fast: false
       matrix:
@@ -336,7 +342,7 @@ jobs:
   push-to-repositories:
     name: Push images to push targets
     # if? When should we do this? Always? Only for certain branches? If so, how should we define that, in the config.json?
-    if: ${{ fromJson(needs.get-flavors.outputs.result).push_to != '' }}
+    if: ${{ inputs.skip_push != true && fromJson(needs.get-flavors.outputs.result).push_to != '' }}
     needs: [retag-images, get-flavors]
     uses: datavisyn/github-workflows/.github/workflows/build-docker-artifacts-trigger-push.yml@main
     secrets: inherit
