@@ -43,13 +43,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.branch || github.sha }}
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
 
       - name: Checkout github-workflows repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
