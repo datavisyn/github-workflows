@@ -40,9 +40,9 @@
                       "default": true,
                       "description": "Scan the image for high severity vulnerabilities"
                     },
-                    "env": {
+                    "build_args": {
                       "type": "object",
-                      "description": "Environment variables to pass as build arguments to Docker",
+                      "description": "Build arguments to pass to Docker",
                       "additionalProperties": {
                         "type": "string"
                       }
