@@ -39,6 +39,13 @@
                       "type": "boolean",
                       "default": true,
                       "description": "Scan the image for high severity vulnerabilities"
+                    },
+                    "build_args": {
+                      "type": "object",
+                      "description": "Build arguments to pass to Docker",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
                     }
                   },
                   "required": ["directory", "ecr_repository"]

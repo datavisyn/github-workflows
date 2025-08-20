@@ -114,6 +114,10 @@ jobs:
                 image_tag_branch_name: imageTagBranchName,
                 ecr_respositories: flavor.components.map(component => component.ecr_repository),
                 components: flavor.components.map(component => {
+                  // Format build arguments as build-args string
+                  const formattedBuildArgs = component.build_args ?
+                    Object.entries(component.build_args).map(([key, value]) => `${key}=${value}`).join('\n') : '';
+
                   return {
                     ...component,
                     // Add metadata to the component object (will be used as matrix input),
@@ -123,6 +127,7 @@ jobs:
                     build_time: buildTime,
                     image_tag: imageTag,
                     image_tag_branch_name: imageTagBranchName,
+                    formatted_build_args: formattedBuildArgs,
                   };
                 }),
               };
@@ -223,6 +228,7 @@ jobs:
             DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
             NODE_BASE_IMAGE=${{ env.NODE_BASE_IMAGE }}
             DATAVISYN_NGINX_BASE_IMAGE=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
+            ${{ matrix.component.formatted_build_args }}
           secrets:
             # Mount the token as secret mount: https://docs.docker.com/build/ci/github-actions/secrets/#secret-mounts
             "github_token=${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}"
