@@ -6,8 +6,6 @@ on:
       branch:
         type: string
         required: false
-        # When using github.ref || github.head_ref, it would contain the full path, including /, which breaks the postgres hostname
-        default: ${{ github.sha }}
       cypress_enable:
         description: "Global enable for cypress"
         type: boolean
@@ -132,7 +130,7 @@ jobs:
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.branch || github.sha }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
           fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
       - name: Checkout github-workflows
@@ -172,7 +170,7 @@ jobs:
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.branch || github.sha }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
       - name: Checkout github-workflows
         uses: actions/checkout@v4
@@ -263,7 +261,7 @@ jobs:
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.branch || github.sha }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
           fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
       - name: Checkout github-workflows
@@ -405,7 +403,7 @@ jobs:
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.branch || github.sha }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
           fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
       - name: Checkout github-workflows
@@ -447,13 +445,13 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: "bundles-${{ inputs.branch }}"
+          name: "bundles-${{ inputs.branch || github.sha }}"
           path: bundles/
       - name: Upload playwright report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: "playwright-report-${{ inputs.branch }}"
+          name: "playwright-report-${{ inputs.branch || github.sha }}"
           path: playwright-report/
       - name: Run Chromatic Playwright
         if: ${{ inputs.chromatic_enable }}
