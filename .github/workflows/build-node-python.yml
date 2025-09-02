@@ -149,7 +149,8 @@ jobs:
         with:
           enable_node: true
           enable_python: false
-          enable_rust: ${{ inputs.rust_enable }}
+          # We probably won't need Rust on Node builds...
+          # enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
