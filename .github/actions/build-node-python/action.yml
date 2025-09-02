@@ -144,7 +144,10 @@ runs:
             echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
           fi
         fi
-        # rustup install stable
+        rustup install stable
+
+        rustc --version
+        cargo --version
       shell: bash
     # General
     - name: Git config
