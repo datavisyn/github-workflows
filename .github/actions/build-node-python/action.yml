@@ -143,7 +143,11 @@ runs:
           else
             echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
           fi
+          # TODO
+          . "$HOME/.cargo/env"
         fi
+
+        # TODO
         rustup install stable
 
         rustc --version
