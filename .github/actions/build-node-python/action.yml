@@ -88,7 +88,7 @@ inputs:
   # Rust
   enable_rust:
     description: "enables the rust part of the action"
-    default: false
+    default: true
     required: true
 
 runs:
@@ -143,11 +143,11 @@ runs:
           else
             echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
           fi
-          # TODO
+          # Load cargo environment so cargo and rustc are available in this shell
           . "$HOME/.cargo/env"
         fi
 
-        # TODO
+        # Ensure stable rust toolchain is installed
         rustup install stable
 
         rustc --version
