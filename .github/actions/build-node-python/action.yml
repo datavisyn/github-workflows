@@ -88,7 +88,7 @@ inputs:
   # Rust
   enable_rust:
     description: "enables the rust part of the action"
-    default: true
+    default: false
     required: true
 
 runs:
