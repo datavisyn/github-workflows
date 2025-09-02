@@ -79,6 +79,11 @@ on:
         required: false
         type: boolean
         default: false
+      rust_enable:
+        description: 'Enable Rust install'
+        required: false
+        type: boolean
+        default: false
       timeout:
         description: "Timeout for each job in minutes."
         type: number
@@ -144,6 +149,7 @@ jobs:
         with:
           enable_node: true
           enable_python: false
+          enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
@@ -183,6 +189,7 @@ jobs:
         with:
           enable_node: false
           enable_python: true
+          enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
@@ -273,6 +280,7 @@ jobs:
       - name: Build node and python
         uses: ./tmp/github-workflows/.github/actions/build-node-python
         with:
+          enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
@@ -415,6 +423,7 @@ jobs:
       - name: Build node and python
         uses: ./tmp/github-workflows/.github/actions/build-node-python
         with:
+          enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
