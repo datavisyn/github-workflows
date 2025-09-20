@@ -23,7 +23,7 @@ runs:
       id: get-branch
       run: |
         # Use HEAD_REF for PRs, fallback to REF_NAME for pushes.
-        BRANCH_NAME_RAW="${HEAD_REF:-$REF_NAME}"
+        BRANCH_NAME_RAW="${HEAD_REF:-"$REF_NAME"}"
         # Clean up the ref by removing 'refs/heads/' or 'refs/tags/'
         BRANCH_NAME="${BRANCH_NAME_RAW#refs/heads/}"
         BRANCH_NAME="${BRANCH_NAME#refs/tags/}"
