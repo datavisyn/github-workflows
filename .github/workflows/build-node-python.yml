@@ -351,9 +351,9 @@ jobs:
     name: Node, Python, Playwright
     timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     if: ${{ inputs.playwright_enable && (inputs.playwright_run_because_flag || inputs.playwright_run_because_branch == 'true') }}
-    concurrency:
-      group: "node-python-playwright-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
-      cancel-in-progress: ${{ fromJSON(inputs.cancel_in_progress) }}
+    # concurrency:
+    #   group: "node-python-playwright-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+    #   cancel-in-progress: ${{ fromJSON(inputs.cancel_in_progress) }}
     permissions:
       id-token: write
       contents: write
