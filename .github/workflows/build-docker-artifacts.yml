@@ -45,7 +45,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "mp/docker_branch"
   PYTHON_BASE_IMAGE: "python:3.10.18-slim-bullseye"
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   NODE_BASE_IMAGE: "node:20.9-bullseye"
@@ -211,26 +211,10 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2.0.1
 
-      - name: Extract branch and SHA
-        id: extract-branch
-        run: |
-          # Use HEAD_REF for PRs, fallback to REF_NAME for pushes.
-          BRANCH_NAME_RAW="${HEAD_REF:-$REF_NAME}"
-          # Clean up the ref by removing 'refs/heads/' or 'refs/tags/'
-          BRANCH_NAME="${BRANCH_NAME_RAW#refs/heads/}"
-          BRANCH_NAME="${BRANCH_NAME#refs/tags/}"
-          
-          # A manual input from workflow_dispatch will always override the detected branch name
-          if [ -n "${MANUAL_BRANCH}" ]; then
-            BRANCH_NAME="${MANUAL_BRANCH}"
-          fi
-          
-          echo "branch=${BRANCH_NAME}" >> $GITHUB_OUTPUT
-          echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-        env:
-          HEAD_REF: ${{ github.head_ref }}
-          REF_NAME: ${{ github.ref_name }}
-          MANUAL_BRANCH: ${{ inputs.branch }}
+      - uses: ./tmp/github-workflows/.github/actions/get-branch
+        id: get-branch
+        with:
+          branch: ${{ inputs.branch }}
 
       - name: Build image
         uses: docker/build-push-action@v6
@@ -244,8 +228,8 @@ jobs:
           # Disable the cache to avoid outdated (base) images
           no-cache: true
           build-args: |
-            GIT_BRANCH=${{ steps.extract-branch.outputs.branch }}
-            GIT_COMMIT=${{ steps.extract-branch.outputs.commit }}
+            GIT_BRANCH=${{ steps.get-branch.outputs.branch }}
+            GIT_COMMIT=${{ steps.get-branch.outputs.commit }}
             DOCKERFILE_DIRECTORY=${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}
             PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}
             DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
