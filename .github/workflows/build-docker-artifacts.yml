@@ -211,6 +211,23 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2.0.1
 
+      - name: Extract branch and SHA
+        id: extract-branch
+        run: |
+          # Use the recommended GITHUB_HEAD_REF for PRs, fallback to GITHUB_REF for pushes
+          BRANCH_NAME_RAW="${{ github.head_ref || github.ref_name }}"
+          # Clean up the ref by removing 'refs/heads/' or 'refs/tags/'
+          BRANCH_NAME="${BRANCH_NAME_RAW#refs/heads/}"
+          BRANCH_NAME="${BRANCH_NAME#refs/tags/}"
+          
+          # A manual input from workflow_dispatch will always override the detected branch name
+          if [ -n "${{ github.event.inputs.branch }}" ]; then
+            BRANCH_NAME="${{ github.event.inputs.branch }}"
+          fi
+          
+          echo "branch=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+          echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Build image
         uses: docker/build-push-action@v6
         with:
@@ -223,6 +240,8 @@ jobs:
           # Disable the cache to avoid outdated (base) images
           no-cache: true
           build-args: |
+            GIT_BRANCH=${{ steps.extract-branch.outputs.branch }}
+            GIT_COMMIT=${{ steps.extract-branch.outputs.commit }}
             DOCKERFILE_DIRECTORY=${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}
             PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}
             DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
