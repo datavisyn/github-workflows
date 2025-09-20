@@ -214,19 +214,23 @@ jobs:
       - name: Extract branch and SHA
         id: extract-branch
         run: |
-          # Use the recommended GITHUB_HEAD_REF for PRs, fallback to GITHUB_REF for pushes
-          BRANCH_NAME_RAW="${{ github.head_ref || github.ref_name }}"
+          # Use HEAD_REF for PRs, fallback to REF_NAME for pushes.
+          BRANCH_NAME_RAW="${HEAD_REF:-$REF_NAME}"
           # Clean up the ref by removing 'refs/heads/' or 'refs/tags/'
           BRANCH_NAME="${BRANCH_NAME_RAW#refs/heads/}"
           BRANCH_NAME="${BRANCH_NAME#refs/tags/}"
           
           # A manual input from workflow_dispatch will always override the detected branch name
-          if [ -n "${{ github.event.inputs.branch }}" ]; then
-            BRANCH_NAME="${{ github.event.inputs.branch }}"
+          if [ -n "${MANUAL_BRANCH}" ]; then
+            BRANCH_NAME="${MANUAL_BRANCH}"
           fi
           
           echo "branch=${BRANCH_NAME}" >> $GITHUB_OUTPUT
           echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          REF_NAME: ${{ github.ref_name }}
+          MANUAL_BRANCH: ${{ inputs.branch }}
 
       - name: Build image
         uses: docker/build-push-action@v6
