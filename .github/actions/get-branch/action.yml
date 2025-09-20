@@ -11,14 +11,14 @@ outputs:
   branch:
     description: "extracted branch"
     value: ${{ steps.get-branch.outputs.branch }}
-  commit:
+  commit_hash:
     description: "extracted commit hash"
-    value: ${{ steps.get-branch.outputs.commit }}
+    value: ${{ steps.get-branch.outputs.commit_hash }}
 
 runs:
   using: "composite"
   steps:
-    - name: Extract branch and commit
+    - name: Extract branch and commit hash
       shell: bash
       id: get-branch
       run: |
@@ -34,7 +34,7 @@ runs:
         fi
         
         echo "branch=${BRANCH_NAME}" >> $GITHUB_OUTPUT
-        echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        echo "commit_hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       env:
         HEAD_REF: ${{ github.head_ref }}
         REF_NAME: ${{ github.ref_name }}

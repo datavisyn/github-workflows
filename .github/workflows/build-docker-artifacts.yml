@@ -229,7 +229,7 @@ jobs:
           no-cache: true
           build-args: |
             GIT_BRANCH=${{ steps.get-branch.outputs.branch }}
-            GIT_COMMIT=${{ steps.get-branch.outputs.commit }}
+            GIT_COMMIT_HASH=${{ steps.get-branch.outputs.commit_hash }}
             DOCKERFILE_DIRECTORY=${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}
             PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}
             DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
