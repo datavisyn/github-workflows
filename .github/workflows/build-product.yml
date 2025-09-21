@@ -62,9 +62,9 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       # checkout specific repository
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -124,7 +124,7 @@ jobs:
     if: ${{ always() && (needs.build-single.result == 'success' || needs.build-single.result == 'skipped') && (needs.build-workspace.result == 'success' || needs.build-workspace.result == 'skipped') && !(needs.build-workspace.result == 'skipped' && needs.build-single.result == 'skipped')}}
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
