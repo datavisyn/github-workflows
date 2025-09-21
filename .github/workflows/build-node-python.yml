@@ -456,12 +456,6 @@ jobs:
         env:
           VISYN_CORE__SENTRY__FRONTEND_DSN: ${{ vars.PLAYWRIGHT__VISYN_CORE__SENTRY__FRONTEND_DSN }}
           VISYN_CORE__SENTRY__BACKEND_DSN: ${{ vars.PLAYWRIGHT__VISYN_CORE__SENTRY__BACKEND_DSN }}
-      - name: Upload bundle
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: "bundles-${{ inputs.branch || github.sha }}"
-          path: bundles/
       # Disable upload of bundles as there is no real value...
       # - name: Upload bundle
       #   uses: actions/upload-artifact@v4
@@ -469,6 +463,12 @@ jobs:
       #   with:
       #     name: "bundles-${{ inputs.branch || github.sha }}"
       #     path: bundles/
+      - name: Upload playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: "playwright-report-${{ inputs.branch || github.sha }}"
+          path: playwright-report/
       - name: Run Chromatic Playwright
         if: ${{ inputs.chromatic_enable }}
         uses: chromaui/action@v12.0.0
