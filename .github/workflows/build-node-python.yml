@@ -469,7 +469,7 @@ jobs:
           path: playwright-report/
       - name: Run Chromatic Playwright
         if: ${{ inputs.chromatic_enable }}
-        uses: chromaui/action@v12.0.0
+        uses: chromaui/action@v13.2.0
         with:
           playwright: true
           exitZeroOnChanges: true
