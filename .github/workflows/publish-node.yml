@@ -17,7 +17,7 @@ on:
 
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
-  NODE_VERSION: ${{ vars.NODE_VERSION || "3.10" }}
+  NODE_VERSION: ${{ vars.NODE_VERSION || '20.9' }}
   WORKFLOW_BRANCH: "main"
 
 permissions:

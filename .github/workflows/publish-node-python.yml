@@ -25,11 +25,11 @@ on:
         required: false
 
 env:
-  NODE_VERSION: ${{ vars.NODE_VERSION || "3.10" }}
+  NODE_VERSION: ${{ vars.NODE_VERSION || '20.9' }}
   NPM_REGISTRY: "https://registry.npmjs.org/"
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
-  PYTHON_VERSION: ${{ vars.PYTHON_VERSION || "3.10" }}
+  PYTHON_VERSION: ${{ vars.PYTHON_VERSION || '3.10' }}
   WORKFLOW_BRANCH: "main"
 
 permissions:

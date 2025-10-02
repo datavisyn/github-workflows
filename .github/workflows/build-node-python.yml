@@ -115,10 +115,10 @@ on:
 
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
-  NODE_VERSION: ${{ vars.NODE_VERSION || "3.10" }}
+  NODE_VERSION: ${{ vars.NODE_VERSION || '20.9' }}
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
-  PYTHON_VERSION: ${{ vars.PYTHON_VERSION || "3.10" }}
+  PYTHON_VERSION: ${{ vars.PYTHON_VERSION || '3.10' }}
   WORKFLOW_BRANCH: "main"
   POSTGRES_HOSTNAME: postgres_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}
 
