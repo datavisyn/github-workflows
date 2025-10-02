@@ -161,7 +161,7 @@ jobs:
           # We probably won't need Rust on Node builds...
           # enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
-          node_version: ${{ inputs.node_version || inputs.node_version || secrets.NODE_VERSION || env.NODE_VERSION }}
+          node_version: ${{ inputs.node_version || secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
           python_version: ${{ inputs.python_version || inputs.python_version || secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
