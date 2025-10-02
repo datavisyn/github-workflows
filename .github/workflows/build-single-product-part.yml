@@ -74,11 +74,11 @@ jobs:
           sudo rm -rf /usr/local/lib/android
           sudo rm -rf /opt/ghc
       # checkout specific repository
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
