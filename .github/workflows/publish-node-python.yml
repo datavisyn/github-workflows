@@ -2,6 +2,14 @@ name: publish-node-python
 
 on:
   workflow_call:
+    inputs:
+      python_version:
+        type: string
+        required: false
+      node_version:
+        type: string
+        required: false
+
     secrets:
       PYPI_USERNAME:
         required: true
@@ -17,7 +25,7 @@ on:
         required: false
 
 env:
-  NODE_VERSION: "20.9"
+  NODE_VERSION: ${{ vars.NODE_VERSION || "3.10" }}
   NPM_REGISTRY: "https://registry.npmjs.org/"
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
@@ -63,7 +71,7 @@ jobs:
         with:
           enable_node: true
           enable_python: false
-          node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
+          node_version: ${{ inputs.node_version || secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       - uses: ./tmp/github-workflows/.github/actions/publish-node
@@ -96,7 +104,7 @@ jobs:
         with:
           enable_node: false
           enable_python: true
-          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
+          python_version: ${{ inputs.python_version || secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       - uses: ./tmp/github-workflows/.github/actions/publish-python
         with:

@@ -18,35 +18,36 @@ on:
       GITLAB_HOST:
         required: false
     inputs:
-        component:
-          description: "component that should be built"
-          required: true
-          type: string
-        image_tag1:
-          description: "image tag 1 to push the image"
-          required: true
-          type: string
-        image_tag2:
-          description: "image tag 2 for labeling"
-          required: true
-          type: string
-        build_time:
-          description: "actually build time (in RFC 3339)"
-          required: true
-          type: string
-        stage:
-          description: "stage for the image (develop or production) depending on the branch name"
-          required: true
-          type: string
-        timeout:
-          description: "Timeout for each job in minutes."
-          type: number
-          required: false
-          default: 60
+      component:
+        description: "component that should be built"
+        required: true
+        type: string
+      image_tag1:
+        description: "image tag 1 to push the image"
+        required: true
+        type: string
+      image_tag2:
+        description: "image tag 2 for labeling"
+        required: true
+        type: string
+      build_time:
+        description: "actually build time (in RFC 3339)"
+        required: true
+        type: string
+      stage:
+        description: "stage for the image (develop or production) depending on the branch name"
+        required: true
+        type: string
+      timeout:
+        description: "Timeout for each job in minutes."
+        type: number
+        required: false
+        default: 60
+
 env:
   VISYN_SCRIPTS_VERSION: "v7" # visyn_scripts@v7 is the last version with workspace support
   TIME_ZONE: "Europe/Vienna"
-  NODE_VERSION: "20.9"
+  NODE_VERSION: ${{ vars.NODE_VERSION || "3.10" }}
   PYTHON_VERSION: ${{ vars.PYTHON_VERSION || "3.10" }}
   WORKFLOW_BRANCH: "main"
   PYTHON_BASE_IMAGE: "python:3.10.18-slim-bullseye"

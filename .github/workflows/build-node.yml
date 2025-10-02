@@ -21,6 +21,10 @@ on:
         type: string
         required: false
         default: "ubuntu-22.04"
+      node_version:
+        type: string
+        required: false
+
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -31,7 +35,7 @@ on:
 
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
-  NODE_VERSION: "20.9"
+  NODE_VERSION: ${{ vars.NODE_VERSION || "3.10" }}
   WORKFLOW_BRANCH: "main"
 
 permissions:
@@ -69,7 +73,7 @@ jobs:
         with:
           enable_node: true
           enable_python: false
-          node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
+          node_version: ${{ inputs.node_version || secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_node_bundle: ${{ inputs.node_run_webpack }}

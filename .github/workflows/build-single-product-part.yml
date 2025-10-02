@@ -52,7 +52,7 @@ on:
           default: "ubuntu-22.04"
 env:
   TIME_ZONE: "Europe/Vienna"
-  NODE_VERSION: "20.9"
+  NODE_VERSION: ${{ vars.NODE_VERSION || "3.10" }}
   PYTHON_VERSION: ${{ vars.PYTHON_VERSION || "3.10" }}
   WORKFLOW_BRANCH: "main"
   PYTHON_BASE_IMAGE: "python:3.10.18-slim-bullseye"
