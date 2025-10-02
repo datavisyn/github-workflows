@@ -163,7 +163,7 @@ jobs:
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ inputs.node_version || secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
-          python_version: ${{ inputs.python_version || inputs.python_version || secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
+          python_version: ${{ inputs.python_version || secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_node_bundle: ${{ inputs.node_run_webpack }}
           enable_node_cache: ${{ inputs.runs_on != 'self-hosted' }}
