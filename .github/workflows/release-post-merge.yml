@@ -54,7 +54,7 @@ jobs:
           git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
 
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
           fetch-depth: 0
