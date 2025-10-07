@@ -85,6 +85,11 @@ inputs:
   run_python_build:
     default: true
     required: false
+  # Rust
+  enable_rust:
+    description: "enables the rust part of the action"
+    default: false
+    required: true
 
 runs:
   using: "composite"
@@ -124,6 +129,29 @@ runs:
       run: |
         sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
         sudo apt-get install postgresql-16-pgvector -y
+      shell: bash
+    # Rust
+    - name: Install Rust
+      if: inputs.enable_rust == 'true'
+      run: |
+        if ! command -v rustup &> /dev/null ; then
+          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --default-toolchain stable -y
+
+          # Resolve the correct CARGO_HOME path depending on OS
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            echo "${CARGO_HOME:-$USERPROFILE/.cargo}/bin" | sed 's|/|\\|g' >> $GITHUB_PATH
+          else
+            echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
+          fi
+          # Load cargo environment so cargo and rustc are available in this shell
+          . "$HOME/.cargo/env"
+        fi
+
+        # Ensure stable rust toolchain is installed
+        rustup install stable
+
+        rustc --version
+        cargo --version
       shell: bash
     # General
     - name: Git config
