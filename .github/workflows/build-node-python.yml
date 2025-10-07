@@ -6,8 +6,6 @@ on:
       branch:
         type: string
         required: false
-        # When using github.ref || github.head_ref, it would contain the full path, including /, which breaks the postgres hostname
-        default: ${{ github.sha }}
       cypress_enable:
         description: "Global enable for cypress"
         type: boolean
@@ -81,12 +79,26 @@ on:
         required: false
         type: boolean
         default: false
+      rust_enable:
+        description: 'Enable Rust install'
+        required: false
+        type: boolean
+        default: false
+      cancel_in_progress:
+        type: boolean
+        default: true
       timeout:
         description: "Timeout for each job in minutes."
         type: number
         required: false
         default: 60
-      
+      python_version:
+        type: string
+        required: false
+      node_version:
+        type: string
+        required: false
+
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
@@ -103,10 +115,10 @@ on:
 
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
-  NODE_VERSION: "20.9"
+  NODE_VERSION: ${{ vars.NODE_VERSION || '20.9' }}
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
   PYPI_USERNAME: "datavisyn"
-  PYTHON_VERSION: "3.10"
+  PYTHON_VERSION: ${{ vars.PYTHON_VERSION || '3.10' }}
   WORKFLOW_BRANCH: "main"
   POSTGRES_HOSTNAME: postgres_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}
 
@@ -123,20 +135,20 @@ jobs:
     if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
     concurrency:
       group: "node-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
-      cancel-in-progress: true
+      cancel-in-progress: ${{ inputs.cancel_in_progress }}
     permissions:
       id-token: write
       contents: write
     runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
     steps:
       - name: Checkout source repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.branch || github.sha }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
           fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
       - name: Checkout github-workflows
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -146,10 +158,12 @@ jobs:
         with:
           enable_node: true
           enable_python: false
+          # We probably won't need Rust on Node builds...
+          # enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
-          node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
+          node_version: ${{ inputs.node_version || secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
-          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
+          python_version: ${{ inputs.python_version || secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_node_bundle: ${{ inputs.node_run_webpack }}
           enable_node_cache: ${{ inputs.runs_on != 'self-hosted' }}
@@ -163,19 +177,19 @@ jobs:
     if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
     concurrency:
       group: "python-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
-      cancel-in-progress: true
+      cancel-in-progress: ${{ inputs.cancel_in_progress }}
     permissions:
       id-token: write
       contents: write
     runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
     steps:
       - name: Checkout source repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.branch || github.sha }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
       - name: Checkout github-workflows
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -185,10 +199,11 @@ jobs:
         with:
           enable_node: false
           enable_python: true
+          enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
-          node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
+          node_version: ${{ inputs.node_version || secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
-          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
+          python_version: ${{ inputs.python_version || secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_node_bundle: ${{ inputs.node_run_webpack }}
           enable_node_cache: ${{ inputs.runs_on != 'self-hosted' }}
@@ -201,7 +216,7 @@ jobs:
     if: ${{ inputs.cypress_enable && (inputs.cypress_run_because_flag || inputs.cypress_run_because_branch == 'true') }}
     concurrency:
       group: "node-python-cypress-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
-      cancel-in-progress: true
+      cancel-in-progress: ${{ inputs.cancel_in_progress }}
     permissions:
       id-token: write
       contents: write
@@ -261,13 +276,13 @@ jobs:
             echo "REDIS_PORT=${{ job.services.redis.ports['6379'] }}" 
           } >> "$GITHUB_ENV"
       - name: Checkout source repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.branch || github.sha }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
           fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
       - name: Checkout github-workflows
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -275,10 +290,11 @@ jobs:
       - name: Build node and python
         uses: ./tmp/github-workflows/.github/actions/build-node-python
         with:
+          enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
-          node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
+          node_version: ${{ inputs.node_version || secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
-          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
+          python_version: ${{ inputs.python_version || secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_node_bundle: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
           enable_node_cache: ${{ inputs.cypress_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
@@ -341,7 +357,7 @@ jobs:
     if: ${{ inputs.playwright_enable && (inputs.playwright_run_because_flag || inputs.playwright_run_because_branch == 'true') }}
     concurrency:
       group: "node-python-playwright-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
-      cancel-in-progress: true
+      cancel-in-progress: ${{ inputs.cancel_in_progress }}
     permissions:
       id-token: write
       contents: write
@@ -403,13 +419,13 @@ jobs:
             echo "REDIS_PORT=${{ job.services.redis.ports['6379'] }}" 
           } >> "$GITHUB_ENV"
       - name: Checkout source repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.branch || github.sha }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
           fetch-depth: ${{ inputs.chromatic_enable && '0' || '1' }}
       - name: Checkout github-workflows
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -417,10 +433,11 @@ jobs:
       - name: Build node and python
         uses: ./tmp/github-workflows/.github/actions/build-node-python
         with:
+          enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
-          node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
+          node_version: ${{ inputs.node_version || secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
-          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
+          python_version: ${{ inputs.python_version || secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_node_bundle: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
           run_playwright_browser_install: true
@@ -443,17 +460,18 @@ jobs:
         env:
           VISYN_CORE__SENTRY__FRONTEND_DSN: ${{ vars.PLAYWRIGHT__VISYN_CORE__SENTRY__FRONTEND_DSN }}
           VISYN_CORE__SENTRY__BACKEND_DSN: ${{ vars.PLAYWRIGHT__VISYN_CORE__SENTRY__BACKEND_DSN }}
-      - name: Upload bundle
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: "bundles-${{ inputs.branch }}"
-          path: bundles/
+      # Disable upload of bundles as there is no real value...
+      # - name: Upload bundle
+      #   uses: actions/upload-artifact@v4
+      #   if: always()
+      #   with:
+      #     name: "bundles-${{ inputs.branch || github.sha }}"
+      #     path: bundles/
       - name: Upload playwright report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: "playwright-report-${{ inputs.branch }}"
+          name: "playwright-report-${{ inputs.branch || github.sha }}"
           path: playwright-report/
       - name: Run Chromatic Playwright
         if: ${{ inputs.chromatic_enable }}

@@ -2,6 +2,11 @@ name: publish-node
 
 on:
   workflow_call:
+    inputs:
+      node_version:
+        type: string
+        required: false
+
     secrets:
       NPM_TOKEN:
         required: true
@@ -12,7 +17,7 @@ on:
 
 env:
   NPM_REGISTRY: "https://registry.npmjs.org/"
-  NODE_VERSION: "20.9"
+  NODE_VERSION: ${{ vars.NODE_VERSION || '20.9' }}
   WORKFLOW_BRANCH: "main"
 
 permissions:
@@ -35,11 +40,11 @@ jobs:
           echo "only the main branch can be published."
           exit 1
       # checkout specific source repository
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token }} # has to set because otherwise it will not work
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -54,7 +59,7 @@ jobs:
         with:
           enable_node: true
           enable_python: false
-          node_version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
+          node_version: ${{ inputs.node_version || secrets.NODE_VERSION || env.NODE_VERSION }}
           npm_registry: ${{ env.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       - uses: ./tmp/github-workflows/.github/actions/publish-node

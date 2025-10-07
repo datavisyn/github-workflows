@@ -16,16 +16,14 @@ on:
       branch:
         type: string
         required: false
-        # When using github.ref || github.head_ref, it would contain the full path, including /, which breaks the postgres hostname
-        default: ${{ github.sha }}
+      skip_push:
+        type: boolean
+        required: false
+        default: false
       fail_fast:
         type: boolean
         required: false
         default: true
-      skip_image_scan:
-        type: boolean
-        required: false
-        default: false
       scan_high_severity:
         description: 'Include high severity'
         type: boolean
@@ -48,7 +46,7 @@ concurrency:
 
 env:
   WORKFLOW_BRANCH: "main"
-  PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
+  PYTHON_BASE_IMAGE: "python:3.10.18-slim-bullseye"
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   NODE_BASE_IMAGE: "node:20.9-bullseye"
   DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
@@ -67,13 +65,13 @@ jobs:
     runs-on: 'ubuntu-22.04'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.branch || github.sha }}
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
 
       - name: Checkout github-workflows repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -116,6 +114,10 @@ jobs:
                 image_tag_branch_name: imageTagBranchName,
                 ecr_respositories: flavor.components.map(component => component.ecr_repository),
                 components: flavor.components.map(component => {
+                  // Format build arguments as build-args string
+                  const formattedBuildArgs = component.build_args ?
+                    Object.entries(component.build_args).map(([key, value]) => `${key}=${value}`).join('\n') : '';
+
                   return {
                     ...component,
                     // Add metadata to the component object (will be used as matrix input),
@@ -125,6 +127,7 @@ jobs:
                     build_time: buildTime,
                     image_tag: imageTag,
                     image_tag_branch_name: imageTagBranchName,
+                    formatted_build_args: formattedBuildArgs,
                   };
                 }),
               };
@@ -163,15 +166,15 @@ jobs:
           sudo rm -rf /opt/ghc
       # TODO: Support arbitrary repositories, not just the current one?
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.branch || github.sha }}
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
           # This is required such that yarn install can access private repositories, i.e. visyn_pro
           # https://github.com/yarnpkg/yarn/issues/2614#issuecomment-2148174789
           persist-credentials: false
       - name: Checkout github-workflows repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -217,12 +220,15 @@ jobs:
           load: true
           # Disable provenance as it creates weird multi-arch images: https://github.com/docker/build-push-action/issues/755
           provenance: false
+          # Disable the cache to avoid outdated (base) images
+          no-cache: true
           build-args: |
             DOCKERFILE_DIRECTORY=${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}
             PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}
             DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
             NODE_BASE_IMAGE=${{ env.NODE_BASE_IMAGE }}
             DATAVISYN_NGINX_BASE_IMAGE=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
+            ${{ matrix.component.formatted_build_args }}
           secrets:
             # Mount the token as secret mount: https://docs.docker.com/build/ci/github-actions/secrets/#secret-mounts
             "github_token=${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}"
@@ -256,10 +262,11 @@ jobs:
             echo "severity=HIGH,CRITICAL" >> "$GITHUB_OUTPUT"
           fi
       - name: Run Trivy vulnerability scanner
-        if: ${{ inputs.skip_image_scan != true && fromJson(vars.SKIP_IMAGE_SCAN || 'false') != true && matrix.component.skip_image_scan != true }}
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
+          # Disable scanning the current directory (defaults to .)
+          scan-ref: '/dev/null'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: false
@@ -268,38 +275,9 @@ jobs:
         continue-on-error: false 
 
       - name: Push image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/Dockerfile
-          push: true
-          # Disable provenance as it creates weird multi-arch images: https://github.com/docker/build-push-action/issues/755
-          provenance: false
-          # Duplicated the build-args, secrets, tags and labels from the actual build above
-          # TODO: How can we avoid the build here and just push with this action?
-          build-args: |
-            DOCKERFILE_DIRECTORY=${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}
-            PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}
-            DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
-            NODE_BASE_IMAGE=${{ env.NODE_BASE_IMAGE }}
-            DATAVISYN_NGINX_BASE_IMAGE=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
-          secrets:
-            # Mount the token as secret mount: https://docs.docker.com/build/ci/github-actions/secrets/#secret-mounts
-            "github_token=${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}"
-          # TODO: As soon as we only have a single tag, we can push the same image to multiple repositories: https://docs.docker.com/build/ci/github-actions/push-multi-registries/
-          # This will be useful for the images which don't change between flavors, e.g. the backend images
-          tags: |
-            ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
-          labels: |
-            name=${{ matrix.component.ecr_repository }}
-            version=${{ matrix.component.image_tag_branch_name }}
-            org.opencontainers.image.description=Image for ${{ matrix.component.ecr_repository }}
-            org.opencontainers.image.source=${{ github.event.repository.html_url }}
-            org.opencontainers.image.url=${{ github.event.repository.html_url }}
-            org.opencontainers.image.title=${{ matrix.component.ecr_repository }}
-            org.opencontainers.image.version=${{ matrix.component.image_tag_branch_name }}
-            org.opencontainers.image.created=${{ matrix.component.build_time }}
-            org.opencontainers.image.revision=${{ github.sha }}
+        if: ${{ inputs.skip_push != true }}
+        # Instead of the docker/build-push-action@v6 which will rebuild the image, just push it directly
+        run: docker push ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
 
       - name: Log out from Amazon ECR
         shell: bash
@@ -308,6 +286,7 @@ jobs:
   retag-images:
     name: Retag images of flavor ${{ matrix.flavor || 'default' }}
     needs: [get-flavors, build-flavors]
+    if: ${{ inputs.skip_push != true }}
     strategy:
       fail-fast: false
       matrix:
@@ -317,13 +296,13 @@ jobs:
     runs-on: 'ubuntu-22.04'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.branch || github.sha }}
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
 
       - name: Checkout github-workflows repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -367,12 +346,12 @@ jobs:
   push-to-repositories:
     name: Push images to push targets
     # if? When should we do this? Always? Only for certain branches? If so, how should we define that, in the config.json?
-    if: ${{ fromJson(needs.get-flavors.outputs.result).push_to != '' }}
+    if: ${{ inputs.skip_push != true && fromJson(needs.get-flavors.outputs.result).push_to != '' }}
     needs: [retag-images, get-flavors]
     uses: datavisyn/github-workflows/.github/workflows/build-docker-artifacts-trigger-push.yml@main
     secrets: inherit
     with:
       push_to: ${{ fromJson(needs.get-flavors.outputs.result).push_to }}
-      branch: ${{ inputs.branch }}
+      branch: ${{ inputs.branch || github.sha }}
       # Do not run this on self-hosted, as it is faster and shouldn't be blocking anything
       # runs_on: ${{ inputs.runs_on || 'ubuntu-22.04' }}

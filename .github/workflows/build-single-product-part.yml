@@ -52,10 +52,10 @@ on:
           default: "ubuntu-22.04"
 env:
   TIME_ZONE: "Europe/Vienna"
-  NODE_VERSION: "20.9"
-  PYTHON_VERSION: "3.10"
+  NODE_VERSION: ${{ vars.NODE_VERSION || '20.9' }}
+  PYTHON_VERSION: ${{ vars.PYTHON_VERSION || '3.10' }}
   WORKFLOW_BRANCH: "main"
-  PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
+  PYTHON_BASE_IMAGE: "python:3.10.18-slim-bullseye"
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
 
@@ -74,11 +74,11 @@ jobs:
           sudo rm -rf /usr/local/lib/android
           sudo rm -rf /opt/ghc
       # checkout specific repository
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}

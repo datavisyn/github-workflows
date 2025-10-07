@@ -11,8 +11,6 @@ on:
       branch:
         type: string
         required: false
-        # When using github.ref || github.head_ref, it would contain the full path, including /, which breaks the postgres hostname
-        default: ${{ github.sha }}
       runs_on:
         type: string
         required: false
@@ -45,13 +43,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.branch || github.sha }}
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
 
       - name: Checkout github-workflows repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}

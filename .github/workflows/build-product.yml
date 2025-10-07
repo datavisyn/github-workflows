@@ -30,10 +30,10 @@ concurrency:
 
 env:
   TIME_ZONE: "Europe/Vienna"
-  NODE_VERSION: "20.9"
-  PYTHON_VERSION: "3.10"
+  NODE_VERSION: ${{ vars.NODE_VERSION || '20.9' }}
+  PYTHON_VERSION: ${{ vars.PYTHON_VERSION || '3.10' }}
   WORKFLOW_BRANCH: "main"
-  PYTHON_BASE_IMAGE: "python:3.10.8-slim-bullseye"
+  PYTHON_BASE_IMAGE: "python:3.10.18-slim-bullseye"
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
 
@@ -62,9 +62,9 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       # checkout specific repository
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -124,7 +124,7 @@ jobs:
     if: ${{ always() && (needs.build-single.result == 'success' || needs.build-single.result == 'skipped') && (needs.build-workspace.result == 'success' || needs.build-workspace.result == 'skipped') && !(needs.build-workspace.result == 'skipped' && needs.build-single.result == 'skipped')}}
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}

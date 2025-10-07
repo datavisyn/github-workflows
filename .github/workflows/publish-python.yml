@@ -2,6 +2,11 @@ name: publish-python
 
 on:
   workflow_call:
+    inputs:
+      python_version:
+        type: string
+        required: false
+
     secrets:
       PYPI_USERNAME:
         required: true
@@ -14,7 +19,7 @@ on:
 
 env:
   PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
-  PYTHON_VERSION: "3.10"
+  PYTHON_VERSION: ${{ vars.PYTHON_VERSION || '3.10' }}
   WORKFLOW_BRANCH: "main"
 
 permissions:
@@ -34,9 +39,9 @@ jobs:
           echo "only the main branch can be published."
           exit 1
       # checkout specific source repository
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -51,7 +56,7 @@ jobs:
         with:
           enable_node: false
           enable_python: true
-          python_version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
+          python_version: ${{ inputs.python_version || secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       - uses: ./tmp/github-workflows/.github/actions/publish-python
         with:
