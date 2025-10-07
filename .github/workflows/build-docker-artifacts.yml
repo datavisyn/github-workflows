@@ -262,7 +262,7 @@ jobs:
             echo "severity=HIGH,CRITICAL" >> "$GITHUB_OUTPUT"
           fi
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.32.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
           # Disable scanning the current directory (defaults to .)
