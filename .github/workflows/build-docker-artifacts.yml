@@ -211,6 +211,11 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2.0.1
 
+      - uses: ./tmp/github-workflows/.github/actions/get-branch
+        id: get-branch
+        with:
+          branch: ${{ inputs.branch }}
+
       - name: Build image
         uses: docker/build-push-action@v6
         with:
@@ -223,6 +228,8 @@ jobs:
           # Disable the cache to avoid outdated (base) images
           no-cache: true
           build-args: |
+            GIT_BRANCH=${{ steps.get-branch.outputs.branch }}
+            GIT_COMMIT_HASH=${{ steps.get-branch.outputs.commit_hash }}
             DOCKERFILE_DIRECTORY=${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}
             PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}
             DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}

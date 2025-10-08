@@ -1,0 +1,41 @@
+name: get-branch
+description: extracts the branch in readable form
+author: datavisyn
+
+inputs:
+  branch:
+    description: "branch override"
+    required: false
+
+outputs:
+  branch:
+    description: "extracted branch"
+    value: ${{ steps.get-branch.outputs.branch }}
+  commit_hash:
+    description: "extracted commit hash"
+    value: ${{ steps.get-branch.outputs.commit_hash }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Extract branch and commit hash
+      shell: bash
+      id: get-branch
+      run: |
+        # Use HEAD_REF for PRs, fallback to REF_NAME for pushes.
+        BRANCH_NAME_RAW="${HEAD_REF:-"$REF_NAME"}"
+        # Clean up the ref by removing 'refs/heads/' or 'refs/tags/'
+        BRANCH_NAME="${BRANCH_NAME_RAW#refs/heads/}"
+        BRANCH_NAME="${BRANCH_NAME#refs/tags/}"
+        
+        # A manual input from workflow_dispatch will always override the detected branch name
+        if [ -n "${MANUAL_BRANCH}" ]; then
+          BRANCH_NAME="${MANUAL_BRANCH}"
+        fi
+        
+        echo "branch=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+        echo "commit_hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      env:
+        HEAD_REF: ${{ github.head_ref }}
+        REF_NAME: ${{ github.ref_name }}
+        MANUAL_BRANCH: ${{ inputs.branch }}
