@@ -42,7 +42,7 @@ permissions:
 jobs:
   post-build:
     name: Push ${{ inputs.repository }}:${{ inputs.image_tag }} docker artifacts to ${{ inputs.customer }}
-    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+    runs-on: ${{ vars.RUNS_ON_OVERRIDE || inputs.runs_on || 'ubuntu-22.04' }}
 
     steps:
       - name: Checkout repository (must be run in infrastructure-k8s)

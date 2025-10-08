@@ -66,7 +66,7 @@ permissions:
 jobs:
   build-components:
     timeout-minutes: ${{ fromJSON(inputs.timeout) }}
-    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+    runs-on: ${{ vars.RUNS_ON_OVERRIDE || inputs.runs_on || 'ubuntu-22.04' }}
     steps:
       - name: Remove unnecessary files
         run: |

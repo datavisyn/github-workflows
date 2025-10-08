@@ -37,7 +37,7 @@ permissions:
 jobs:
   get-customers:
     name: Get customers to push to (${{ inputs.push_to || 'all' }})
-    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+    runs-on: ${{ vars.RUNS_ON_OVERRIDE || inputs.runs_on || 'ubuntu-22.04' }}
     outputs:
       result: ${{ steps.get-customers.outputs.result }}
 
@@ -96,7 +96,7 @@ jobs:
       fail-fast: true
       matrix:
         customer: ${{ fromJson(needs.get-customers.outputs.result) }}
-    runs-on: ${{ inputs.runs_on }}
+    runs-on: ${{ vars.RUNS_ON_OVERRIDE || inputs.runs_on || 'ubuntu-22.04' }}
     steps:
       - name: Trigger push docker artifacts to ${{ matrix.customer.customer }}
         if: ${{ matrix.customer.customer_json.skip != true }}
