@@ -33,13 +33,13 @@ inputs:
     required: false
     default: false
   upload_yarn_lock:
-    description: "uploads the node-yarn-lock artifact"
+    description: "name of the artifact to upload the node-yarn-lock artifact"
     required: false
-    default: false # false as it is broken right now when actions run in parallel: the artifact name must be unique (so we have to pass the branch or so)
+    default: ''
   upload_bundle:
-    description: "uploads the bundle artifact"
+    description: "name of the artifact to uploads the bundle artifact"
     required: false
-    default: false # false as it is broken right now when actions run in parallel: the artifact name must be unique (so we have to pass the branch or so)
+    default: ''
   run_node_lint:
     default: true
     required: false
@@ -271,6 +271,7 @@ runs:
         RUN_PYTHON_LINT: ${{ inputs.run_python_lint }}
         RUN_PYTHON_TEST: ${{ inputs.run_python_test }}
         RUN_PYTHON_BUILD: ${{ inputs.run_python_build }}
+        UV_HTTP_TIMEOUT: 90  # https://docs.astral.sh/uv/reference/environment/#uv_http_timeout
     # Node
     - name: Save yarn cache
       uses: actions/cache/save@v4
@@ -280,14 +281,14 @@ runs:
         path: ~/.yarn/berry/cache/
         key: yarn-download-cache-${{ hashFiles('package.json') }}
     - uses: actions/upload-artifact@v4
-      if: inputs.enable_node == 'true' && inputs.upload_yarn_lock == 'true'
+      if: inputs.enable_node == 'true' && inputs.upload_yarn_lock
       with:
-        name: node-yarn-lock
+        name: ${{ inputs.upload_yarn_lock }}
         path: ./yarn.lock
     - uses: actions/upload-artifact@v4
-      if: inputs.enable_node == 'true' && inputs.run_node_bundle == 'true' && inputs.upload_bundle == 'true'
+      if: inputs.enable_node == 'true' && inputs.run_node_bundle == 'true' && inputs.upload_bundle
       with:
-        name: node-bundle
+        name: ${{ inputs.upload_bundle }}
         path: ./bundles
     # Chromatic
     - name: Run Chromatic
