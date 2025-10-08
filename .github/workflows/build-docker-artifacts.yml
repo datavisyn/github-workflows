@@ -153,13 +153,14 @@ jobs:
       fail-fast: ${{ inputs.fail_fast }}
       matrix:
         component: ${{ fromJson(needs.get-flavors.outputs.result).components }}
-    runs-on: ${{ vars.BUILD_DOCKER_ARTIFACTS_RUNS_ON_OVERRIDE || vars.RUNS_ON_OVERRIDE || inputs.runs_on || 'ubuntu-22.04' }}
+    runs-on: ${{ vars.BUILD_DOCKER_RUNS_ON_OVERRIDE || vars.RUNS_ON_OVERRIDE || inputs.runs_on || 'ubuntu-22.04' }}
     steps:
       - name: View flavor and component
         shell: bash
         run: |
           echo "Component ${{ toJson(matrix.component) }}"
       - name: Remove unnecessary files
+        if: ${{ vars.BUILD_DOCKER_NEEDS_MORE_SPACE == "true" }}
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /usr/local/lib/android
