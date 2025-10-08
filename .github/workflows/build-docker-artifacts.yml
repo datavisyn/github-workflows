@@ -160,7 +160,7 @@ jobs:
         run: |
           echo "Component ${{ toJson(matrix.component) }}"
       - name: Remove unnecessary files
-        if: ${{ vars.BUILD_DOCKER_NEEDS_MORE_SPACE == "true" }}
+        if: ${{ vars.BUILD_DOCKER_NEEDS_MORE_SPACE == 'true' }}
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /usr/local/lib/android
