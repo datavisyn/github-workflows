@@ -170,6 +170,7 @@ jobs:
           enable_python_cache: ${{ inputs.runs_on != 'self-hosted' }}
           chromatic_enable: ${{ inputs.chromatic_enable }}
           chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          upload_yarn_lock: "node-yarn-lock-${{ inputs.branch || github.sha }}"
 
   build-python:
     name: Python
@@ -445,6 +446,7 @@ jobs:
           enable_python_cache: ${{ inputs.playwright_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
           chromatic_enable: false # Set to false as we run chromatic below w/ playwright integration
           chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          upload_yarn_lock: "node-yarn-lock-${{ inputs.branch || github.sha }}"
       - name: Decrypt .env.enc and <app>/.env.enc
         run: |
           yarn run env:decrypt -pass env:ENV_PASSWORD || true

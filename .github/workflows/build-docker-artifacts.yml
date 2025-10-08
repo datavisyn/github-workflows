@@ -228,6 +228,7 @@ jobs:
             DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
             NODE_BASE_IMAGE=${{ env.NODE_BASE_IMAGE }}
             DATAVISYN_NGINX_BASE_IMAGE=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
+            UV_HTTP_TIMEOUT=90
             ${{ matrix.component.formatted_build_args }}
           secrets:
             # Mount the token as secret mount: https://docs.docker.com/build/ci/github-actions/secrets/#secret-mounts
