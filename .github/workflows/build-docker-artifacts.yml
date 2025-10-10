@@ -46,9 +46,7 @@ concurrency:
 
 env:
   WORKFLOW_BRANCH: "main"
-  PYTHON_BASE_IMAGE: "python:3.10.18-slim-bullseye"
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
-  NODE_BASE_IMAGE: "node:20.9-bullseye"
   DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
 
 permissions:
@@ -232,9 +230,7 @@ jobs:
             GIT_BRANCH=${{ steps.get-branch.outputs.branch }}
             GIT_COMMIT_HASH=${{ steps.get-branch.outputs.commit_hash }}
             DOCKERFILE_DIRECTORY=${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}
-            PYTHON_BASE_IMAGE=${{ env.PYTHON_BASE_IMAGE }}
             DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
-            NODE_BASE_IMAGE=${{ env.NODE_BASE_IMAGE }}
             DATAVISYN_NGINX_BASE_IMAGE=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
             UV_HTTP_TIMEOUT=300
             ${{ matrix.component.formatted_build_args }}
