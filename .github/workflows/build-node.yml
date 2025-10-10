@@ -28,14 +28,10 @@ on:
     secrets:
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
-      NODE_VERSION:
-        required: false
       CHROMATIC_PROJECT_TOKEN:
         required: false
 
 env:
-  NPM_REGISTRY: "https://registry.npmjs.org/"
-  NODE_VERSION: ${{ vars.NODE_VERSION || '20.9' }}
   WORKFLOW_BRANCH: "main"
 
 permissions:
@@ -73,8 +69,8 @@ jobs:
         with:
           enable_node: true
           enable_python: false
-          node_version: ${{ inputs.node_version || secrets.NODE_VERSION || env.NODE_VERSION }}
-          npm_registry: ${{ env.NPM_REGISTRY }}
+          node_version: ${{ vars.NODE_VERSION || inputs.node_version }}
+          npm_registry: ${{ vars.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_node_bundle: ${{ inputs.node_run_webpack }}
           enable_node_cache: ${{ inputs.runs_on != 'self-hosted' }}

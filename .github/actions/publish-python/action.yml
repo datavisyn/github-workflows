@@ -6,7 +6,7 @@ inputs:
   pypi_registry:
     description: "registry where to publish python package"
     default: "https://upload.pypi.org/legacy/"
-    required: true
+    required: false
   pypi_username:
     description: "username for python registry"
     default: "admin"

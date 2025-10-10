@@ -28,7 +28,7 @@ runs:
           
           // Define the versions to check against the package.json engines field, in order of preference
           // See https://github.com/actions/node-versions/releases for available versions
-          const versionsToCheck = ['24.9', '20.9'].map((v) => semver.minVersion(v).version);
+          const versionsToCheck = ['20.9', '24.9'].map((v) => semver.minVersion(v).version);
 
           const packageJsonPath = path.join(process.env.GITHUB_WORKSPACE, 'package.json');
           if (!fs.existsSync(packageJsonPath)) {
@@ -48,7 +48,7 @@ runs:
 
           for (const version of versionsToCheck) {
             if (semver.satisfies(version, requiredRange)) {
-              core.info(`\nMatch found! Returning version ${version}.`);
+              core.info(`\nMatch found! Returning version ${version} out of ${versionsToCheck.join(', ')} for range "${requiredRange}".`);
               // Simply return the matching version string to set the 'result' output
               return version;
             }

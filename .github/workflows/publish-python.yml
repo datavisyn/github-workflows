@@ -14,12 +14,8 @@ on:
         required: true
       DATAVISYN_BOT_REPO_TOKEN:
         required: false
-      PYTHON_VERSION:
-        required: false
 
 env:
-  PYPI_REGISTRY: "https://upload.pypi.org/legacy/"
-  PYTHON_VERSION: ${{ vars.PYTHON_VERSION || '3.10' }}
   WORKFLOW_BRANCH: "main"
 
 permissions:
@@ -56,10 +52,9 @@ jobs:
         with:
           enable_node: false
           enable_python: true
-          python_version: ${{ inputs.python_version || secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
+          python_version: ${{ vars.PYTHON_VERSION || inputs.python_version }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       - uses: ./tmp/github-workflows/.github/actions/publish-python
         with:
-          pypi_registry: ${{ env.PYPI_REGISTRY }}
           pypi_username: ${{ secrets.PYPI_USERNAME }}
           pypi_password: ${{ secrets.PYPI_PASSWORD }}
