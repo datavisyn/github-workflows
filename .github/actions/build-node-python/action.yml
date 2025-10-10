@@ -101,9 +101,8 @@ runs:
   steps:
     # Node
     - uses: ./tmp/github-workflows/.github/actions/get-node-version
-      if: inputs.enable_node == 'true'
+      if: inputs.enable_node == 'true' && inputs.node_version == ''
       id: get-node-version
-
     - name: Set up node version
       uses: actions/setup-node@v5
       if: inputs.enable_node == 'true'

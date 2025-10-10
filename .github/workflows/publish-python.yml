@@ -56,5 +56,6 @@ jobs:
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       - uses: ./tmp/github-workflows/.github/actions/publish-python
         with:
+          pypi_registry: ${{ vars.PYPI_REGISTRY }}
           pypi_username: ${{ secrets.PYPI_USERNAME }}
           pypi_password: ${{ secrets.PYPI_PASSWORD }}

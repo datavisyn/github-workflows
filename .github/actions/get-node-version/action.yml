@@ -25,10 +25,12 @@ runs:
           const fs = require('fs');
           // Load the sandboxed semver dependency from the action's own node_modules
           const semver = require(path.join(process.env.GITHUB_ACTION_PATH, 'node_modules/semver'));
+
+          const defaultVersion = '20.9';
           
           // Define the versions to check against the package.json engines field, in order of preference
           // See https://github.com/actions/node-versions/releases for available versions
-          const versionsToCheck = ['20.9', '24.9'].map((v) => semver.minVersion(v).version);
+          const versionsToCheck = [defaultVersion, '24.9'].map((v) => semver.minVersion(v).version);
 
           const packageJsonPath = path.join(process.env.GITHUB_WORKSPACE, 'package.json');
           if (!fs.existsSync(packageJsonPath)) {
@@ -40,11 +42,9 @@ runs:
           const requiredRange = packageJson.engines?.node;
 
           if (!requiredRange) {
-            core.info('No node engine requirement in package.json. Returning empty.');
-            return '';
+            core.info(`No node engine requirement in package.json. Returning default version ${defaultVersion}.`);
+            return defaultVersion;
           }
-
-          core.info(`Required Node.js range: ${requiredRange}`);
 
           for (const version of versionsToCheck) {
             if (semver.satisfies(version, requiredRange)) {
@@ -54,4 +54,5 @@ runs:
             }
           }
 
-          core.setFailed(`\nNo compatible Node.js version found in the list of versions "${versionsToCheck.join(', ')}" for range "${requiredRange}".`);
+          core.setFailed(`\nNo compatible Node.js version found in the list of versions "${versionsToCheck.join(', ')}" for range "${requiredRange}". Returning default version ${defaultVersion}.`);
+          return defaultVersion;

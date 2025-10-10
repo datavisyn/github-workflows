@@ -5,15 +5,12 @@ author: datavisyn
 inputs:
   pypi_registry:
     description: "registry where to publish python package"
-    default: "https://upload.pypi.org/legacy/"
     required: false
   pypi_username:
     description: "username for python registry"
-    default: "admin"
     required: true
   pypi_password:
     description: "passwort for python registry"
-    default: "admin"
     required: true
 
 runs:
@@ -30,6 +27,6 @@ runs:
         twine upload dist_python/*
       shell: bash
       env:
-        PYPI_REPOSITORY: ${{ inputs.pypi_registry }}
+        PYPI_REPOSITORY: ${{ inputs.pypi_registry || 'https://upload.pypi.org/legacy/' }}
         TWINE_USERNAME: ${{ inputs.pypi_username }}
         TWINE_PASSWORD: ${{ inputs.pypi_password }}
