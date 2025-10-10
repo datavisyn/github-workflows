@@ -1,0 +1,58 @@
+name: get-node-version
+description: extracts the node version from the package.json engines
+author: datavisyn
+
+outputs:
+  node_version:
+    description: "extracted node version"
+    value: ${{ steps.get-node-version.outputs.result }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup sandboxed dependencies
+      shell: bash
+      run: |
+        npm init -y --prefix ${{ github.action_path }} >/dev/null 2>&1
+        npm install semver --prefix ${{ github.action_path }} >/dev/null 2>&1
+
+    - name: Find version script
+      id: get-node-version
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const path = require('path');
+          const fs = require('fs');
+          // Load the sandboxed semver dependency from the action's own node_modules
+          const semver = require(path.join(process.env.GITHUB_ACTION_PATH, 'node_modules/semver'));
+
+          const defaultVersion = '20.9';
+          
+          // Define the versions to check against the package.json engines field, in order of preference
+          // See https://github.com/actions/node-versions/releases for available versions
+          const versionsToCheck = [defaultVersion, '24.9'].map((v) => semver.minVersion(v).version);
+
+          const packageJsonPath = path.join(process.env.GITHUB_WORKSPACE, 'package.json');
+          if (!fs.existsSync(packageJsonPath)) {
+            core.setFailed(`Error: package.json not found at ${packageJsonPath}`);
+            return;
+          }
+          
+          const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+          const requiredRange = packageJson.engines?.node;
+
+          if (!requiredRange) {
+            core.info(`No node engine requirement in package.json. Returning default version ${defaultVersion}.`);
+            return defaultVersion;
+          }
+
+          for (const version of versionsToCheck) {
+            if (semver.satisfies(version, requiredRange)) {
+              core.info(`\nMatch found! Returning version ${version} out of ${versionsToCheck.join(', ')} for range "${requiredRange}".`);
+              // Simply return the matching version string to set the 'result' output
+              return version;
+            }
+          }
+
+          core.setFailed(`\nNo compatible Node.js version found in the list of versions "${versionsToCheck.join(', ')}" for range "${requiredRange}". Returning default version ${defaultVersion}.`);
+          return defaultVersion;

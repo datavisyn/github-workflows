@@ -9,29 +9,28 @@ inputs:
     required: true
   run_parallel:
     description: "enables parallel running of node and python tasks"
-    default: true
+    default: "true"
     required: true
   # Node
   enable_node:
     description: "enables the node part of the action"
-    default: true
+    default: "true"
     required: true
   node_version:
     description: "node version to use"
-    default: "20.9"
-    required: true
+    default: ""
+    required: false
   npm_registry:
     description: "npm registry"
-    default: "https://registry.npmjs.org/"
-    required: true
+    required: false
   enable_node_cache:
     description: "enables the yarn cache download and upload"
     required: false
-    default: true
+    default: "true"
   download_yarn_lock:
     description: "downloads the node-yarn-lock artifact (only available when build-node was called before)"
     required: false
-    default: false
+    default: "false"
   upload_yarn_lock:
     description: "name of the artifact to upload the node-yarn-lock artifact"
     required: false
@@ -41,66 +40,76 @@ inputs:
     required: false
     default: ''
   run_node_lint:
-    default: true
+    description: "run node lint"
+    default: "true"
     required: false
   run_playwright_browser_install:
-    default: false
+    description: "run playwright browser install"
+    default: "false"
     required: false
   run_node_test:
-    default: true
+    description: "run node test"
+    default: "true"
     required: false
   run_node_build:
-    default: true
+    description: "run node build"
+    default: "true"
     required: false
   run_node_bundle:
-    default: false
+    description: "run node bundle"
+    default: "false"
     required: false
   chromatic_enable:
     description: "Enable Chromatic tests"
     required: false
-    type: boolean
-    default: false
+    default: "false"
   chromatic_project_token:
     description: "Chromatic project token"
     required: false
   # Python
   enable_python:
     description: "enables the python part of the action"
-    default: true
+    default: "true"
     required: true
   python_version:
     description: "python version to use"
-    default: "3.10"
-    required: true
+    required: false
   enable_python_cache:
     description: "deprecated and disabled as uv is usually faster anyways"
     required: false
-    default: false
+    default: "false"
   run_python_lint:
-    default: true
+    description: "run python lint"
+    default: "true"
     required: false
   run_python_test:
-    default: true
+    description: "run python test"
+    default: "true"
     required: false
   run_python_build:
-    default: true
+    description: "run python build"
+    default: "true"
     required: false
   # Rust
   enable_rust:
     description: "enables the rust part of the action"
-    default: false
+    default: "false"
     required: true
 
 runs:
   using: "composite"
   steps:
     # Node
+    - uses: ./tmp/github-workflows/.github/actions/get-node-version
+      if: inputs.enable_node == 'true' && inputs.node_version == ''
+      id: get-node-version
     - name: Set up node version
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       if: inputs.enable_node == 'true'
       with:
-        node-version: ${{ inputs.node_version }}
-        registry-url: ${{ inputs.npm_registry }}
+        node-version: ${{ inputs.node_version || fromJson(steps.get-node-version.outputs.node_version) }}
+        registry-url: ${{ inputs.npm_registry || 'https://registry.npmjs.org/' }}
+        package-manager-cache: false
     - name: Show node and npm version
       if: inputs.enable_node == 'true'
       run: |
@@ -113,7 +122,7 @@ runs:
       uses: actions/setup-python@v5
       if: inputs.enable_python == 'true'
       with:
-        python-version: ${{ inputs.python_version }}
+        python-version: ${{ inputs.python_version || '3.10' }}
         # cache: ${{ inputs.enable_python_cache == 'true' && 'pip' || null }} Disable cache as uv is probably faster anyways: https://github.com/actions/setup-python/issues/822
     - name: Install additional python requirements
       if: inputs.enable_python == 'true'
