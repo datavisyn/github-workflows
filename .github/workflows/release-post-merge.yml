@@ -110,7 +110,17 @@ jobs:
           git merge origin/${{ inputs.base_branch }}
           git push origin ${{ inputs.develop_branch }}
           
+      - name: check for package.json
+        id: check-package-json
+        run: |
+          if [ -f "package.json" ]; then
+            echo "is_package_json=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_package_json=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Update Package Version for Next Development Cycle
+        if: ${{ steps.check-package-json.outputs.is_package_json == 'true' }}
         run: |
           git config user.name "$GITHUB_USER"
           git config user.email "<>"
