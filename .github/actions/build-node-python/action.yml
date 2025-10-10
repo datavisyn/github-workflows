@@ -95,12 +95,18 @@ runs:
   using: "composite"
   steps:
     # Node
+    - uses: ./tmp/github-workflows/.github/actions/get-node-version
+      if: inputs.enable_node == 'true'
+      id: get-node-version
+
     - name: Set up node version
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       if: inputs.enable_node == 'true'
       with:
-        node-version: ${{ inputs.node_version }}
+        # TODO: Revert the two
+        node-version: ${{ fromJson(steps.get-node-version.outputs.node_version) || inputs.node_version }}
         registry-url: ${{ inputs.npm_registry }}
+        package-manager-cache: false
     - name: Show node and npm version
       if: inputs.enable_node == 'true'
       run: |
