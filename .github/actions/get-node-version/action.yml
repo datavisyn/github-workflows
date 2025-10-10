@@ -10,24 +10,27 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup sandboxed dependencies
+    - name: Setup sandbox for github-script
       shell: bash
       run: |
-        npm init -y --prefix ${{ github.action_path }} >/dev/null 2>&1
-        npm install semver --prefix ${{ github.action_path }} >/dev/null 2>&1
+        cd ${{ github.action_path }}
+        mkdir temp
+        cd temp
+        npm init -y
+        npm install semver
 
     - name: Find version script
       id: get-node-version
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       with:
         script: |
           const path = require('path');
           const fs = require('fs');
           // Load the sandboxed semver dependency from the action's own node_modules
-          const semver = require(path.join(process.env.GITHUB_ACTION_PATH, 'node_modules/semver'));
+          const semver = require(path.join(process.env.GITHUB_ACTION_PATH, 'temp/node_modules/semver'));
 
           const defaultVersion = '20.9';
-          
+
           // Define the versions to check against the package.json engines field, in order of preference
           // See https://github.com/actions/node-versions/releases for available versions
           const versionsToCheck = [defaultVersion, '24.9'].map((v) => semver.minVersion(v).version);
@@ -37,7 +40,7 @@ runs:
             core.setFailed(`Error: package.json not found at ${packageJsonPath}`);
             return;
           }
-          
+
           const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
           const requiredRange = packageJson.engines?.node;
 
@@ -56,3 +59,9 @@ runs:
 
           core.setFailed(`\nNo compatible Node.js version found in the list of versions "${versionsToCheck.join(', ')}" for range "${requiredRange}". Returning default version ${defaultVersion}.`);
           return defaultVersion;
+
+    - name: Cleanup sandbox
+      shell: bash
+      run: |
+        cd ${{ github.action_path }}
+        rm -rf temp

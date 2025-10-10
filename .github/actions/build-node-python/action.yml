@@ -119,7 +119,7 @@ runs:
       shell: bash
     # Python
     - name: Set up python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       if: inputs.enable_python == 'true'
       with:
         python-version: ${{ inputs.python_version || '3.10' }}
