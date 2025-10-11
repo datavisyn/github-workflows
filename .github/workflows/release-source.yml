@@ -160,7 +160,7 @@ jobs:
 
           # Call the function for pyproject.toml (if needed)
           if [ "${{ steps.check-pyproject-toml.outputs.has_pyproject_toml }}" == "true" ]; then
-            file_release_version="$(grep -oP '(?<=version = ")[^"]+' pyproject.toml | cut -d '-' -f 1)"
+            file_release_version="$(grep -oP 'version\s*=\s*[\"\x27]\K[^\"\x27]+' pyproject.toml | cut -d '-' -f 1)"
             file_release_version=${file_release_version//.dev0/}
             echo "file_release_version=$file_release_version"
             file_major=$(echo "$file_release_version" | cut -d'.' -f1)
