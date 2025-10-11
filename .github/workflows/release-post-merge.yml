@@ -30,7 +30,6 @@ on:
         description: "The name of the repository"
         required: true
 
-
 permissions:
   contents: write
   pull-requests: write
@@ -53,13 +52,13 @@ jobs:
           git config --add --global url."https://$GITHUB_TOKEN@github".insteadOf https://github
           git config --add --global url."https://$GITHUB_TOKEN@github.com/".insteadOf git@github.com:
 
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v5
         with:
           token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
           fetch-depth: 0
 
-      - name: Create and Push Tag
+      - name: Create and push tag
         run: |
           TAG_NAME="v$(echo "${{ inputs.pr_title }}" | awk '{print $2}')"
           git tag "$TAG_NAME"
@@ -72,11 +71,11 @@ jobs:
           PR_RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                         -H "Accept: application/vnd.github.v3+json" \
                         https://api.github.com/repos/${{ inputs.repository_owner }}/${{ inputs.repository_name }}/pulls/${{ inputs.pr_number }})
-        
+
           PR_BODY=$(echo "$PR_RESPONSE" | jq -r '.body')
           echo "$PR_BODY" > pr_release_notes.txt
-          
-      - name: Create GitHub Release
+
+      - name: Create release
         run: |
           TAG_NAME="v$(echo "${{ inputs.pr_title }}" | awk '{print $2}')"
           RELEASE_NOTES=$(cat pr_release_notes.txt)
@@ -100,8 +99,8 @@ jobs:
           else
             echo "GitHub release '$TAG_NAME' created successfully."
           fi
-          
-      - name: Merge Main into Develop
+
+      - name: Merge main into develop
         run: |
           git config user.name "$GITHUB_USER"
           git config user.email "<>"
@@ -109,25 +108,34 @@ jobs:
           git fetch origin ${{ inputs.base_branch }}
           git merge origin/${{ inputs.base_branch }}
           git push origin ${{ inputs.develop_branch }}
-          
-      - name: check for package.json
-        id: check-package-json
+
+      - name: Update package.json
         run: |
           if [ -f "package.json" ]; then
-            echo "is_package_json=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "is_package_json=false" >> "$GITHUB_OUTPUT"
+            CURRENT_VERSION=$(jq -r '.version' package.json)
+            NEW_VERSION=$(echo "$CURRENT_VERSION" | awk -F. -v OFS=. '{$NF += 1 ; print $0"-SNAPSHOT"}')
+            jq --arg new_version "$NEW_VERSION" '.version = $new_version' package.json > tmp.json && mv tmp.json package.json
+
+            git add package.json
           fi
 
-      - name: Update Package Version for Next Development Cycle
-        if: ${{ steps.check-package-json.outputs.is_package_json == 'true' }}
+      - name: Update pyproject.toml
         run: |
-          git config user.name "$GITHUB_USER"
-          git config user.email "<>"
-          CURRENT_VERSION=$(jq -r '.version' package.json)
-          NEW_VERSION=$(echo "$CURRENT_VERSION" | awk -F. -v OFS=. '{$NF += 1 ; print $0"-SNAPSHOT"}')
-          jq --arg new_version "$NEW_VERSION" '.version = $new_version' package.json > tmp.json && mv tmp.json package.json
+          if [ -f "pyproject.toml" ]; then
+            CURRENT_VERSION=$(grep -m 1 '^version =' pyproject.toml | sed -E "s/^version = ['\"]([^'\"]+)['\"].*/\1/")
+            NEW_VERSION=$(echo "$CURRENT_VERSION" | awk -F. -v OFS=. '{$NF += 1 ; print $0".dev0"}')
+            sed -i -E "s/^version = ['\"][^'\"]+['\"]/version = \"${NEW_VERSION}\"/" pyproject.toml
 
-          git add package.json
-          git commit -m "chore: prepare next dev release"
-          git push origin ${{ inputs.develop_branch }}
+            git add pyproject.toml
+          fi
+
+      - name: Push remaining changes
+        run: |
+          # Only push if there are changes to commit
+          if [[ $(git status --porcelain --untracked-files=no) ]]; then
+            git config user.name "$GITHUB_USER"
+            git config user.email "<>"
+            
+            git commit -m "chore: prepare next dev release"
+            git push origin ${{ inputs.develop_branch }}
+          fi

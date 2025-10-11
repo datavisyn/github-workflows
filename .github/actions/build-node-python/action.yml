@@ -198,6 +198,10 @@ runs:
       run: |
         # Run node and python in parallel
 
+        # In case uv sync is used, sync into the system python environment
+        # https://github.com/astral-sh/uv/issues/8085#issuecomment-2406665798
+        export UV_PROJECT_ENVIRONMENT="${pythonLocation}"
+
         # Define the node sequence of commands
         node_job() {
           set -e
@@ -280,7 +284,9 @@ runs:
         RUN_PYTHON_LINT: ${{ inputs.run_python_lint }}
         RUN_PYTHON_TEST: ${{ inputs.run_python_test }}
         RUN_PYTHON_BUILD: ${{ inputs.run_python_build }}
+        UV_SYSTEM_PYTHON: 1  # In case uv pip is used, install into the system python environment https://docs.astral.sh/uv/guides/integration/github/#using-uv-pip
         UV_HTTP_TIMEOUT: 300  # https://docs.astral.sh/uv/reference/environment/#uv_http_timeout
+
     # Node
     - name: Save yarn cache
       uses: actions/cache/save@v4
