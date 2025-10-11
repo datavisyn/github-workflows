@@ -4,21 +4,21 @@ on:
   workflow_call:
     inputs:
       is_helm_chart:
-        description: 'Specify if this is a Helm Chart repository'
+        description: "Specify if this is a Helm Chart repository"
         required: false
         type: boolean
         default: false
       release_version:
         type: string
-        description: 'The version to release'
+        description: "The version to release"
         required: true
       skip_branch_check:
-        description: 'Skip the branch check'
+        description: "Skip the branch check"
         required: false
         type: boolean
         default: false
       base_branch:
-        description: 'The base branch to use'
+        description: "The base branch to use"
         required: false
         type: string
         default: main
@@ -28,13 +28,12 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: '${{ github.workflow }}-${{ github.ref || github.head_ref }}'
+  group: "${{ github.workflow }}-${{ github.ref || github.head_ref }}"
   cancel-in-progress: true
 
 env:
-  GA_VERSION: "main"
   GITHUB_USER: "datavisyn-bot"
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "mp/release_pyproject"  # TODO: Remove
   GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
   CHARTMUSEUM_USER: ${{ secrets.DV_CHARTMUSEUM_USER }}
   CHARTMUSEUM_PASSWORD: ${{ secrets.DV_CHARTMUSEUM_PASSWORD }}
@@ -61,19 +60,17 @@ jobs:
             echo "Error: base_branch must be 'main' when skip_branch_check is false."
             exit 1
           fi
-      # checkout specific repository
-      - name: checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v5
         with:
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-      # checkout this workflow repository to get actions
-      - name: checkout github-workflows repository
+      - name: Checkout github-workflows repository
         uses: actions/checkout@v5
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
           path: ./tmp/github-workflows
-      - name: check actor
+      - name: Check actor
         uses: ./tmp/github-workflows/.github/actions/check-actor
         with:
           dv_devops: ${{ vars.DV_DEVOPS }}
@@ -81,16 +78,25 @@ jobs:
           actor: ${{ github.actor }}
           qms_are_allowed: "false"
 
-      - name: check for package.json
+      - name: Check for package.json
         id: check-package-json
         run: |
           if [ -f "package.json" ]; then
-            echo "is_package_json=true" >> "$GITHUB_OUTPUT"
+            echo "has_package_json=true" >> "$GITHUB_OUTPUT"
           else
-            echo "is_package_json=false" >> "$GITHUB_OUTPUT"
+            echo "has_package_json=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: get release version from input
+      - name: Check for pyproject.toml
+        id: check-pyproject-toml
+        run: |
+          if [ -f "pyproject.toml" ]; then
+            echo "has_pyproject_toml=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_pyproject_toml=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Get release version from input
         if: ${{ inputs.skip_branch_check == false }}
         id: get-release-version-from-input
         run: |
@@ -102,27 +108,26 @@ jobs:
             exit 1
           fi
 
-          # Check if package.json exists and validate the version against it
-          if [ "${{ steps.check-package-json.outputs.is_package_json }}" == "true" ]; then
-            file_release_version="$(jq -r '.version' package.json | cut -d '-' -f 1)"
-            file_release_version="${file_release_version//[^0-9.]}"
-            echo "file_release_version=$file_release_version"
-            file_major=$(echo "$file_release_version" | cut -d'.' -f1)
-            file_minor=$(echo "$file_release_version" | cut -d'.' -f2)
-            file_patch=$(echo "$file_release_version" | cut -d'.' -f3)
+          # Extract major, minor, and patch versions of the input version
+          input_major=$(echo "$input_release_version" | cut -d'.' -f1)
+          input_minor=$(echo "$input_release_version" | cut -d'.' -f2)
+          input_patch=$(echo "$input_release_version" | cut -d'.' -f3)
 
-            echo "Stable release version: $file_major.$file_minor.$file_patch"
-
-            input_major=$(echo "$input_release_version" | cut -d'.' -f1)
-            input_minor=$(echo "$input_release_version" | cut -d'.' -f2)
-            input_patch=$(echo "$input_release_version" | cut -d'.' -f3)
+          # Utility function to validate versioning rules
+          validate_version() {
+            input_major=$1
+            input_minor=$2
+            input_patch=$3
+            file_major=$4
+            file_minor=$5
+            file_patch=$6
 
             if [ "$input_major" -eq "$file_major" ]; then
               if [ "$input_minor" -eq "$file_minor" ]; then
                 if [ "$input_patch" -eq "$file_patch" ]; then
                   echo "Valid patch version input"
                 else
-                  echo "Error: Patch version must match the package.json version without the -SNAPSHOT suffix."
+                  echo "Error: Patch version must match the file version without the -SNAPSHOT or .dev0 suffix."
                   exit 1
                 fi
               elif [ "$input_minor" -gt "$file_minor" ] && [ "$input_patch" -eq 0 ]; then
@@ -137,21 +142,54 @@ jobs:
               echo "Error: Version input is invalid based on semantic versioning rules."
               exit 1
             fi
+          }
+
+          # Call the function for package.json (if needed)
+          if [ "${{ steps.check-package-json.outputs.has_package_json }}" == "true" ]; then
+            file_release_version="$(jq -r '.version' package.json | cut -d '-' -f 1)"
+            file_release_version=${file_release_version//-SNAPSHOT/}
+            echo "file_release_version=$file_release_version"
+            file_major=$(echo "$file_release_version" | cut -d'.' -f1)
+            file_minor=$(echo "$file_release_version" | cut -d'.' -f2)
+            file_patch=$(echo "$file_release_version" | cut -d'.' -f3)
+
+            echo "Validating package.json version: $file_major.$file_minor.$file_patch"
+
+            validate_version "$input_major" "$input_minor" "$input_patch" "$file_major" "$file_minor" "$file_patch"
+          fi
+
+          # Call the function for pyproject.toml (if needed)
+          if [ "${{ steps.check-pyproject-toml.outputs.has_pyproject_toml }}" == "true" ]; then
+            file_release_version="$(grep -oP '(?<=version = ")[^"]+' pyproject.toml | cut -d '-' -f 1)"
+            file_release_version=${file_release_version//.dev0/}
+            echo "file_release_version=$file_release_version"
+            file_major=$(echo "$file_release_version" | cut -d'.' -f1)
+            file_minor=$(echo "$file_release_version" | cut -d'.' -f2)
+            file_patch=$(echo "$file_release_version" | cut -d'.' -f3)
+
+            echo "Validating pyproject.toml version: $file_major.$file_minor.$file_patch"
+
+            validate_version "$input_major" "$input_minor" "$input_patch" "$file_major" "$file_minor" "$file_patch"
           fi
 
           echo "New version is $input_major.$input_minor.$input_patch"
           echo "RELEASE_VERSION=$input_release_version" >> "$GITHUB_ENV"
-  
-      - name: create release branch
+
+      - name: Create release branch
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "<>"
           git checkout -b release-"$RELEASE_VERSION"
       - name: Update package.json
-        if: ${{ steps.check-package-json.outputs.is_package_json == 'true' }}
+        if: ${{ steps.check-package-json.outputs.has_package_json == 'true' }}
         run: |
           sed -i "s/^\(\s*\)\"version\".*/\1\"version\": \"$RELEASE_VERSION\",/" package.json
           git add package.json
+      - name: Update pyproject.toml
+        if: ${{ steps.check-pyproject-toml.outputs.has_pyproject_toml == 'true' }}
+        run: |
+          sed -i "s/^version = \".*\"/version = \"$RELEASE_VERSION\"/" pyproject.toml
+          git add pyproject.toml
       - name: Add Helm repository
         if: ${{ inputs.is_helm_chart == true }}
         run: |
@@ -160,7 +198,7 @@ jobs:
           # TODO: make this an input of the workflow.
           helm repo add apache-airflow https://airflow.apache.org
           helm repo add bitnami https://charts.bitnami.com/bitnami
-      - name: change charts and subcharts version
+      - name: Change charts and subcharts version
         if: ${{ inputs.is_helm_chart == true }}
         run: |
           cd deploy/helm
@@ -190,7 +228,7 @@ jobs:
           done
 
           git add .
-      - name: update imageTag and repository_tag in values files
+      - name: Update imageTag and repository_tag in values files
         if: ${{ inputs.is_helm_chart == true }}
         run: |
           cd deploy/helm
@@ -255,12 +293,12 @@ jobs:
             -d "$(jq -n --arg tag_name "$TAG_NAME" \
                   --arg target_commitish "${{ github.ref_name }}" \
                   '{tag_name: $tag_name, target_commitish: $target_commitish}')")
-          
+
           RELEASE_NOTES=$(echo "$response" | jq -r '.body')
 
-          echo "$RELEASE_NOTES" > release_notes.txt  
+          echo "$RELEASE_NOTES" > release_notes.txt
 
-      - name: create pr
+      - name: Create pr
         run: |
           PR_NOTES=$(cat release_notes.txt)
           curl -L \
