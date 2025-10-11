@@ -33,7 +33,7 @@ concurrency:
 
 env:
   GITHUB_USER: "datavisyn-bot"
-  WORKFLOW_BRANCH: "mp/release_pyproject"  # TODO: Remove
+  WORKFLOW_BRANCH: "main"
   GITHUB_TOKEN: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
   CHARTMUSEUM_USER: ${{ secrets.DV_CHARTMUSEUM_USER }}
   CHARTMUSEUM_PASSWORD: ${{ secrets.DV_CHARTMUSEUM_PASSWORD }}
@@ -97,7 +97,6 @@ jobs:
           fi
 
       - name: Get release version from input
-        if: ${{ inputs.skip_branch_check == false }}
         id: get-release-version-from-input
         run: |
           input_release_version="${{ inputs.release_version }}"
