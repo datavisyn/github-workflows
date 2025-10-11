@@ -289,7 +289,7 @@ jobs:
         run: docker logout ${{ steps.login-ecr.outputs.registry }}
 
   retag-images:
-    name: Retag images of flavor ${{ matrix.flavor || 'default' }}
+    name: Retag images of flavor ${{ matrix.flavor.id || 'default' }}
     needs: [get-flavors, build-flavors]
     if: ${{ inputs.skip_push != true }}
     strategy:
