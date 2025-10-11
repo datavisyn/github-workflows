@@ -45,7 +45,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "mp/test_images"  # TODO: Revert to main
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
 
@@ -195,10 +195,120 @@ jobs:
           fi
 
       # Required for build secrets to work: https://docs.docker.com/build/ci/github-actions/secrets/#secret-mounts
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      # - name: Set up QEMU
+      #   uses: docker/setup-qemu-action@v3
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v3
+
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v4.2.1
+      #   with:
+      #     role-to-assume: ${{ vars.DV_AWS_ECR_ROLE }}
+      #     aws-region: ${{ vars.DV_AWS_REGION }}
+
+      # - name: Login to Amazon ECR
+      #   id: login-ecr
+      #   uses: aws-actions/amazon-ecr-login@v2.0.1
+
+      # - uses: ./tmp/github-workflows/.github/actions/get-branch
+      #   id: get-branch
+      #   with:
+      #     branch: ${{ inputs.branch }}
+
+      # - name: Build image
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     context: .
+      #     file: ${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/Dockerfile
+      #     push: false
+      #     load: true
+      #     # Disable provenance as it creates weird multi-arch images: https://github.com/docker/build-push-action/issues/755
+      #     provenance: false
+      #     # Disable the cache to avoid outdated (base) images
+      #     no-cache: true
+      #     build-args: |
+      #       GIT_BRANCH=${{ steps.get-branch.outputs.branch }}
+      #       GIT_COMMIT_HASH=${{ steps.get-branch.outputs.commit_hash }}
+      #       DOCKERFILE_DIRECTORY=${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}
+      #       DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
+      #       DATAVISYN_NGINX_BASE_IMAGE=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
+      #       UV_HTTP_TIMEOUT=300
+      #       ${{ matrix.component.formatted_build_args }}
+      #     secrets:
+      #       # Mount the token as secret mount: https://docs.docker.com/build/ci/github-actions/secrets/#secret-mounts
+      #       "github_token=${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}"
+      #     # TODO: As soon as we only have a single tag, we can push the same image to multiple repositories: https://docs.docker.com/build/ci/github-actions/push-multi-registries/
+      #     # This will be useful for the images which don't change between flavors, e.g. the backend images
+      #     tags: |
+      #       ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
+      #     labels: |
+      #       name=${{ matrix.component.ecr_repository }}
+      #       version=${{ matrix.component.image_tag_branch_name }}
+      #       org.opencontainers.image.description=Image for ${{ matrix.component.ecr_repository }}
+      #       org.opencontainers.image.source=${{ github.event.repository.html_url }}
+      #       org.opencontainers.image.url=${{ github.event.repository.html_url }}
+      #       org.opencontainers.image.title=${{ matrix.component.ecr_repository }}
+      #       org.opencontainers.image.version=${{ matrix.component.image_tag_branch_name }}
+      #       org.opencontainers.image.created=${{ matrix.component.build_time }}
+      #       org.opencontainers.image.revision=${{ github.sha }}
+      #   env:
+      #     # Disable the build summary for now as it leads to "Failed to export build record: .../export/rec.dockerbuild not found"
+      #     # https://github.com/docker/build-push-action/issues/1156#issuecomment-2437227730
+      #     DOCKER_BUILD_SUMMARY: false
+
+      # - name: Determine trivy scan severity levels
+      #   id: set_severity
+      #   run: |
+      #     if [[ "${{ github.event.inputs.scan_high_severity }}" == "false" ]] || \
+      #        [[ "${{ vars.SCAN_HIGH_SEVERITY }}" == "false" ]] || \
+      #        [[ "${{ matrix.component.scan_high_severity }}" == "false" ]]; then
+      #       echo "severity=CRITICAL" >> "$GITHUB_OUTPUT"
+      #     else
+      #       echo "severity=HIGH,CRITICAL" >> "$GITHUB_OUTPUT"
+      #     fi
+      # - name: Run Trivy vulnerability scanner
+      #   uses: aquasecurity/trivy-action@0.33.1
+      #   with:
+      #     image-ref: ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
+      #     # Disable scanning the current directory (defaults to .)
+      #     scan-ref: '/dev/null'
+      #     format: 'table'
+      #     exit-code: '1'
+      #     ignore-unfixed: false
+      #     vuln-type: 'os,library'
+      #     severity: ${{ steps.set_severity.outputs.severity }}
+      #   continue-on-error: false 
+
+      # - name: Push image
+      #   if: ${{ inputs.skip_push != true }}
+      #   # Instead of the docker/build-push-action@v6 which will rebuild the image, just push it directly
+      #   run: docker push ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
+
+      # - name: Log out from Amazon ECR
+      #   shell: bash
+      #   run: docker logout ${{ steps.login-ecr.outputs.registry }}
+
+  test-images:
+    name: Test images of flavor ${{ matrix.flavor.id || 'default' }}
+    needs: [get-flavors, build-flavors]
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: ${{ fromJson(needs.get-flavors.outputs.result).flavors }}
+    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.branch || github.sha }}
+          token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+
+      - name: Checkout github-workflows repository
+        uses: actions/checkout@v5
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.2.1
@@ -210,87 +320,29 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2.0.1
 
-      - uses: ./tmp/github-workflows/.github/actions/get-branch
-        id: get-branch
-        with:
-          branch: ${{ inputs.branch }}
-
-      - name: Build image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}/Dockerfile
-          push: false
-          load: true
-          # Disable provenance as it creates weird multi-arch images: https://github.com/docker/build-push-action/issues/755
-          provenance: false
-          # Disable the cache to avoid outdated (base) images
-          no-cache: true
-          build-args: |
-            GIT_BRANCH=${{ steps.get-branch.outputs.branch }}
-            GIT_COMMIT_HASH=${{ steps.get-branch.outputs.commit_hash }}
-            DOCKERFILE_DIRECTORY=${{ matrix.component.flavor_directory }}/${{ matrix.component.directory }}
-            DATAVISYN_PYTHON_BASE_IMAGE=${{ env.DATAVISYN_PYTHON_BASE_IMAGE }}
-            DATAVISYN_NGINX_BASE_IMAGE=${{ env.DATAVISYN_NGINX_BASE_IMAGE }}
-            UV_HTTP_TIMEOUT=300
-            ${{ matrix.component.formatted_build_args }}
-          secrets:
-            # Mount the token as secret mount: https://docs.docker.com/build/ci/github-actions/secrets/#secret-mounts
-            "github_token=${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}"
-          # TODO: As soon as we only have a single tag, we can push the same image to multiple repositories: https://docs.docker.com/build/ci/github-actions/push-multi-registries/
-          # This will be useful for the images which don't change between flavors, e.g. the backend images
-          tags: |
-            ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
-          labels: |
-            name=${{ matrix.component.ecr_repository }}
-            version=${{ matrix.component.image_tag_branch_name }}
-            org.opencontainers.image.description=Image for ${{ matrix.component.ecr_repository }}
-            org.opencontainers.image.source=${{ github.event.repository.html_url }}
-            org.opencontainers.image.url=${{ github.event.repository.html_url }}
-            org.opencontainers.image.title=${{ matrix.component.ecr_repository }}
-            org.opencontainers.image.version=${{ matrix.component.image_tag_branch_name }}
-            org.opencontainers.image.created=${{ matrix.component.build_time }}
-            org.opencontainers.image.revision=${{ github.sha }}
-        env:
-          # Disable the build summary for now as it leads to "Failed to export build record: .../export/rec.dockerbuild not found"
-          # https://github.com/docker/build-push-action/issues/1156#issuecomment-2437227730
-          DOCKER_BUILD_SUMMARY: false
-
-      - name: Determine trivy scan severity levels
-        id: set_severity
+      - name: Test images
+        shell: bash
         run: |
-          if [[ "${{ github.event.inputs.scan_high_severity }}" == "false" ]] || \
-             [[ "${{ vars.SCAN_HIGH_SEVERITY }}" == "false" ]] || \
-             [[ "${{ matrix.component.scan_high_severity }}" == "false" ]]; then
-            echo "severity=CRITICAL" >> "$GITHUB_OUTPUT"
-          else
-            echo "severity=HIGH,CRITICAL" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.33.1
-        with:
-          image-ref: ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
-          # Disable scanning the current directory (defaults to .)
-          scan-ref: '/dev/null'
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: false
-          vuln-type: 'os,library'
-          severity: ${{ steps.set_severity.outputs.severity }}
-        continue-on-error: false 
+          directory="./deploy/build/"${{ matrix.flavor.directory }}""
+          cd "$directory"
 
-      - name: Push image
-        if: ${{ inputs.skip_push != true }}
-        # Instead of the docker/build-push-action@v6 which will rebuild the image, just push it directly
-        run: docker push ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
+          if [[ -f "./hooks/test_images.sh" ]]; then
+            echo "Run test_images.sh in $directory"
+            chmod +x ./hooks/test_images.sh
+            ./hooks/test_images.sh
+          else
+            echo "No hooks/test_images.sh found in $directory, skipping tests"
+          fi
+        env:
+          FLAVOR: ${{ toJSON(matrix.flavor) }}
 
       - name: Log out from Amazon ECR
         shell: bash
         run: docker logout ${{ steps.login-ecr.outputs.registry }}
 
   retag-images:
-    name: Retag images of flavor ${{ toJSON(matrix.flavor).id || 'default' }}
-    needs: [get-flavors, build-flavors]
+    name: Retag images of flavor ${{ matrix.flavor.id || 'default' }}
+    needs: [get-flavors, test-images]
     if: ${{ inputs.skip_push != true }}
     strategy:
       fail-fast: false
