@@ -7,16 +7,17 @@ on:
         type: string
         required: false
         default: ""
-        description: Comma separated list of build keys. Leave empty to run for all.
+        description: "Comma separated list of build keys. Leave empty to run for all."
       push_to:
         type: string
         required: false
         default: ""
-        description: Comma separated list of push keys. Leave empty to trigger for all.
+        description: "Comma separated list of push keys. Leave empty to trigger for all."
       branch:
         type: string
         required: false
       skip_push:
+        description: "Skip retagging and pushing the built images to customer registries"
         type: boolean
         required: false
         default: false
@@ -25,7 +26,7 @@ on:
         required: false
         default: true
       scan_high_severity:
-        description: 'Include high severity'
+        description: "Include high severity"
         type: boolean
         required: false
         default: true
@@ -60,7 +61,7 @@ jobs:
       result: ${{ steps.get-flavors.outputs.result }}
     # Do not run this on self-hosted, as it is faster and shouldn't be blocking anything
     # runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
-    runs-on: 'ubuntu-22.04'
+    runs-on: "ubuntu-22.04"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -124,6 +125,7 @@ jobs:
                     flavor_directory: `./deploy/build/${flavor.directory}`,
                     build_time: buildTime,
                     image_tag: imageTag,
+                    image_ref: `${{ vars.DV_AWS_ECR_REGISTRY }}/${component.ecr_repository}:${imageTag}`,
                     image_tag_branch_name: imageTagBranchName,
                     formatted_build_args: formattedBuildArgs,
                   };
@@ -240,7 +242,7 @@ jobs:
           # TODO: As soon as we only have a single tag, we can push the same image to multiple repositories: https://docs.docker.com/build/ci/github-actions/push-multi-registries/
           # This will be useful for the images which don't change between flavors, e.g. the backend images
           tags: |
-            ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
+            ${{ matrix.component.image_ref }}
           labels: |
             name=${{ matrix.component.ecr_repository }}
             version=${{ matrix.component.image_tag_branch_name }}
@@ -269,20 +271,96 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.33.1
         with:
-          image-ref: ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
+          image-ref: ${{ matrix.component.image_ref }}
           # Disable scanning the current directory (defaults to .)
-          scan-ref: '/dev/null'
-          format: 'table'
-          exit-code: '1'
+          scan-ref: "/dev/null"
+          format: "table"
+          exit-code: "1"
           ignore-unfixed: false
-          vuln-type: 'os,library'
+          vuln-type: "os,library"
           severity: ${{ steps.set_severity.outputs.severity }}
-        continue-on-error: false 
+        continue-on-error: false
 
       - name: Push image
-        if: ${{ inputs.skip_push != true }}
         # Instead of the docker/build-push-action@v6 which will rebuild the image, just push it directly
-        run: docker push ${{ vars.DV_AWS_ECR_REGISTRY }}/${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }}
+        run: docker push ${{ matrix.component.image_ref }}
+
+      - name: Log out from Amazon ECR
+        shell: bash
+        run: docker logout ${{ steps.login-ecr.outputs.registry }}
+
+  test-images:
+    name: Test images of flavor ${{ matrix.flavor.id || 'default' }}
+    needs: [get-flavors, build-flavors]
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: ${{ fromJson(needs.get-flavors.outputs.result).flavors }}
+    runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.branch || github.sha }}
+          token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
+
+      - name: Checkout github-workflows repository
+        uses: actions/checkout@v5
+        with:
+          repository: datavisyn/github-workflows
+          ref: ${{ env.WORKFLOW_BRANCH }}
+          path: ./tmp/github-workflows
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4.2.1
+        with:
+          role-to-assume: ${{ vars.DV_AWS_ECR_ROLE }}
+          aws-region: ${{ vars.DV_AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2.0.1
+
+      - name: Run test-images.sh hook
+        shell: bash
+        id: test-images
+        run: |
+          hooks_folder="$(realpath -m "./deploy/build/${{ matrix.flavor.directory }}/hooks")"
+          test_images_hook="$hooks_folder/test-images.sh"
+          test_images_report="$hooks_folder/test-images-report"
+
+          if [[ -f "$test_images_hook" ]]; then
+            # Iterate through all components and store their image ref in an environment variable
+            for component in $(jq -c '.components[]' <<< "$FLAVOR"); do
+              name=$(jq -r '.ecr_repository' <<< "$component")
+              image_ref=$(jq -r '.image_ref' <<< "$component")
+              # Replace all non-alphanumeric characters with underscores and convert to uppercase
+              name_upper=$(echo "${name//[^[:alnum:]]/_}" | tr '[:lower:]' '[:upper:]')
+              echo "Setting environment variable IMAGE_${name_upper}=${image_ref}"
+              export "IMAGE_${name_upper}=${image_ref}"
+            done;
+
+            # Create report folder to avoid any downstream Docker volume issues
+            # TODO: For some reason this doesn't work yet, i.e. if a docker-compose script mounts a volume here, nothing shows up...
+            mkdir -p "$test_images_report"
+            chmod 777 "$test_images_report"
+            echo "test_images_report=${test_images_report}" >> "$GITHUB_OUTPUT"
+
+            echo "Run $test_images_hook"
+            chmod +x "$test_images_hook"
+            bash "$test_images_hook"
+          else
+            echo "No $test_images_hook found, skipping tests."
+          fi
+        env:
+          FLAVOR: ${{ toJSON(matrix.flavor) }}
+
+      - name: Upload test-images-report
+        uses: actions/upload-artifact@v4
+        if: ${{ steps.test-images.outputs.test_images_report }}
+        with:
+          name: "test-images-report-${{ matrix.flavor.id || 'default' }}"
+          path: ${{ steps.test-images.outputs.test_images_report }}
 
       - name: Log out from Amazon ECR
         shell: bash
@@ -290,7 +368,7 @@ jobs:
 
   retag-images:
     name: Retag images of flavor ${{ matrix.flavor.id || 'default' }}
-    needs: [get-flavors, build-flavors]
+    needs: [get-flavors, test-images]
     if: ${{ inputs.skip_push != true }}
     strategy:
       fail-fast: false
@@ -298,7 +376,7 @@ jobs:
         flavor: ${{ fromJson(needs.get-flavors.outputs.result).flavors }}
     # Do not run this on self-hosted, as it is faster and shouldn't be blocking anything
     # runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
-    runs-on: 'ubuntu-22.04'
+    runs-on: "ubuntu-22.04"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
