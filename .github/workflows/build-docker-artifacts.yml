@@ -7,16 +7,17 @@ on:
         type: string
         required: false
         default: ""
-        description: Comma separated list of build keys. Leave empty to run for all.
+        description: "Comma separated list of build keys. Leave empty to run for all."
       push_to:
         type: string
         required: false
         default: ""
-        description: Comma separated list of push keys. Leave empty to trigger for all.
+        description: "Comma separated list of push keys. Leave empty to trigger for all."
       branch:
         type: string
         required: false
       skip_push:
+        description: "Skip retagging and pushing the built images to customer registries"
         type: boolean
         required: false
         default: false
@@ -272,16 +273,15 @@ jobs:
         with:
           image-ref: ${{ matrix.component.image_ref }}
           # Disable scanning the current directory (defaults to .)
-          scan-ref: '/dev/null'
-          format: 'table'
-          exit-code: '1'
+          scan-ref: "/dev/null"
+          format: "table"
+          exit-code: "1"
           ignore-unfixed: false
-          vuln-type: 'os,library'
+          vuln-type: "os,library"
           severity: ${{ steps.set_severity.outputs.severity }}
         continue-on-error: false
 
       - name: Push image
-        if: ${{ inputs.skip_push != true }}
         # Instead of the docker/build-push-action@v6 which will rebuild the image, just push it directly
         run: docker push ${{ matrix.component.image_ref }}
 
