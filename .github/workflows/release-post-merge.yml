@@ -122,9 +122,9 @@ jobs:
       - name: Update pyproject.toml
         run: |
           if [ -f "pyproject.toml" ]; then
-            CURRENT_VERSION=$(grep -m 1 '^version =' pyproject.toml | awk -F'"' '{print $2}')
+            CURRENT_VERSION=$(grep -m 1 '^version =' pyproject.toml | sed -E "s/^version = ['\"]([^'\"]+)['\"].*/\1/")
             NEW_VERSION=$(echo "$CURRENT_VERSION" | awk -F. -v OFS=. '{$NF += 1 ; print $0".dev0"}')
-            sed -i "s/^version = \".*\"/version = \"$NEW_VERSION\"/" pyproject.toml
+            sed -i -E "s/^version = ['\"][^'\"]+['\"]/version = \"${NEW_VERSION}\"/" pyproject.toml
 
             git add pyproject.toml
           fi
