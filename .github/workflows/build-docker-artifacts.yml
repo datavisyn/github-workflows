@@ -25,7 +25,7 @@ on:
         required: false
         default: true
       scan_high_severity:
-        description: 'Include high severity'
+        description: "Include high severity"
         type: boolean
         required: false
         default: true
@@ -45,7 +45,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  WORKFLOW_BRANCH: "mp/test_images"  # TODO: Revert to main
+  WORKFLOW_BRANCH: "mp/test_images" # TODO: Revert to main
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
 
@@ -60,7 +60,7 @@ jobs:
       result: ${{ steps.get-flavors.outputs.result }}
     # Do not run this on self-hosted, as it is faster and shouldn't be blocking anything
     # runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
-    runs-on: 'ubuntu-22.04'
+    runs-on: "ubuntu-22.04"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -279,7 +279,7 @@ jobs:
       #     ignore-unfixed: false
       #     vuln-type: 'os,library'
       #     severity: ${{ steps.set_severity.outputs.severity }}
-      #   continue-on-error: false 
+      #   continue-on-error: false
 
       # - name: Push image
       #   if: ${{ inputs.skip_push != true }}
@@ -322,10 +322,13 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2.0.1
 
-      - name: Test images
+      - name: Run test-images.sh hook
         shell: bash
+        id: test-images
         run: |
-          test_images_hook="./deploy/build/${{ matrix.flavor.directory }}/hooks/test_images.sh"
+          hooks_folder="$(realpath -m "./deploy/build/${{ matrix.flavor.directory }}/hooks")"
+          test_images_hook="$hooks_folder/test-images.sh"
+          test_images_report="$hooks_folder/test-images-report"
 
           if [[ -f "$test_images_hook" ]]; then
             # Iterate through all components and store their image ref in an environment variable
@@ -338,14 +341,27 @@ jobs:
               export "IMAGE_$name_upper=$image_ref"
             done;
 
+            # Create report folder to avoid any downstream Docker volume issues
+            # TODO: For some reason this doesn't work yet, i.e. if a docker-compose script mounts a volume here, nothing shows up...
+            mkdir -p "$test_images_report"
+            chmod 777 "$test_images_report"
+
             echo "Run $test_images_hook"
             chmod +x "$test_images_hook"
             "$test_images_hook"
+
           else
             echo "No $test_images_hook found, skipping tests."
           fi
         env:
           FLAVOR: ${{ toJSON(matrix.flavor) }}
+
+      - name: Upload test-images-report
+        uses: actions/upload-artifact@v4
+        if: ${{ steps.test-images.outputs.test_images_report }}
+        with:
+          name: "test-images-report-${{ matrix.flavor.id || 'default' }}"
+          path: ${{ steps.test-images.outputs.test_images_report }}
 
       - name: Log out from Amazon ECR
         shell: bash
@@ -361,7 +377,7 @@ jobs:
         flavor: ${{ fromJson(needs.get-flavors.outputs.result).flavors }}
     # Do not run this on self-hosted, as it is faster and shouldn't be blocking anything
     # runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
-    runs-on: 'ubuntu-22.04'
+    runs-on: "ubuntu-22.04"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
