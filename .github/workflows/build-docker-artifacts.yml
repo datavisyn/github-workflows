@@ -118,7 +118,7 @@ jobs:
                 build_time: buildTime,
                 image_tag: imageTag,
                 image_tag_branch_name: imageTagBranchName,
-                ecr_respositories: flavor.components.map(component => component.ecr_repository),
+                ecr_repositories: flavor.components.map(component => component.ecr_repository),
                 test_images: {
                   enabled: testImageEnabled,
                   script_path: testImagesHookScript,
@@ -296,7 +296,7 @@ jobs:
           vuln-type: "os,library"
           severity: ${{ steps.set_severity.outputs.severity }}
           # The cache update takes quite long, so let's try to disable it for now: https://github.com/aquasecurity/trivy-action#cache
-          cache: 'false'
+          cache: "false"
         continue-on-error: false
 
       - name: Push image
@@ -353,15 +353,17 @@ jobs:
               export "IMAGE_${name_upper}=${image_ref}"
             done;
 
-            # Create report folder to avoid any downstream Docker volume issues
-            # TODO: For some reason this doesn't work yet, i.e. if a docker-compose script mounts a volume here, nothing shows up...
+            # Create a directory to store the report results
             mkdir -p "$test_images_report"
-            chmod 777 "$test_images_report"
-            echo "test_images_report=${test_images_report}" >> "$GITHUB_OUTPUT"
 
             echo "Run $test_images_hook"
             chmod +x "$test_images_hook"
             bash "$test_images_hook"
+
+            # If the report folder is not empty, we store it as output
+            if [[ -n "$(ls -A "$test_images_report")" ]]; then
+              echo "test_images_report=${test_images_report}" >> "$GITHUB_OUTPUT"
+            fi
           else
             echo "No $test_images_hook found, skipping tests."
           fi
@@ -425,7 +427,7 @@ jobs:
           echo "image_tag=$image_tag"
           echo "image_tag_branch_name=$image_tag_branch_name"
 
-          for repository_name in $(jq -r '.ecr_respositories[]' <<< "$FLAVOR"); do
+          for repository_name in $(jq -r '.ecr_repositories[]' <<< "$FLAVOR"); do
             IMAGE_META=$(aws ecr describe-images --repository-name "$repository_name" --image-ids imageTag="$image_tag" --output json | jq --arg var "${image_tag_branch_name}" '.imageDetails[0].imageTags | index( $var )')
             if [[ -z "${IMAGE_META}" || ${IMAGE_META} == "null" ]]; then
               MANIFEST=$(aws ecr batch-get-image --repository-name "$repository_name" --image-ids imageTag="$image_tag" --output json | jq --raw-output --join-output '.images[0].imageManifest')
