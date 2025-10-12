@@ -312,6 +312,8 @@ jobs:
   test-images:
     name: Test images of flavor ${{ matrix.flavor.id || 'default' }}
     needs: [get-flavors, build-flavors]
+    # Skip in case we would have an empty matrix. Note that in this case it also skips all downstream jobs...
+    if: ${{ toJSON(fromJson(needs.get-flavors.outputs.result).flavorsToTest) != '[]' }}
     strategy:
       fail-fast: false
       matrix:
@@ -381,6 +383,9 @@ jobs:
   retag-images:
     name: Retag images of flavor ${{ matrix.flavor.id || 'default' }}
     needs: [get-flavors, test-images]
+    # Skip in case we would have an empty matrix. Note that in this case it also skips all downstream jobs...
+    # We need the always() && !cancelled() && !failure() because the test-images may have been skipped (which is fine). See https://github.com/actions/runner/issues/491#issuecomment-1507495166
+    if: ${{ always() && !cancelled() && !failure() && toJSON(fromJson(needs.get-flavors.outputs.result).flavorsToRetag) != '[]' }}
     strategy:
       fail-fast: false
       matrix:
@@ -439,9 +444,9 @@ jobs:
 
   push-to-repositories:
     name: Push images to push targets
+    needs: [retag-images, get-flavors]
     # if? When should we do this? Always? Only for certain branches? If so, how should we define that, in the config.json?
     if: ${{ fromJson(needs.get-flavors.outputs.result).skip_push != true && fromJson(needs.get-flavors.outputs.result).push_to != '' }}
-    needs: [retag-images, get-flavors]
     uses: datavisyn/github-workflows/.github/workflows/build-docker-artifacts-trigger-push.yml@main
     secrets: inherit
     with:
