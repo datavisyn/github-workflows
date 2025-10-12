@@ -102,16 +102,28 @@ jobs:
 
             const builds = process.env.BUILDS ? process.env.BUILDS.split(',') : Object.keys(config.build);
             const push_to = process.env.PUSH_TO ? process.env.PUSH_TO.split(',') : Object.keys(config.push || {});
+            const skip_push = process.env.SKIP_PUSH === 'true';
 
             const flavors = builds.map(id => [id, config.build[id]]).filter(([id, flavor]) => flavor.skip !== true).map(([id, flavor]) => {
+              const hooksDirectory = path.join('./deploy/build', flavor.directory, 'hooks');
+              const testImagesHookScript = path.join(hooksDirectory, 'test-images.sh');
+              const testImagesHookReport = path.join(hooksDirectory, 'test-images-report');
+              const testImageEnabled = fs.existsSync(testImagesHookScript);
+
               return {
                 ...flavor,
                 id,
+                skip_retag: skip_push,
                 // Add metadata to the flavor object (will be used as matrix input)
                 build_time: buildTime,
                 image_tag: imageTag,
                 image_tag_branch_name: imageTagBranchName,
                 ecr_respositories: flavor.components.map(component => component.ecr_repository),
+                test_images: {
+                  enabled: testImageEnabled,
+                  script_path: testImagesHookScript,
+                  report_path: testImagesHookReport,
+                },
                 components: flavor.components.map(component => {
                   // Format build arguments as build-args string
                   const formattedBuildArgs = component.build_args ?
@@ -119,6 +131,8 @@ jobs:
 
                   return {
                     ...component,
+                    // We can skip the push only if we don't want to test the image below
+                    skip_push: skip_push && !testImageEnabled,
                     // Add metadata to the component object (will be used as matrix input),
                     flavor,
                     flavor_id: id,
@@ -133,16 +147,18 @@ jobs:
               };
             });
 
-            const flattenedComponents = flavors.flatMap(flavor => flavor.components);
-
             const result = {
               flavors,
-              components: flattenedComponents,
+              flavorsToTest: flavors.filter(flavor => flavor.test_images.enabled),
+              flavorsToRetag: flavors.filter(flavor => flavor.skip_retag !== true),
+              componentsToBuild: flavors.flatMap(flavor => flavor.components),
               push_to: push_to.join(','),
+              skip_push,
             };
             console.log(result);
             return result;
         env:
+          SKIP_PUSH: ${{ inputs.skip_push }}
           BUILDS: ${{ inputs.builds }}
           PUSH_TO: ${{ inputs.push_to }}
 
@@ -152,7 +168,7 @@ jobs:
     strategy:
       fail-fast: ${{ inputs.fail_fast }}
       matrix:
-        component: ${{ fromJson(needs.get-flavors.outputs.result).components }}
+        component: ${{ fromJson(needs.get-flavors.outputs.result).componentsToBuild }}
     runs-on: ${{ vars.BUILD_DOCKER_RUNS_ON_OVERRIDE || vars.RUNS_ON_OVERRIDE || inputs.runs_on || 'ubuntu-22.04' }}
     steps:
       - name: View flavor and component
@@ -282,6 +298,7 @@ jobs:
         continue-on-error: false
 
       - name: Push image
+        if: ${{ matrix.component.skip_push != true }}
         # Instead of the docker/build-push-action@v6 which will rebuild the image, just push it directly
         run: docker push ${{ matrix.component.image_ref }}
 
@@ -295,7 +312,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavor: ${{ fromJson(needs.get-flavors.outputs.result).flavors }}
+        flavor: ${{ fromJson(needs.get-flavors.outputs.result).flavorsToTest }}
     runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
     steps:
       - name: Checkout repository
@@ -303,13 +320,6 @@ jobs:
         with:
           ref: ${{ inputs.branch || github.sha }}
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
-
-      - name: Checkout github-workflows repository
-        uses: actions/checkout@v5
-        with:
-          repository: datavisyn/github-workflows
-          ref: ${{ env.WORKFLOW_BRANCH }}
-          path: ./tmp/github-workflows
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.2.1
@@ -325,13 +335,12 @@ jobs:
         shell: bash
         id: test-images
         run: |
-          hooks_folder="$(realpath -m "./deploy/build/${{ matrix.flavor.directory }}/hooks")"
-          test_images_hook="$hooks_folder/test-images.sh"
-          test_images_report="$hooks_folder/test-images-report"
+          test_images_hook=$(jq -r '.test_images.script_path' <<< "$FLAVOR")
+          test_images_report=$(jq -r '.test_images.report_path' <<< "$FLAVOR")
 
           if [[ -f "$test_images_hook" ]]; then
             # Iterate through all components and store their image ref in an environment variable
-            for component in $(jq -c '.components[]' <<< "$FLAVOR"); do
+            for component in $(jq -c '.componentsToBuild[]' <<< "$FLAVOR"); do
               name=$(jq -r '.ecr_repository' <<< "$component")
               image_ref=$(jq -r '.image_ref' <<< "$component")
               # Replace all non-alphanumeric characters with underscores and convert to uppercase
@@ -369,11 +378,10 @@ jobs:
   retag-images:
     name: Retag images of flavor ${{ matrix.flavor.id || 'default' }}
     needs: [get-flavors, test-images]
-    if: ${{ inputs.skip_push != true }}
     strategy:
       fail-fast: false
       matrix:
-        flavor: ${{ fromJson(needs.get-flavors.outputs.result).flavors }}
+        flavor: ${{ fromJson(needs.get-flavors.outputs.result).flavorsToRetag }}
     # Do not run this on self-hosted, as it is faster and shouldn't be blocking anything
     # runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
     runs-on: "ubuntu-22.04"
@@ -429,7 +437,7 @@ jobs:
   push-to-repositories:
     name: Push images to push targets
     # if? When should we do this? Always? Only for certain branches? If so, how should we define that, in the config.json?
-    if: ${{ inputs.skip_push != true && fromJson(needs.get-flavors.outputs.result).push_to != '' }}
+    if: ${{ fromJson(needs.get-flavors.outputs.result).skip_push != true && fromJson(needs.get-flavors.outputs.result).push_to != '' }}
     needs: [retag-images, get-flavors]
     uses: datavisyn/github-workflows/.github/workflows/build-docker-artifacts-trigger-push.yml@main
     secrets: inherit
