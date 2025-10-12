@@ -275,7 +275,7 @@ jobs:
           DOCKER_BUILD_SUMMARY: false
 
       - name: Determine trivy scan severity levels
-        id: set_severity
+        id: configure_trivy
         run: |
           if [[ "${{ github.event.inputs.scan_high_severity }}" == "false" ]] || \
              [[ "${{ vars.SCAN_HIGH_SEVERITY }}" == "false" ]] || \
@@ -284,6 +284,14 @@ jobs:
           else
             echo "severity=HIGH,CRITICAL" >> "$GITHUB_OUTPUT"
           fi
+
+          # If the TRIVY_CACHE_DIR is in the environment variables, we set it as output to be used in the trivy-action
+          if [[ -n "$TRIVY_CACHE_DIR" ]]; then
+            echo "cache_dir=$TRIVY_CACHE_DIR" >> "$GITHUB_OUTPUT"
+          else
+            echo "cache_dir=${{ github.workspace }}/.cache/trivy" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.33.1
         with:
@@ -294,9 +302,11 @@ jobs:
           exit-code: "1"
           ignore-unfixed: false
           vuln-type: "os,library"
-          severity: ${{ steps.set_severity.outputs.severity }}
+          severity: ${{ steps.configure_trivy.outputs.severity }}
           # The cache update takes quite long, so let's try to disable it for now: https://github.com/aquasecurity/trivy-action#cache
           cache: "false"
+          # Explicitly set the cache directory to make it persistent between jobs
+          cache-dir: ${{ steps.configure_trivy.outputs.cache_dir }}
         continue-on-error: false
 
       - name: Push image
