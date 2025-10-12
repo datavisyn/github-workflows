@@ -342,7 +342,7 @@ jobs:
 
           if [[ -f "$test_images_hook" ]]; then
             # Iterate through all components and store their image ref in an environment variable
-            for component in $(jq -c '.componentsToBuild[]' <<< "$FLAVOR"); do
+            for component in $(jq -c '.components[]' <<< "$FLAVOR"); do
               name=$(jq -r '.ecr_repository' <<< "$component")
               image_ref=$(jq -r '.image_ref' <<< "$component")
               # Replace all non-alphanumeric characters with underscores and convert to uppercase
