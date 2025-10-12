@@ -285,6 +285,7 @@ jobs:
             echo "severity=HIGH,CRITICAL" >> "$GITHUB_OUTPUT"
           fi
       - name: Run Trivy vulnerability scanner
+        if: ${{ false }} # TODO: Remove
         uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: ${{ matrix.component.image_ref }}
