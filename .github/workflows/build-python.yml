@@ -58,4 +58,3 @@ jobs:
           enable_python: true
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           python_version: ${{ vars.PYTHON_VERSION || inputs.python_version }}
-          enable_python_cache: ${{ inputs.runs_on != 'self-hosted' }}

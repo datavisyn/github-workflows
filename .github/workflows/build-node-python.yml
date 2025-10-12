@@ -157,8 +157,6 @@ jobs:
           python_version: ${{ vars.PYTHON_VERSION || inputs.python_version }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_node_bundle: ${{ inputs.node_run_webpack }}
-          enable_node_cache: ${{ inputs.runs_on != 'self-hosted' }}
-          enable_python_cache: ${{ inputs.runs_on != 'self-hosted' }}
           chromatic_enable: ${{ inputs.chromatic_enable }}
           chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           upload_yarn_lock: "node-yarn-lock-${{ inputs.branch || github.sha }}"
@@ -198,8 +196,6 @@ jobs:
           python_version: ${{ vars.PYTHON_VERSION || inputs.python_version }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_node_bundle: ${{ inputs.node_run_webpack }}
-          enable_node_cache: ${{ inputs.runs_on != 'self-hosted' }}
-          enable_python_cache: ${{ inputs.runs_on != 'self-hosted' }}
 
   # If cypress is used, build node and python sequentially as it is avoiding the duplicate install overhead
   build-node-python-cypress:
@@ -289,8 +285,6 @@ jobs:
           python_version: ${{ vars.PYTHON_VERSION || inputs.python_version }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_node_bundle: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
-          enable_node_cache: ${{ inputs.cypress_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
-          enable_python_cache: ${{ inputs.cypress_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
           chromatic_enable: ${{ inputs.chromatic_enable }}
           chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       - name: Decrypt .env.enc and <app>/.env.enc
@@ -433,8 +427,6 @@ jobs:
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           run_node_bundle: false # Disable the build here and call afterwards, as otherwise the yarn run env:decrypt will fail due to a missing yarn install
           run_playwright_browser_install: true
-          enable_node_cache: ${{ inputs.playwright_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
-          enable_python_cache: ${{ inputs.playwright_runs_on != 'self-hosted' && inputs.runs_on != 'self-hosted' }}
           chromatic_enable: false # Set to false as we run chromatic below w/ playwright integration
           chromatic_project_token: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           upload_yarn_lock: "node-yarn-lock-${{ inputs.branch || github.sha }}"
