@@ -133,7 +133,7 @@ jobs:
           REPOSITORY_HTML: ${{ github.event.repository.html_url }}
       - name: setup node
         if: ${{ steps.get-parameters.outputs.type == 'web' }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ secrets.NODE_VERSION || env.NODE_VERSION }}
           registry-url: ${{ env.NPM_REGISTRY }}
