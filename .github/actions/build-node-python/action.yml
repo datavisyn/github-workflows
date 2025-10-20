@@ -104,7 +104,7 @@ runs:
       if: inputs.enable_node == 'true' && inputs.node_version == ''
       id: get-node-version
     - name: Set up node version
-      uses: actions/setup-node@v5
+      uses: actions/setup-node@v6
       if: inputs.enable_node == 'true'
       with:
         node-version: ${{ inputs.node_version || fromJson(steps.get-node-version.outputs.node_version) }}
