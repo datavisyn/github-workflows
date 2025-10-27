@@ -177,7 +177,7 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_ro_token }}
       shell: bash
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v6
       # TODO: Remove the variable whenever we can ensure that build-node was called before
       if: inputs.enable_node == 'true' && inputs.download_yarn_lock == 'true'
       with:
