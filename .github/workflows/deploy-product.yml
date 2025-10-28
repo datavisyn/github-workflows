@@ -43,7 +43,7 @@ concurrency:
 
 env:
   GA_VERSION: "main"
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "feat/deploy_app_update"
 
 jobs:
   deploy:
