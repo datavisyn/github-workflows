@@ -49,7 +49,7 @@ env:
   TIME_ZONE: "Europe/Vienna"
   NODE_VERSION: ${{ vars.NODE_VERSION || '20.9' }}
   PYTHON_VERSION: ${{ vars.PYTHON_VERSION || '3.10' }}
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "feat_deploy_app_update"
   PYTHON_BASE_IMAGE: "python:3.10.18-slim-bullseye"
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
