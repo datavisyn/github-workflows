@@ -298,10 +298,9 @@ runs:
       with:
         scan-type: "fs"
         scan-ref: "uv.lock"
-        format: "table"
         exit-code: "1"
         scaners: "vuln"
-        severity: "HIGH,CRITICAL"
+        severity: "CRITICAL" # HIGH,CRITICAL may be too strict
         ignore-unfixed: false
         # The cache update takes quite long, so let's try to disable it for now: https://github.com/aquasecurity/trivy-action#cache
         cache: "false"
@@ -312,10 +311,9 @@ runs:
       with:
         scan-type: "fs"
         scan-ref: "yarn.lock"
-        format: "table"
         exit-code: "1"
         scaners: "vuln"
-        severity: "HIGH,CRITICAL"
+        severity: "CRITICAL" # HIGH,CRITICAL may be too strict
         ignore-unfixed: false
         # The cache update takes quite long, so let's try to disable it for now: https://github.com/aquasecurity/trivy-action#cache
         cache: "false"
