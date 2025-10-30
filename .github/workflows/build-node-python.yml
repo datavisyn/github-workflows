@@ -115,7 +115,7 @@ on:
         required: false
 
 env:
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "mp/trivy_on_lock_files"  # TODO: Revert
   POSTGRES_HOSTNAME: postgres_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}
 
 permissions:
