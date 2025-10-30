@@ -59,7 +59,7 @@ inputs:
     description: "run node bundle"
     default: "false"
     required: false
-  enable_trivy:
+  trivy_enable:
     description: "Enable trivy scans on lock files"
     default: "false"  # Enable this by default?
     required: false
@@ -293,7 +293,7 @@ runs:
 
     # Trivy
     - name: Run Trivy vulnerability scanner on uv.lock
-      if: inputs.enable_trivy == 'true' && inputs.enable_python == 'true'
+      if: inputs.trivy_enable == 'true' && inputs.enable_python == 'true'
       uses: aquasecurity/trivy-action@0.33.1
       with:
         scan-type: "fs"
@@ -307,7 +307,7 @@ runs:
         cache: "false"
       continue-on-error: false
     - name: Run Trivy vulnerability scanner on yarn.lock
-      if: inputs.enable_trivy == 'true' && inputs.enable_node == 'true'
+      if: inputs.trivy_enable == 'true' && inputs.enable_node == 'true'
       uses: aquasecurity/trivy-action@0.33.1
       with:
         scan-type: "fs"
