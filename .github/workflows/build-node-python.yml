@@ -79,6 +79,10 @@ on:
         default: false  # Enable this by default?
         type: boolean
         required: false
+      trivy_severity:
+        description: "Severity for the trivy scans"
+        type: string
+        required: false
       chromatic_enable:
         description: 'Enable Chromatic tests'
         required: false
@@ -157,6 +161,7 @@ jobs:
           # We probably won't need Rust on Node builds...
           # enable_rust: ${{ inputs.rust_enable }}
           trivy_enable: ${{ inputs.trivy_enable }}
+          trivy_severity: ${{ inputs.trivy_severity }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ vars.NODE_VERSION || inputs.node_version }}
           npm_registry: ${{ vars.NPM_REGISTRY }}
@@ -198,6 +203,7 @@ jobs:
           enable_node: false
           enable_python: true
           trivy_enable: ${{ inputs.trivy_enable }}
+          trivy_severity: ${{ inputs.trivy_severity }}
           enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ vars.NODE_VERSION || inputs.node_version }}
@@ -290,6 +296,7 @@ jobs:
         uses: ./tmp/github-workflows/.github/actions/build-node-python
         with:
           trivy_enable: ${{ inputs.trivy_enable }}
+          trivy_severity: ${{ inputs.trivy_severity }}
           enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ vars.NODE_VERSION || inputs.node_version }}
@@ -434,6 +441,7 @@ jobs:
         uses: ./tmp/github-workflows/.github/actions/build-node-python
         with:
           trivy_enable: ${{ inputs.trivy_enable }}
+          trivy_severity: ${{ inputs.trivy_severity }}
           enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ vars.NODE_VERSION || inputs.node_version }}

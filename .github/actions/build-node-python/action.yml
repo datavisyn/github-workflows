@@ -63,6 +63,9 @@ inputs:
     description: "Enable trivy scans on lock files"
     default: "false"  # Enable this by default?
     required: false
+  trivy_severity:
+    description: "Severity level for trivy"
+    required: false
   chromatic_enable:
     description: "Enable Chromatic tests"
     required: false
@@ -299,8 +302,8 @@ runs:
         scan-type: "fs"
         scan-ref: "uv.lock"
         exit-code: "1"
-        scaners: "vuln"
-        severity: "CRITICAL" # HIGH,CRITICAL may be too strict
+        scanners: "vuln"
+        severity: ${{ inputs.trivy_severity || 'CRITICAL' }}
         ignore-unfixed: false
         # The cache update takes quite long, so let's try to disable it for now: https://github.com/aquasecurity/trivy-action#cache
         cache: "false"
@@ -312,8 +315,8 @@ runs:
         scan-type: "fs"
         scan-ref: "yarn.lock"
         exit-code: "1"
-        scaners: "vuln"
-        severity: "CRITICAL" # HIGH,CRITICAL may be too strict
+        scanners: "vuln"
+        severity: ${{ inputs.trivy_severity || 'CRITICAL' }}
         ignore-unfixed: false
         # The cache update takes quite long, so let's try to disable it for now: https://github.com/aquasecurity/trivy-action#cache
         cache: "false"

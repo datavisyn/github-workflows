@@ -294,7 +294,7 @@ jobs:
           image-ref: ${{ matrix.component.image_ref }}
           # Disable scanning the current directory (defaults to .)
           scan-ref: "/dev/null"
-          format: "table"
+          format: "github"
           exit-code: "1"
           ignore-unfixed: false
           vuln-type: "os,library"
