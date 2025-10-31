@@ -302,7 +302,7 @@ runs:
         scan-type: "fs"
         scan-ref: "uv.lock"
         exit-code: "1"
-        format: "github"
+        format: "table"
         scanners: "vuln"
         severity: ${{ inputs.trivy_severity || 'CRITICAL' }}
         ignore-unfixed: false
@@ -316,7 +316,7 @@ runs:
         scan-type: "fs"
         scan-ref: "yarn.lock"
         exit-code: "1"
-        format: "github"
+        format: "table"
         scanners: "vuln"
         severity: ${{ inputs.trivy_severity || 'CRITICAL' }}
         ignore-unfixed: false
