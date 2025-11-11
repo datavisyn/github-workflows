@@ -7,6 +7,15 @@ on:
         type: string
         required: false
         default: ${{ github.ref || github.head_ref }}
+      trivy_enable:
+        description: "Enable trivy scans on lock files"
+        default: false  # Enable this by default?
+        type: boolean
+        required: false
+      trivy_severity:
+        description: "Severity for the trivy scans"
+        type: string
+        required: false
       runs_on:
         type: string
         required: false
@@ -56,6 +65,8 @@ jobs:
         with:
           enable_node: false
           enable_python: true
+          trivy_enable: ${{ inputs.trivy_enable }}
+          trivy_severity: ${{ inputs.trivy_severity }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           python_version: ${{ vars.PYTHON_VERSION || inputs.python_version }}
           enable_python_cache: ${{ inputs.runs_on != 'self-hosted' }}
