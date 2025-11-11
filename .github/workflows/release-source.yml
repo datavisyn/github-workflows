@@ -90,7 +90,8 @@ jobs:
       - name: Check for pyproject.toml
         id: check-pyproject-toml
         run: |
-          if [ -f "pyproject.toml" ]; then
+          # Check if pyproject.toml exists and contains a version field
+          if [ -f "pyproject.toml" ] && grep -q "^version\s*=" "pyproject.toml"; then
             echo "has_pyproject_toml=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_pyproject_toml=false" >> "$GITHUB_OUTPUT"
