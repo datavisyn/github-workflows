@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "vdelev_merged_upstream"
 
 permissions:
   contents: read
@@ -100,7 +100,7 @@ jobs:
     steps:
       - name: Trigger push docker artifacts to ${{ matrix.customer.customer }}
         if: ${{ matrix.customer.customer_json.skip != true }}
-        uses: datavisyn/github-action-trigger-workflow@v1
+        uses: datavisyn/github-action-trigger-workflow@vs-test
         with:
           owner: "datavisyn"
           repo: "infrastructure-k8s"
