@@ -7,6 +7,15 @@ on:
         type: string
         required: false
         default: ${{ github.ref || github.head_ref }}
+      trivy_enable:
+        description: "Enable trivy scans on lock files"
+        default: false  # Enable this by default?
+        type: boolean
+        required: false
+      trivy_severity:
+        description: "Severity for the trivy scans"
+        type: string
+        required: false
       chromatic_enable:
         description: 'Enable Chromatic tests'
         required: false
@@ -69,6 +78,8 @@ jobs:
         with:
           enable_node: true
           enable_python: false
+          trivy_enable: ${{ inputs.trivy_enable }}
+          trivy_severity: ${{ inputs.trivy_severity }}
           node_version: ${{ vars.NODE_VERSION || inputs.node_version }}
           npm_registry: ${{ vars.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}

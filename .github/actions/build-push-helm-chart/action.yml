@@ -54,7 +54,7 @@ runs:
       run: |
         cd $CURRENT_DIRECTORY
         helm dependency update
-        helm cm-push . chartmuseum
+        helm cm-push -f . chartmuseum
       env:
         CURRENT_DIRECTORY: ${{ inputs.current_directory }}
       shell: bash
