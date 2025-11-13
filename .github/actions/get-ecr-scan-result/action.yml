@@ -51,7 +51,6 @@ runs:
       with:
         role-to-assume: ${{ inputs.aws_role }}
         aws-region: ${{ inputs.aws_region }}
-        registry-type: ${{ inputs.registry_type }}
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2.0.1
