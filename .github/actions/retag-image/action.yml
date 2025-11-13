@@ -9,6 +9,10 @@ inputs:
   aws_region:
     description: "aws region to use"
     required: true
+  registry_type:
+    description: "type of registry (public|private)"
+    required: false
+    default: "private"
   ecr_repositories:
     description: "ecr repositories (name only) - seperated with ,"
     required: true
@@ -27,6 +31,7 @@ runs:
       with:
         role-to-assume: ${{ inputs.aws_role }}
         aws-region: ${{ inputs.aws_region }}
+        registry-type: ${{ inputs.registry_type }}
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2.0.1

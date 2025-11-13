@@ -33,7 +33,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  WORKFLOW_BRANCH: "main"
+  WORKFLOW_BRANCH: "feat-add-registry-type"
 
 permissions:
   contents: read
@@ -108,6 +108,7 @@ jobs:
           source_images: ${{ fromJson(steps.get-customer.outputs.result).source_images }}
           destination_aws_role: ${{ steps.get-aws-image-config.outputs.aws_role }}
           destination_aws_region: ${{ steps.get-aws-image-config.outputs.aws_region }}
+          destination_registry_type: ${{ steps.get-aws-image-config.outputs.registry_type }}
           destination_aws_access_key_id: ${{ steps.get-aws-image-config.outputs.aws_access_key_id }}
           destination_aws_secret_access_key: ${{ steps.get-aws-image-config.outputs.aws_secret_access_key }}
           destination_images: ${{ fromJson(steps.get-customer.outputs.result).destination_images }}
