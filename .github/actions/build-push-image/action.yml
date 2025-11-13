@@ -55,6 +55,8 @@ runs:
         ECR_REGISTRY: ${{ inputs.ecr_registry }}
         ECR_REPOSITORY: ${{ inputs.ecr_repository }}
         IMAGE_TAG: ${{ inputs.image_tag }}
+      with:
+        registry-type: ${{ inputs.registry_type }}
       shell: bash
     - name: Build and push image to Amazon ECR
       uses: docker/build-push-action@v6
