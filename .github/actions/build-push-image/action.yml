@@ -45,6 +45,8 @@ runs:
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2.0.1
+      with:
+        registry-type: ${{ inputs.registry_type }}
     - name: get image tag
       id: get-image-tag
       run: |
@@ -55,8 +57,6 @@ runs:
         ECR_REGISTRY: ${{ inputs.ecr_registry }}
         ECR_REPOSITORY: ${{ inputs.ecr_repository }}
         IMAGE_TAG: ${{ inputs.image_tag }}
-      with:
-        registry-type: ${{ inputs.registry_type }}
       shell: bash
     - name: Build and push image to Amazon ECR
       uses: docker/build-push-action@v6
