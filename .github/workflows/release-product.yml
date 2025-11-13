@@ -136,7 +136,7 @@ jobs:
           RELEASE_VERSION: ${{ steps.check-repository.outputs.release_version }}
           BRANCH_NAME: ${{ steps.check-repository.outputs.new_branch_name }}
       - name: trigger build
-        uses: datavisyn/github-action-trigger-workflow@v1
+        uses: datavisyn/github-action-trigger-workflow@v3
         with:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}

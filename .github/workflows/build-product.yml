@@ -167,7 +167,7 @@ jobs:
           CUSTOMER_FULL: ${{ matrix.customer }}
         shell: bash
       - name: trigger deployment
-        uses: datavisyn/github-action-trigger-workflow@v1
+        uses: datavisyn/github-action-trigger-workflow@v3
         with:
           owner: "datavisyn"
           repo: "infrastructure-k8s"
