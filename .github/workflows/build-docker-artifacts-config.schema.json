@@ -21,6 +21,11 @@
                 "default": false,
                 "description": "Skip building the build"
               },
+              "skip_test_images": {
+                "type": "boolean",
+                "default": false,
+                "description": "Skip the test_images hook"
+              },
               "components": {
                 "type": "array",
                 "items": {

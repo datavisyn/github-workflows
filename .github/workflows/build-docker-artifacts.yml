@@ -108,7 +108,7 @@ jobs:
               const hooksDirectory = path.join('./deploy/build', flavor.directory, 'hooks');
               const testImagesHookScript = path.join(hooksDirectory, 'test-images.sh');
               const testImagesHookReport = path.join(hooksDirectory, 'test-images-report');
-              const testImageEnabled = fs.existsSync(testImagesHookScript);
+              const testImageEnabled = !flavor.skip_test_images && fs.existsSync(testImagesHookScript);
 
               return {
                 ...flavor,
