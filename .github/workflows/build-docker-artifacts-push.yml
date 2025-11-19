@@ -58,7 +58,7 @@ jobs:
           path: ./tmp/github-workflows
 
       - name: Extract customer from payload
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         id: get-customer
         with:
           script: |
