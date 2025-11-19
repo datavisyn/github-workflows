@@ -26,7 +26,7 @@ inputs:
   enable_node_cache:
     description: "enables the yarn cache download and upload"
     required: false
-    default: "true"
+    default: "false"
   download_yarn_lock:
     description: "downloads the node-yarn-lock artifact (only available when build-node was called before)"
     required: false
@@ -106,6 +106,17 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Determine runner configuration
+      id: runner_configuration
+      shell: bash
+      run: |
+        # If the GH_ACTIONS_SELF_HOSTED is in the environment variables, we handle things like caching differently
+        if [[ -n "$GH_ACTIONS_SELF_HOSTED" ]]; then
+          echo "self_hosted=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "self_hosted=false" >> "$GITHUB_OUTPUT"
+        fi
+
     # Node
     - uses: ./tmp/github-workflows/.github/actions/get-node-version
       if: inputs.enable_node == 'true' && inputs.node_version == ''
@@ -192,7 +203,7 @@ runs:
     # Enable yarn download cache, @see https://github.com/actions/cache/tree/main/save#always-save-cache and https://github.com/actions/setup-node/issues/325
     - name: Restore yarn cache
       uses: actions/cache/restore@v4
-      if: inputs.enable_node == 'true' && inputs.enable_node_cache == 'true'
+      if: inputs.enable_node == 'true' && inputs.enable_node_cache == 'true' && steps.runner_configuration.outputs.self_hosted == 'false'
       with:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
         path: ~/.yarn/berry/cache/
@@ -326,7 +337,7 @@ runs:
     # Node
     - name: Save yarn cache
       uses: actions/cache/save@v4
-      if: inputs.enable_node == 'true' && steps.build.outcome == 'success' && inputs.enable_node_cache == 'true'
+      if: inputs.enable_node == 'true' && steps.build.outcome == 'success' && inputs.enable_node_cache == 'true' && steps.runner_configuration.outputs.self_hosted == 'false'
       with:
         # This path is the global yarn cache, because for some reason the local .yarn/cache is not used. Maybe we need to set the cacheFolder, enableGlobalCache, ... options differently? @see https://yarnpkg.com/configuration/yarnrc#cacheFolder
         path: ~/.yarn/berry/cache/
