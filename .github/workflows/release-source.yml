@@ -61,11 +61,11 @@ jobs:
             exit 1
           fi
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
       - name: Checkout github-workflows repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
