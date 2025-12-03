@@ -299,6 +299,7 @@ jobs:
           ignore-unfixed: false
           vuln-type: "os,library"
           severity: ${{ steps.set_severity.outputs.severity }}
+          timeout: "10m0s"
           # The cache update takes quite long, so let's try to disable it for now: https://github.com/aquasecurity/trivy-action#cache
           cache: "false"
         continue-on-error: false
