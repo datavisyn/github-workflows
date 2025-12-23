@@ -119,7 +119,7 @@ on:
         required: false
 
 env:
-  WORKFLOW_BRANCH: "mp/python_version_file"
+  WORKFLOW_BRANCH: "main"
   POSTGRES_HOSTNAME: postgres_${{ github.job }}_${{ inputs.deduplication_id }}_${{ github.run_id }}_${{ github.run_attempt }}
 
 permissions:
