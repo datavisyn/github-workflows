@@ -97,8 +97,6 @@ jobs:
             const config = require('./deploy/build/config.json');
 
             const buildTime = new Date().toISOString().replace(/:/g, '').replace(/\..+/, 'Z');
-            const imageTagBranchName = "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-');
-            const imageTag = `tagged-${imageTagBranchName}-${buildTime}`;
 
             const builds = process.env.BUILDS ? process.env.BUILDS.split(',') : Object.keys(config.build);
             const push_to = process.env.PUSH_TO ? process.env.PUSH_TO.split(',') : Object.keys(config.push || {});
@@ -126,6 +124,9 @@ jobs:
                   const formattedBuildArgs = component.build_args ?
                     Object.entries(component.build_args).map(([key, value]) => `${key}=${value}`).join('\n') : '';
 
+                  const imageTagAfterRetag = (component.image_tag_prefix || '') + "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-') + (component.image_tag_suffix || '');
+                  const imageTagBeforeRetag = `tagged-${imageTagAfterRetag}-${buildTime}`;
+
                   return {
                     ...component,
                     // We can skip the push only if we don't want to test the image below
@@ -135,9 +136,9 @@ jobs:
                     flavor_id: id,
                     flavor_directory: `./deploy/build/${flavor.directory}`,
                     build_time: buildTime,
-                    image_tag: imageTag,
-                    image_ref: `${{ vars.DV_AWS_ECR_REGISTRY }}/${component.ecr_repository}:${imageTag}`,
-                    image_tag_branch_name: imageTagBranchName,
+                    image_tag_before_retag: imageTagBeforeRetag,
+                    image_ref: `${{ vars.DV_AWS_ECR_REGISTRY }}/${component.ecr_repository}:${imageTagBeforeRetag}`,
+                    image_tag_after_retag: imageTagAfterRetag,
                     formatted_build_args: formattedBuildArgs,
                   };
                 }),
@@ -160,7 +161,7 @@ jobs:
           PUSH_TO: ${{ inputs.push_to }}
 
   build-flavors:
-    name: Build ${{ matrix.component.directory }} of ${{ matrix.component.flavor.directory }} (${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag }})
+    name: Build ${{ matrix.component.directory }} of ${{ matrix.component.flavor.directory }} (${{ matrix.component.ecr_repository }}:${{ matrix.component.image_tag_before_retag }})
     needs: get-flavors
     strategy:
       fail-fast: ${{ inputs.fail_fast }}
@@ -264,12 +265,12 @@ jobs:
             ${{ matrix.component.image_ref }}
           labels: |
             name=${{ matrix.component.ecr_repository }}
-            version=${{ matrix.component.image_tag_branch_name }}
+            version=${{ matrix.component.image_tag_after_retag }}
             org.opencontainers.image.description=Image for ${{ matrix.component.ecr_repository }}
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.url=${{ github.event.repository.html_url }}
             org.opencontainers.image.title=${{ matrix.component.ecr_repository }}
-            org.opencontainers.image.version=${{ matrix.component.image_tag_branch_name }}
+            org.opencontainers.image.version=${{ matrix.component.image_tag_after_retag }}
             org.opencontainers.image.created=${{ matrix.component.build_time }}
             org.opencontainers.image.revision=${{ github.sha }}
         env:
@@ -427,15 +428,15 @@ jobs:
         run: |
           for component in $(jq -c '.components[]' <<< "$FLAVOR"); do
             repository_name=$(jq -r '.ecr_repository' <<< "$component")
-            image_tag=$(jq -r '.image_tag' <<< "$component")
-            image_tag_branch_name=$(jq -r '.image_tag_branch_name' <<< "$component")
+            image_tag_before_retag=$(jq -r '.image_tag_before_retag' <<< "$component")
+            image_tag_after_retag=$(jq -r '.image_tag_after_retag' <<< "$component")
 
-            echo "Processing repository: $repository_name, image_tag: $image_tag, image_tag_branch_name: $image_tag_branch_name"
+            echo "Processing repository: $repository_name, image_tag_before_retag: $image_tag_before_retag, image_tag_after_retag: $image_tag_after_retag"
 
-            IMAGE_META=$(aws ecr describe-images --repository-name "$repository_name" --image-ids imageTag="$image_tag" --output json | jq --arg var "${image_tag_branch_name}" '.imageDetails[0].imageTags | index($var)')
+            IMAGE_META=$(aws ecr describe-images --repository-name "$repository_name" --image-ids imageTag="$image_tag_before_retag" --output json | jq --arg var "${image_tag_after_retag}" '.imageDetails[0].imageTags | index($var)')
             if [[ -z "${IMAGE_META}" || "${IMAGE_META}" == "null" ]]; then
-              MANIFEST=$(aws ecr batch-get-image --repository-name "$repository_name" --image-ids imageTag="$image_tag" --output json | jq --raw-output --join-output '.images[0].imageManifest')
-              aws ecr put-image --repository-name "$repository_name" --image-tag "$image_tag_branch_name" --image-manifest "$MANIFEST"
+              MANIFEST=$(aws ecr batch-get-image --repository-name "$repository_name" --image-ids imageTag="$image_tag_before_retag" --output json | jq --raw-output --join-output '.images[0].imageManifest')
+              aws ecr put-image --repository-name "$repository_name" --image-tag "$image_tag_after_retag" --image-manifest "$MANIFEST"
             else
               echo "Image already tagged for repository: $repository_name!"
             fi

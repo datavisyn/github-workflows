@@ -75,13 +75,13 @@ jobs:
 
             const customers = process.env.PUSH_TO ? process.env.PUSH_TO.split(',') : Object.keys(config.push || {});
 
-            const imageTagBranchName = "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-');
+            const imageTagAfterRetag = "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-');
 
             const result = customers.map((c) => ({
               repository: process.env.REPOSITORY,
               customer: c,
               customer_json: JSON.stringify(config.push[c]),
-              image_tag: imageTagBranchName,
+              image_tag: imageTagAfterRetag,
             }));
             console.log(result);
             return result;
