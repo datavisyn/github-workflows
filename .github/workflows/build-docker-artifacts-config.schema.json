@@ -40,6 +40,14 @@
                       "type": "string",
                       "description": "ECR repository to push the image to"
                     },
+                    "image_tag_suffix": {
+                      "type": "string",
+                      "description": "Suffix to append to the image tag"
+                    },
+                    "image_tag_prefix": {
+                      "type": "string",
+                      "description": "Prefix to prepend to the image tag"
+                    },
                     "scan_high_severity": {
                       "type": "boolean",
                       "default": true,
@@ -95,6 +103,14 @@
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
+                    "image_tag_suffix": {
+                      "type": "string",
+                      "description": "Suffix to append to the image tag"
+                    },
+                    "image_tag_prefix": {
+                      "type": "string",
+                      "description": "Prefix to prepend to the image tag"
+                    },
                     "source_repository": {
                       "type": "string",
                       "description": "Internal ECR repository name"
