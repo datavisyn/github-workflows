@@ -77,12 +77,12 @@ jobs:
 
             const imageTagAfterRetag = "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-');
 
-            const result = customers.map((c) => ({
+            const result = customers.flatMap((c) => config.push?.[c] ? [{
               repository: process.env.REPOSITORY,
               customer: c,
               customer_json: JSON.stringify(config.push[c]),
               image_tag: imageTagAfterRetag,
-            })).filter((c) => c.customer_json);
+            }] : []);
             console.log(result);
             return result;
         env:
