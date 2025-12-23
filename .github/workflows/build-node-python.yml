@@ -134,7 +134,7 @@ jobs:
     timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
     concurrency:
-      group: "node-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      group: "node-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}-${{ inputs.deduplication_id }}"
       cancel-in-progress: ${{ inputs.cancel_in_progress }}
     permissions:
       id-token: write
@@ -179,7 +179,7 @@ jobs:
     timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
     concurrency:
-      group: "python-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      group: "python-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}-${{ inputs.deduplication_id }}"
       cancel-in-progress: ${{ inputs.cancel_in_progress }}
     permissions:
       id-token: write
@@ -220,7 +220,7 @@ jobs:
     timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     if: ${{ inputs.cypress_enable && (inputs.cypress_run_because_flag || inputs.cypress_run_because_branch == 'true') }}
     concurrency:
-      group: "node-python-cypress-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      group: "node-python-cypress-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}-${{ inputs.deduplication_id }}"
       cancel-in-progress: ${{ inputs.cancel_in_progress }}
     permissions:
       id-token: write
@@ -363,7 +363,7 @@ jobs:
     timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     if: ${{ inputs.playwright_enable && (inputs.playwright_run_because_flag || inputs.playwright_run_because_branch == 'true') }}
     concurrency:
-      group: "node-python-playwright-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      group: "node-python-playwright-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}-${{ inputs.deduplication_id }}"
       cancel-in-progress: ${{ inputs.cancel_in_progress }}
     permissions:
       id-token: write
