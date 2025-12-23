@@ -116,8 +116,6 @@ jobs:
                 skip_retag: skip_push,
                 // Add metadata to the flavor object (will be used as matrix input)
                 build_time: buildTime,
-                image_tag: imageTag,
-                image_tag_branch_name: imageTagBranchName,
                 test_images: {
                   enabled: testImageEnabled,
                   script_path: testImagesHookScript,
@@ -427,12 +425,6 @@ jobs:
       - name: Retag images
         shell: bash
         run: |
-          image_tag="${{ matrix.flavor.image_tag }}"
-          image_tag_branch_name="${{ matrix.flavor.image_tag_branch_name }}"
-
-          echo "image_tag=$image_tag"
-          echo "image_tag_branch_name=$image_tag_branch_name"
-
           for component in $(jq -c '.components[]' <<< "$FLAVOR"); do
             repository_name=$(jq -r '.ecr_repository' <<< "$component")
             image_tag=$(jq -r '.image_tag' <<< "$component")
