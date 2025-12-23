@@ -110,4 +110,5 @@ jobs:
           destination_aws_region: ${{ steps.get-aws-image-config.outputs.aws_region }}
           destination_aws_access_key_id: ${{ steps.get-aws-image-config.outputs.aws_access_key_id }}
           destination_aws_secret_access_key: ${{ steps.get-aws-image-config.outputs.aws_secret_access_key }}
+          destination_ecr_registry_type: ${{ steps.get-aws-image-config.outputs.ecr_registry_type }}
           destination_images: ${{ fromJson(steps.get-customer.outputs.result).destination_images }}
