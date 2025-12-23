@@ -67,8 +67,8 @@ jobs:
             const filteredRepositories = customer.repositories.filter(repo => !repo.skip);
 
             // Comma separated list of source images, incl. registry, repository and tag
-            const sourceImages = filteredRepositories.map(repo => `${process.env.SOURCE_ECR_REGISTRY}/${repo.source_repository}:${repo.source_image_tag || process.env.IMAGE_TAG}`).join(',');
-            const destinationImages = filteredRepositories.map(repo => `${customer.registry}/${repo.target_repository}:${repo.target_image_tag || process.env.IMAGE_TAG}`).join(',');
+            const sourceImages = filteredRepositories.map(repo => `${process.env.SOURCE_ECR_REGISTRY}/${repo.source_repository}:${repo.image_tag_prefix || ''}${repo.source_image_tag || process.env.IMAGE_TAG}${repo.image_tag_suffix || ''}`).join(',');
+            const destinationImages = filteredRepositories.map(repo => `${customer.registry}/${repo.target_repository}:${repo.image_tag_prefix || ''}${repo.target_image_tag || process.env.IMAGE_TAG}${repo.image_tag_suffix || ''}`).join(',');
 
             const result = {
               customer,
