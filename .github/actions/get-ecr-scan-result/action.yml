@@ -9,10 +9,6 @@ inputs:
   aws_region:
     description: "aws region to use"
     required: true
-  ecr_registry_type:
-    description: "type of registry (public|private)"
-    required: false
-    default: "private"
   ecr_registry:
     description: "registry where to push the image"
     required: true
@@ -54,8 +50,6 @@ runs:
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2.0.1
-      with:
-        registry-type: ${{ inputs.ecr_registry_type }}
     - name: Get AWS ECR Scan results
       id: get-scan-results
       run: |
