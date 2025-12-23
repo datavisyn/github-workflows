@@ -9,7 +9,7 @@ inputs:
   aws_region:
     description: "aws region to use"
     required: true
-  registry_type:
+  ecr_registry_type:
     description: "type of registry (public|private)"
     required: false
     default: "private"
@@ -34,6 +34,8 @@ runs:
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2.0.1
+      with:
+        registry-type: ${{ inputs.ecr_registry_type }}
     - name: retag image
       run: |
         mapfile -t array < <(echo "${REPOSITORY_NAMES}" | tr ',' "\n")
