@@ -46,7 +46,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  WORKFLOW_BRANCH: "feat-add-registry-type"
+  WORKFLOW_BRANCH: "main"
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
 
@@ -453,7 +453,7 @@ jobs:
     # if? When should we do this? Always? Only for certain branches? If so, how should we define that, in the config.json?
     # We need the always() && !cancelled() && !failure() because the test-images may have been skipped (which is fine), but this transitvely propagates through retag-images to here. See https://github.com/actions/runner/issues/491#issuecomment-1507495166
     if: ${{ always() && !cancelled() && !failure() && fromJson(needs.get-flavors.outputs.result).skip_push != true && fromJson(needs.get-flavors.outputs.result).push_to != '' }}
-    uses: datavisyn/github-workflows/.github/workflows/build-docker-artifacts-trigger-push.yml@feat-add-registry-type
+    uses: datavisyn/github-workflows/.github/workflows/build-docker-artifacts-trigger-push.yml@main
     secrets: inherit
     with:
       push_to: ${{ fromJson(needs.get-flavors.outputs.result).push_to }}

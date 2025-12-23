@@ -33,7 +33,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  WORKFLOW_BRANCH: "feat-add-registry-type"
+  WORKFLOW_BRANCH: "main"
 
 permissions:
   contents: read
