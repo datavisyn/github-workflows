@@ -33,7 +33,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  WORKFLOW_BRANCH: "mp/image_tag_suffix"
+  WORKFLOW_BRANCH: "main"
 
 permissions:
   contents: read

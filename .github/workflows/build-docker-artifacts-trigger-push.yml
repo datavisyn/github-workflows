@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  WORKFLOW_BRANCH: "mp/image_tag_suffix"
+  WORKFLOW_BRANCH: "main"
 
 permissions:
   contents: read
@@ -106,6 +106,6 @@ jobs:
           repo: "infrastructure-k8s"
           github_token: ${{ secrets.DATAVISYN_BOT_REPO_TOKEN }}
           workflow_file_name: "push-docker-artifact-to-customer.yml"
-          ref: "mp/image_tag_suffix"
+          ref: "main"
           github_user: ${{ secrets.DV_BOT_USER }}
           client_payload: ${{ toJson(matrix.customer) }}
