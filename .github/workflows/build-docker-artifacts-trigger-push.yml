@@ -82,7 +82,7 @@ jobs:
               customer: c,
               customer_json: JSON.stringify(config.push[c]),
               image_tag: imageTagAfterRetag,
-            }));
+            })).filter((c) => c.customer_json);
             console.log(result);
             return result;
         env:

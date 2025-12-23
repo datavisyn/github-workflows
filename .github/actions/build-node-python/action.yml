@@ -129,7 +129,8 @@ runs:
       uses: actions/setup-python@v6
       if: inputs.enable_python == 'true'
       with:
-        python-version: ${{ inputs.python_version || '3.10' }}
+        python-version-file: pyproject.toml
+        python-version: ${{ inputs.python_version || null }}
         # cache: ${{ inputs.enable_python_cache == 'true' && 'pip' || null }} Disable cache as uv is probably faster anyways: https://github.com/actions/setup-python/issues/822
     - name: Install additional python requirements
       if: inputs.enable_python == 'true'
