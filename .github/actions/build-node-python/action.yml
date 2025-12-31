@@ -147,6 +147,11 @@ runs:
         sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
         sudo apt-get install postgresql-16-pgvector -y
       shell: bash
+    - name: Install redis-server
+      if: inputs.enable_python == 'true'
+      run: |
+        sudo apt-get install redis-server -y
+      shell: bash
     # Rust
     - name: Install Rust
       if: inputs.enable_rust == 'true'
