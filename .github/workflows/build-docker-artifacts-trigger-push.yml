@@ -92,6 +92,7 @@ jobs:
   trigger-push:
     name: Trigger push docker artifacts to ${{ matrix.customer.customer }}
     needs: get-customers
+    if: ${{ needs.get-customers.outputs.result != '[]' }}
     strategy:
       fail-fast: true
       matrix:
