@@ -50,12 +50,12 @@ jobs:
     runs-on: ${{ vars.BUILD_RUNS_ON_OVERRIDE || vars.RUNS_ON_OVERRIDE || inputs.runs_on || 'ubuntu-22.04' }}
     steps:
       - name: Checkout source repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.branch }}
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token  }}
       - name: Checkout github-workflows
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
