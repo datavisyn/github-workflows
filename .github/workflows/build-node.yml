@@ -80,6 +80,7 @@ jobs:
           enable_python: false
           trivy_enable: ${{ inputs.trivy_enable }}
           trivy_severity: ${{ inputs.trivy_severity }}
+          trivy_skip_files: ${{ vars.TRIVY_SKIP_FILES }}
           node_version: ${{ vars.NODE_VERSION || inputs.node_version }}
           npm_registry: ${{ vars.NPM_REGISTRY }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}

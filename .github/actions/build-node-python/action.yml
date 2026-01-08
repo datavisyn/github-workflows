@@ -66,6 +66,9 @@ inputs:
   trivy_severity:
     description: "Severity level for trivy"
     required: false
+  trivy_skip_files:
+    description: "Skip files for trivy"
+    required: false
   chromatic_enable:
     description: "Enable Chromatic tests"
     required: false
@@ -129,7 +132,8 @@ runs:
       uses: actions/setup-python@v6
       if: inputs.enable_python == 'true'
       with:
-        python-version: ${{ inputs.python_version || '3.10' }}
+        python-version-file: pyproject.toml
+        python-version: ${{ inputs.python_version || null }}
         # cache: ${{ inputs.enable_python_cache == 'true' && 'pip' || null }} Disable cache as uv is probably faster anyways: https://github.com/actions/setup-python/issues/822
     - name: Install additional python requirements
       if: inputs.enable_python == 'true'
@@ -145,6 +149,11 @@ runs:
       run: |
         sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
         sudo apt-get install postgresql-16-pgvector -y
+      shell: bash
+    - name: Install redis-server
+      if: inputs.enable_python == 'true'
+      run: |
+        sudo apt-get install redis-server -y
       shell: bash
     # Rust
     - name: Install Rust
@@ -305,7 +314,7 @@ runs:
         format: "table"
         scanners: "vuln"
         severity: ${{ inputs.trivy_severity || 'CRITICAL' }}
-        ignore-unfixed: false
+        skip-files: ${{ inputs.trivy_skip_files }}
         # The cache update takes quite long, so let's try to disable it for now: https://github.com/aquasecurity/trivy-action#cache
         cache: "false"
       continue-on-error: false
@@ -319,7 +328,7 @@ runs:
         format: "table"
         scanners: "vuln"
         severity: ${{ inputs.trivy_severity || 'CRITICAL' }}
-        ignore-unfixed: false
+        skip-files: ${{ inputs.trivy_skip_files }}
         # The cache update takes quite long, so let's try to disable it for now: https://github.com/aquasecurity/trivy-action#cache
         cache: "false"
       continue-on-error: false

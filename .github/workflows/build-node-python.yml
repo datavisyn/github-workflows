@@ -134,7 +134,7 @@ jobs:
     timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
     concurrency:
-      group: "node-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      group: "node-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}-${{ inputs.deduplication_id }}"
       cancel-in-progress: ${{ inputs.cancel_in_progress }}
     permissions:
       id-token: write
@@ -162,6 +162,7 @@ jobs:
           # enable_rust: ${{ inputs.rust_enable }}
           trivy_enable: ${{ inputs.trivy_enable }}
           trivy_severity: ${{ inputs.trivy_severity }}
+          trivy_skip_files: ${{ vars.TRIVY_SKIP_FILES }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ vars.NODE_VERSION || inputs.node_version }}
           npm_registry: ${{ vars.NPM_REGISTRY }}
@@ -179,7 +180,7 @@ jobs:
     timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     if: ${{ (!inputs.cypress_enable || (!inputs.cypress_run_because_flag && inputs.cypress_run_because_branch != 'true')) && (!inputs.playwright_enable || (!inputs.playwright_run_because_flag && inputs.playwright_run_because_branch != 'true')) }}
     concurrency:
-      group: "python-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      group: "python-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}-${{ inputs.deduplication_id }}"
       cancel-in-progress: ${{ inputs.cancel_in_progress }}
     permissions:
       id-token: write
@@ -204,6 +205,7 @@ jobs:
           enable_python: true
           trivy_enable: ${{ inputs.trivy_enable }}
           trivy_severity: ${{ inputs.trivy_severity }}
+          trivy_skip_files: ${{ vars.TRIVY_SKIP_FILES }}
           enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ vars.NODE_VERSION || inputs.node_version }}
@@ -220,7 +222,7 @@ jobs:
     timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     if: ${{ inputs.cypress_enable && (inputs.cypress_run_because_flag || inputs.cypress_run_because_branch == 'true') }}
     concurrency:
-      group: "node-python-cypress-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      group: "node-python-cypress-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}-${{ inputs.deduplication_id }}"
       cancel-in-progress: ${{ inputs.cancel_in_progress }}
     permissions:
       id-token: write
@@ -297,6 +299,7 @@ jobs:
         with:
           trivy_enable: ${{ inputs.trivy_enable }}
           trivy_severity: ${{ inputs.trivy_severity }}
+          trivy_skip_files: ${{ vars.TRIVY_SKIP_FILES }}
           enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ vars.NODE_VERSION || inputs.node_version }}
@@ -363,7 +366,7 @@ jobs:
     timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     if: ${{ inputs.playwright_enable && (inputs.playwright_run_because_flag || inputs.playwright_run_because_branch == 'true') }}
     concurrency:
-      group: "node-python-playwright-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}"
+      group: "node-python-playwright-${{ github.workflow }}-${{ github.ref || github.head_ref }}-${{ inputs.branch }}-${{ inputs.deduplication_id }}"
       cancel-in-progress: ${{ inputs.cancel_in_progress }}
     permissions:
       id-token: write
@@ -442,6 +445,7 @@ jobs:
         with:
           trivy_enable: ${{ inputs.trivy_enable }}
           trivy_severity: ${{ inputs.trivy_severity }}
+          trivy_skip_files: ${{ vars.TRIVY_SKIP_FILES }}
           enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ vars.NODE_VERSION || inputs.node_version }}

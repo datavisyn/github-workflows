@@ -67,6 +67,7 @@ jobs:
           enable_python: true
           trivy_enable: ${{ inputs.trivy_enable }}
           trivy_severity: ${{ inputs.trivy_severity }}
+          trivy_skip_files: ${{ vars.TRIVY_SKIP_FILES }}
           github_ro_token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token  }}
           python_version: ${{ vars.PYTHON_VERSION || inputs.python_version }}
           enable_python_cache: ${{ inputs.runs_on != 'self-hosted' }}
