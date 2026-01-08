@@ -162,6 +162,7 @@ jobs:
           # enable_rust: ${{ inputs.rust_enable }}
           trivy_enable: ${{ inputs.trivy_enable }}
           trivy_severity: ${{ inputs.trivy_severity }}
+          trivy_skip_files: ${{ vars.TRIVY_SKIP_FILES }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ vars.NODE_VERSION || inputs.node_version }}
           npm_registry: ${{ vars.NPM_REGISTRY }}
@@ -204,6 +205,7 @@ jobs:
           enable_python: true
           trivy_enable: ${{ inputs.trivy_enable }}
           trivy_severity: ${{ inputs.trivy_severity }}
+          trivy_skip_files: ${{ vars.TRIVY_SKIP_FILES }}
           enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ vars.NODE_VERSION || inputs.node_version }}
@@ -297,6 +299,7 @@ jobs:
         with:
           trivy_enable: ${{ inputs.trivy_enable }}
           trivy_severity: ${{ inputs.trivy_severity }}
+          trivy_skip_files: ${{ vars.TRIVY_SKIP_FILES }}
           enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ vars.NODE_VERSION || inputs.node_version }}
@@ -442,6 +445,7 @@ jobs:
         with:
           trivy_enable: ${{ inputs.trivy_enable }}
           trivy_severity: ${{ inputs.trivy_severity }}
+          trivy_skip_files: ${{ vars.TRIVY_SKIP_FILES }}
           enable_rust: ${{ inputs.rust_enable }}
           run_parallel: ${{ inputs.run_parallel }}
           node_version: ${{ vars.NODE_VERSION || inputs.node_version }}
