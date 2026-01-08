@@ -311,7 +311,7 @@ runs:
         format: "table"
         scanners: "vuln"
         severity: ${{ inputs.trivy_severity || 'CRITICAL' }}
-        ignore-unfixed: false
+        skip-files: ${{ vars.TRIVY_SKIP_FILES }}
         # The cache update takes quite long, so let's try to disable it for now: https://github.com/aquasecurity/trivy-action#cache
         cache: "false"
       continue-on-error: false
@@ -325,7 +325,7 @@ runs:
         format: "table"
         scanners: "vuln"
         severity: ${{ inputs.trivy_severity || 'CRITICAL' }}
-        ignore-unfixed: false
+        skip-files: ${{ vars.TRIVY_SKIP_FILES }}
         # The cache update takes quite long, so let's try to disable it for now: https://github.com/aquasecurity/trivy-action#cache
         cache: "false"
       continue-on-error: false
