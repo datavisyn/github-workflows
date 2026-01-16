@@ -47,8 +47,10 @@ concurrency:
 
 env:
   WORKFLOW_BRANCH: "main"
-  DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
-  DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
+  DATAVISYN_PYTHON_BASE_IMAGE: "public.ecr.aws/datavisyn/datavisyn/python:main-3.10"
+  DATAVISYN_PYTHON_3_10_BASE_IMAGE: "public.ecr.aws/datavisyn/datavisyn/python:main-3.10"
+  DATAVISYN_PYTHON_3_12_BASE_IMAGE: "public.ecr.aws/datavisyn/datavisyn/python:main-3.12"
+  DATAVISYN_NGINX_BASE_IMAGE: "public.ecr.aws/datavisyn/datavisyn/nginx:main"
 
 permissions:
   contents: read
