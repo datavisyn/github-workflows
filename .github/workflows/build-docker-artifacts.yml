@@ -445,7 +445,7 @@ jobs:
             for image_tag_after_retag in $(jq -r '.image_tags_after_retag[]' <<< "$component"); do
               echo "Tagging with: $image_tag_after_retag"
               
-              IMAGE_META=$(aws ecr describe-images --repository-name "$repository_name" --image-ids imageTag="$image_tag_after_retag" --output json | jq --arg var "${image_tag_after_retag}" '.imageDetails[0].imageTags | index($var)' 2>/dev/null || echo "null")
+              IMAGE_META=$(aws ecr describe-images --repository-name "$repository_name" --image-ids imageTag="$image_tag_before_retag" --output json | jq --arg var "${image_tag_after_retag}" '.imageDetails[0].imageTags | index($var)')
               if [[ -z "${IMAGE_META}" || "${IMAGE_META}" == "null" ]]; then
                 aws ecr put-image --repository-name "$repository_name" --image-tag "$image_tag_after_retag" --image-manifest "$MANIFEST"
               else
