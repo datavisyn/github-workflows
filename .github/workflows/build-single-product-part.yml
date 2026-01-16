@@ -224,7 +224,7 @@ jobs:
           STAGE: ${{ inputs.stage }}
       - name: setup python
         if: ${{ steps.get-parameters.outputs.type == 'api' }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ secrets.PYTHON_VERSION || env.PYTHON_VERSION }}
           # cache: 'pip' Disable cache as uv is probably faster anyways: https://github.com/actions/setup-python/issues/822
