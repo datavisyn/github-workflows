@@ -1,0 +1,6 @@
+# libc6 is detected as 2.31-13+deb11u10 but actually installed as 2.31-13+deb11u13 (fixed)
+CVE-2025-4802
+# Reason: nbconvert: nbconvert: Arbitrary code execution via malicious SVG to PDF conversion. This is a dep by lamindb, and there's no newer version with a fix...
+CVE-2025-53000
+# No fix available for this glibc vulnerability
+CVE-2026-0861

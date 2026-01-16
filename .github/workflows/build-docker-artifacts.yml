@@ -126,6 +126,11 @@ jobs:
 
                   const imageTagAfterRetag = (component.image_tag_prefix || '') + "${{ github.ref }}".replace('refs/heads/', '').replace('refs/tags/', '').replace(/[^a-zA-Z0-9._-]/g, '-') + (component.image_tag_suffix || '');
                   const imageTagBeforeRetag = `tagged-${imageTagAfterRetag}-${buildTime}`;
+                  const imageTagsAfterRetag = [
+                    imageTagAfterRetag,
+                    // In addition, always add the github.sha as tag for easier identification
+                    '${{ github.sha }}'
+                  ];
 
                   return {
                     ...component,
@@ -138,7 +143,7 @@ jobs:
                     build_time: buildTime,
                     image_tag_before_retag: imageTagBeforeRetag,
                     image_ref: `${{ vars.DV_AWS_ECR_REGISTRY }}/${component.ecr_repository}:${imageTagBeforeRetag}`,
-                    image_tag_after_retag: imageTagAfterRetag,
+                    image_tags_after_retag: imageTagsAfterRetag,
                     formatted_build_args: formattedBuildArgs,
                   };
                 }),
@@ -300,6 +305,7 @@ jobs:
           vuln-type: "os,library"
           severity: ${{ steps.set_severity.outputs.severity }}
           skip-files: ${{ vars.TRIVY_SKIP_FILES }}
+          trivyignores: ".trivyignore,./tmp/github-workflows/.github/workflows/global.trivyignore"
           timeout: "10m0s"
           # The cache update takes quite long, so let's try to disable it for now: https://github.com/aquasecurity/trivy-action#cache
           cache: "false"
@@ -430,17 +436,22 @@ jobs:
           for component in $(jq -c '.components[]' <<< "$FLAVOR"); do
             repository_name=$(jq -r '.ecr_repository' <<< "$component")
             image_tag_before_retag=$(jq -r '.image_tag_before_retag' <<< "$component")
-            image_tag_after_retag=$(jq -r '.image_tag_after_retag' <<< "$component")
 
-            echo "Processing repository: $repository_name, image_tag_before_retag: $image_tag_before_retag, image_tag_after_retag: $image_tag_after_retag"
+            echo "Processing repository: $repository_name, image_tag_before_retag: $image_tag_before_retag"
 
-            IMAGE_META=$(aws ecr describe-images --repository-name "$repository_name" --image-ids imageTag="$image_tag_before_retag" --output json | jq --arg var "${image_tag_after_retag}" '.imageDetails[0].imageTags | index($var)')
-            if [[ -z "${IMAGE_META}" || "${IMAGE_META}" == "null" ]]; then
-              MANIFEST=$(aws ecr batch-get-image --repository-name "$repository_name" --image-ids imageTag="$image_tag_before_retag" --output json | jq --raw-output --join-output '.images[0].imageManifest')
-              aws ecr put-image --repository-name "$repository_name" --image-tag "$image_tag_after_retag" --image-manifest "$MANIFEST"
-            else
-              echo "Image already tagged for repository: $repository_name!"
-            fi
+            MANIFEST=$(aws ecr batch-get-image --repository-name "$repository_name" --image-ids imageTag="$image_tag_before_retag" --output json | jq --raw-output --join-output '.images[0].imageManifest')
+            
+            # Loop through all image tags after retag
+            for image_tag_after_retag in $(jq -r '.image_tags_after_retag[]' <<< "$component"); do
+              echo "Tagging with: $image_tag_after_retag"
+              
+              IMAGE_META=$(aws ecr describe-images --repository-name "$repository_name" --image-ids imageTag="$image_tag_after_retag" --output json | jq --arg var "${image_tag_after_retag}" '.imageDetails[0].imageTags | index($var)' 2>/dev/null || echo "null")
+              if [[ -z "${IMAGE_META}" || "${IMAGE_META}" == "null" ]]; then
+                aws ecr put-image --repository-name "$repository_name" --image-tag "$image_tag_after_retag" --image-manifest "$MANIFEST"
+              else
+                echo "Image already tagged with $image_tag_after_retag for repository: $repository_name!"
+              fi
+            done
           done;
         env:
           FLAVOR: ${{ toJSON(matrix.flavor) }}
