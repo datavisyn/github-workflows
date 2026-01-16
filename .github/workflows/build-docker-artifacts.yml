@@ -64,13 +64,13 @@ jobs:
     runs-on: "ubuntu-22.04"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.branch || github.sha }}
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
 
       - name: Checkout github-workflows repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -186,7 +186,7 @@ jobs:
           sudo rm -rf /opt/ghc
       # TODO: Support arbitrary repositories, not just the current one?
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.branch || github.sha }}
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
@@ -194,7 +194,7 @@ jobs:
           # https://github.com/yarnpkg/yarn/issues/2614#issuecomment-2148174789
           persist-credentials: false
       - name: Checkout github-workflows repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -332,7 +332,7 @@ jobs:
     runs-on: ${{ inputs.runs_on || 'ubuntu-22.04' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.branch || github.sha }}
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
@@ -408,13 +408,13 @@ jobs:
     runs-on: "ubuntu-22.04"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.branch || github.sha }}
           token: ${{ secrets.CHECKOUT_TOKEN || github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN || github.token }}
 
       - name: Checkout github-workflows repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}

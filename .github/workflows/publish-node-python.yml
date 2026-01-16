@@ -43,11 +43,11 @@ jobs:
           echo "only the main branch can be published."
           exit 1
       # checkout specific source repository
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           token: ${{ github.event.repository.private == true && secrets.DATAVISYN_BOT_REPO_TOKEN  || github.token }} # has to set because otherwise it will not work
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
@@ -78,9 +78,9 @@ jobs:
           echo "only the main branch can be published."
           exit 1
       # checkout specific source repository
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       # checkout this workflow repository to get actions
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           repository: datavisyn/github-workflows
           ref: ${{ env.WORKFLOW_BRANCH }}
