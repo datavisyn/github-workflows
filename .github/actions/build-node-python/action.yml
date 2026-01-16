@@ -315,6 +315,7 @@ runs:
         scanners: "vuln"
         severity: ${{ inputs.trivy_severity || 'CRITICAL' }}
         skip-files: ${{ inputs.trivy_skip_files }}
+        trivyignores: ".trivyignore,./tmp/github-workflows/.github/workflows/global.trivyignore"
         # The cache update takes quite long, so let's try to disable it for now: https://github.com/aquasecurity/trivy-action#cache
         cache: "false"
       continue-on-error: false
@@ -329,6 +330,7 @@ runs:
         scanners: "vuln"
         severity: ${{ inputs.trivy_severity || 'CRITICAL' }}
         skip-files: ${{ inputs.trivy_skip_files }}
+        trivyignores: ".trivyignore,./tmp/github-workflows/.github/workflows/global.trivyignore"
         # The cache update takes quite long, so let's try to disable it for now: https://github.com/aquasecurity/trivy-action#cache
         cache: "false"
       continue-on-error: false

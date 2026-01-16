@@ -46,7 +46,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  WORKFLOW_BRANCH: "mp/retag_with_sha"
+  WORKFLOW_BRANCH: "main"
   DATAVISYN_PYTHON_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/python:main"
   DATAVISYN_NGINX_BASE_IMAGE: "188237246440.dkr.ecr.eu-central-1.amazonaws.com/datavisyn/base/nginx:main"
 
@@ -305,7 +305,7 @@ jobs:
           vuln-type: "os,library"
           severity: ${{ steps.set_severity.outputs.severity }}
           skip-files: ${{ vars.TRIVY_SKIP_FILES }}
-          trivyignores: ".trivyignore,./tmp/github-workflows/.github/workflows/build-docker-artifacts.trivyignore"
+          trivyignores: ".trivyignore,./tmp/github-workflows/.github/workflows/global.trivyignore"
           timeout: "10m0s"
           # The cache update takes quite long, so let's try to disable it for now: https://github.com/aquasecurity/trivy-action#cache
           cache: "false"
